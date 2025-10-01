@@ -1,0 +1,226 @@
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #f8b4cb 0%, #a8d5ba 50%, #c8a8d8 100%);
+  margin: 0;
+  min-height: 100vh;
+  color: #333;
+}
+
+nav {
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 12px #c8a8d833;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+}
+nav a {
+  color: #d946ef;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: color 0.2s;
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem;
+}
+nav a:hover,
+nav a.active {
+  color: #fff;
+  background: linear-gradient(90deg, #f8b4cb, #c8a8d8);
+}
+
+h1, h2, h3 {
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  color: #d946ef;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.team-photo {
+  max-width: 180px;      /* or any size you want! */
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  margin: 1rem auto;
+  box-shadow: 0 2px 12px #c8a8d833;
+}
+
+.color-block {
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #c8a8d833;
+  display: inline-block;
+  margin: 0.5rem 0;
+  color: #222; /* default text color, can override per color */
+}
+
+/* Example color modifiers */
+.bg-white    { background: #fff; }
+.bg-pink     { background: #f8bbd0; color: #880e4f; }
+.bg-purple   { background: #d1c4e9; color: #4a148c; }
+.bg-yellow   { background: #fff9c4; color: #f57c00; }
+.bg-green    { background: #c8e6c9; color: #1b5e20; }
+.bg-blue     { background: #bbdefb; color: #0d47a1; }
+.bg-gray     { background: #f5f5f5; color: #333; }
+
+section, main {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 12px #d946ef33;
+}
+
+button, input[type="submit"] {
+  background: #d946ef;
+  color: #fff;
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover, input[type="submit"]:hover {
+  background: #c026d3;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ddd;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.product-card, .gallery-card {
+  background: #f6f2fe;
+  border-radius: 1rem;
+  box-shadow: 0 1px 8px #c8a8d844;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+.product-card:hover, .gallery-card:hover {
+  box-shadow: 0 4px 16px #d946ef44;
+}
+.product-img, .gallery-img {
+  width: 160px; height: 160px; object-fit: cover;
+  border-radius: 0.7rem;
+  background: #eee; margin-bottom: 1rem;
+}
+
+.product-title, .gallery-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d946ef;
+  text-align: center;
+  margin-bottom: 0.7rem;
+}
+.product-price {
+  color: #f472b6;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+@media (max-width: 700px) {
+  section, main {
+    padding: 1rem;
+  }
+  nav {
+    gap: 1rem;
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+  }
+  .product-img, .gallery-img {
+    width: 100px; height: 100px;
+  }
+}
+
+/* Add this section to your CSS file for Instagram gallery sizing */
+.instagram-gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.instagram-gallery .instagram-media {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+@media (max-width: 700px) {
+  section, main {
+    padding: 0.5rem !important;
+    margin: 0.5rem auto !important;
+    border-radius: 0.7rem !important;
+  }
+  nav {
+    gap: 0.5rem !important;
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    padding: 0.5rem 0 !important;
+  }
+  nav a, nav .cart-btn {
+    padding: 0.4rem 0.7rem !important;
+    font-size: 1rem !important;
+    border-radius: 0.5rem !important;
+    display: inline-block !important;
+  }
+  h1, h2, h3 {
+    font-size: 1.3rem !important;
+    margin-top: 1rem !important;
+  }
+  .product-img, .gallery-img, .team-photo {
+    width: 100px !important;
+    height: 100px !important;
+    object-fit: cover !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .product-card, .gallery-card, .color-block {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    border-radius: 0.7rem !important;
+  }
+  input, textarea, select, button {
+    font-size: 1.1rem !important;
+    padding: 0.6rem !important;
+  }
+  .shop-tabs {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: stretch !important;
+    margin-bottom: 1rem !important;
+  }
+  .shop-tabs button {
+    width: 100% !important;
+    font-size: 1.1rem !important;
+    padding: 0.7rem !important;
+  }
+  .cart-btn span {
+    font-size: 1rem !important;
+    padding-left: 0.2em !important;
+  }
+  /* Instagram gallery sizing */
+  .instagram-gallery .instagram-media {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+}

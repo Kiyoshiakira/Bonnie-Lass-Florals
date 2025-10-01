@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact - Bonnie Lass Florals</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
+      authDomain: "bonnie-lass-florals.firebaseapp.com",
+      projectId: "bonnie-lass-florals",
+      storageBucket: "bonnie-lass-florals.firebasestorage.app",
+      messagingSenderId: "1009091302977",
+      appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
+      measurementId: "G-DQRB98D0WY"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="shop.html">Shop</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="contact.html">Contact</a>
+    <a href="cart.html" class="cart-btn">
+      🛒 Cart <span id="cart-count">0</span>
+    </a>
+  </nav>
+  <main>
+    <h1>Contact Us</h1>
+    <p>Questions, feedback, custom requests? Use the form below or email us directly at <a href="mailto:bonnielassflorals@gmail.com">bonnielassflorals@gmail.com</a>.</p>
+    <form id="contactForm">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="name" required placeholder="Name">
+
+      <label for="email">Your Email</label>
+      <input type="email" id="email" name="email" required placeholder="Email">
+
+      <label for="message">Message</label>
+      <textarea id="message" name="message" required placeholder="How can we help you?" rows="5"></textarea>
+
+      <button type="submit">Send Message 💌</button>
+    </form>
+    <div id="contact-success" style="display:none; color: green; margin-top: 1rem;">Thank you! Your message has been prepared in your email client.</div>
+    <div style="margin-top:2rem;">
+      <p>Or reach us on social:</p>
+      <a href="https://instagram.com/bonnielassflorals" target="_blank">Instagram</a> |
+      <a href="https://facebook.com/bonnielassflorals" target="_blank">Facebook</a>
+    </div>
+  </main>
+  <script>
+    // Update cart count
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      document.getElementById('cart-count').textContent = cart.length;
+    }
+    updateCartCount();
+
+    // Contact form mailto handler
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = encodeURIComponent(document.getElementById('name').value);
+      const email = encodeURIComponent(document.getElementById('email').value);
+      const message = encodeURIComponent(document.getElementById('message').value);
+      const mailto = `mailto:bonnielassflorals@gmail.com?subject=Contact%20from%20${name}&body=${message}%0A%0AFrom:%20${name}%20(${email})`;
+      window.location.href = mailto;
+      document.getElementById('contact-success').style.display = "block";
+      setTimeout(() => {
+        document.getElementById('contact-success').style.display = "none";
+      }, 5000);
+    });
+  </script>
+</body>
+</html>
