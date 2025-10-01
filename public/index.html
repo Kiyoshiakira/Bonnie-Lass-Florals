@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonnie Lass Florals - Handcrafted Silk Flowers</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
+        authDomain: "bonnie-lass-florals.firebaseapp.com",
+        projectId: "bonnie-lass-florals",
+        storageBucket: "bonnie-lass-florals.firebasestorage.app",
+        messagingSenderId: "1009091302977",
+        appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
+        measurementId: "G-DQRB98D0WY"
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
+    <style>
+      #loginModal {
+        display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;
+      }
+      #loginModal.active { display: flex; }
+      #loginModalContent {
+        background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px #d946ef44;
+        min-width: 300px; max-width: 90vw;
+      }
+      .hidden { display: none; }
+      #userInfo { margin-left: 1em; color: #d946ef; }
+      /* Profile circle and dropdown styling */
+      #profileCircleContainer {
+        position: relative;
+        display: none;
+        vertical-align: middle;
+      }
+      #profileCircle {
+        width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+        cursor: pointer; border: 2px solid #d946ef; background: #fff;
+      }
+      #profileDropdown {
+        display: none;
+        position: absolute;
+        top: 48px;
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px #d946ef88;
+        min-width: 160px;
+        z-index: 999;
+        text-align: left;
+      }
+      #profileDropdown a, #profileDropdown button {
+        display: block;
+        width: 100%;
+        padding: 0.8em 1.2em;
+        border-bottom: 1px solid #eee;
+        color: #d946ef;
+        text-decoration: none;
+        background: none;
+        text-align: left;
+        font-size: 1rem;
+        cursor: pointer;
+        border: none;
+        outline: none;
+      }
+      #profileDropdown a:last-child, #profileDropdown button:last-child { border-bottom: none; }
+      #profileDropdown a:hover, #profileDropdown button:hover { background: #f6f2fe; color: #c026d3; }
+    </style>
+</head>
+<body>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="shop.html">Shop</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a href="cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <!-- Profile Circle Dropdown (hidden until logged in) -->
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
+        <div id="profileDropdown">
+          <a href="profile.html">Profile</a>
+          <a href="orders.html">Orders</a>
+          <!-- Optionally add settings or admin links here -->
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
+    </nav>
+    <div id="loginModal">
+      <div id="loginModalContent">
+        <h2 id="loginTitle">Login</h2>
+        <form id="authForm">
+          <div id="signupFields" class="hidden">
+            <input type="text" id="signupName" placeholder="Your Name" required>
+          </div>
+          <input type="email" id="emailField" placeholder="Email" required>
+          <input type="password" id="passwordField" placeholder="Password" required>
+          <button type="submit" id="loginEmailBtn">Login</button>
+          <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
+        </form>
+        <div style="margin:1em 0;">OR</div>
+        <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
+        <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
+        <div id="loginError" style="color:red;margin-top:1em;"></div>
+      </div>
+    </div>
+    <section>
+        <img src="img/logo.png" alt="Bonnie Lass Florals Logo" />
+        <h1>Bonnie Lass Florals</h1>
+        <p>Handcrafted Silk Flower Arrangements</p>
+        <button onclick="window.location='shop.html'">Shop Collections 🌸</button>
+        <button onclick="window.location='gallery.html'">View Gallery ✨</button>
+    </section>
+    <script>
+      // Cart count update
+      function updateCartCount() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        document.getElementById('cart-count').textContent = cart.length;
+      }
+      updateCartCount();
+
+      // Modal logic
+      const loginBtn = document.getElementById('loginBtn');
+      const loginModal = document.getElementById('loginModal');
+      const closeLogin = document.getElementById('closeLogin');
+      const toggleSignup = document.getElementById('toggleSignup');
+      const signupFields = document.getElementById('signupFields');
+      const loginTitle = document.getElementById('loginTitle');
+      const authForm = document.getElementById('authForm');
+      const googleLoginBtn = document.getElementById('googleLogin');
+      const loginError = document.getElementById('loginError');
+      const userInfo = document.getElementById('userInfo');
+
+      // Profile circle logic
+      const profileCircleContainer = document.getElementById('profileCircleContainer');
+      const profileCircle = document.getElementById('profileCircle');
+      const profileDropdown = document.getElementById('profileDropdown');
+      const logoutMenu = document.getElementById('logoutMenu');
+
+      let isSignup = false;
+
+      loginBtn.onclick = () => { loginModal.classList.add('active'); };
+      closeLogin.onclick = () => { loginModal.classList.remove('active'); loginError.textContent = ""; };
+      toggleSignup.onclick = () => {
+        isSignup = !isSignup;
+        signupFields.classList.toggle('hidden', !isSignup);
+        loginTitle.textContent = isSignup ? "Sign Up" : "Login";
+        toggleSignup.textContent = isSignup ? "Login instead" : "Sign up instead";
+        document.getElementById('loginEmailBtn').textContent = isSignup ? "Sign Up" : "Login";
+        loginError.textContent = "";
+      };
+
+      // Profile dropdown toggle
+      profileCircle.onclick = function(e) {
+        e.stopPropagation();
+        profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block";
+      };
+      document.body.onclick = () => profileDropdown.style.display = "none";
+
+      // Logout
+      logoutMenu.onclick = async function(e) {
+        e.preventDefault();
+        await firebase.auth().signOut();
+        profileDropdown.style.display = "none";
+        window.location.reload();
+      };
+
+      // Firebase email/password login/signup
+      authForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        loginError.textContent = "";
+        const email = document.getElementById('emailField').value;
+        const password = document.getElementById('passwordField').value;
+        const name = isSignup ? document.getElementById('signupName').value : "";
+
+        try {
+          if(isSignup) {
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+            if(name) {
+              await userCredential.user.updateProfile({ displayName: name });
+            }
+            handleLogin(userCredential.user);
+          } else {
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            handleLogin(userCredential.user);
+          }
+          loginModal.classList.remove('active');
+        } catch(err) {
+          loginError.textContent = err.message;
+        }
+      });
+
+      // Google login
+      googleLoginBtn.onclick = async function() {
+        loginError.textContent = "";
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+          const result = await firebase.auth().signInWithPopup(provider);
+          handleLogin(result.user);
+          loginModal.classList.remove('active');
+        } catch(err) {
+          loginError.textContent = err.message;
+        }
+      };
+
+      // Show user info and role, update nav
+      function handleLogin(user) {
+        // Set admin if email matches (case-insensitive)
+        const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
+        let role = admins.includes(user.email.toLowerCase()) ? "Admin" : "Customer";
+        userInfo.textContent = `Logged in as: ${user.displayName || user.email} (${role})`;
+        loginBtn.style.display = "none";
+        profileCircleContainer.style.display = "inline-block";
+        profileCircle.src = user.photoURL || "img/default-avatar.png";
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('userName', user.displayName || "");
+        localStorage.setItem('userPhoto', user.photoURL || "");
+      }
+
+      // Auth state listener
+      firebase.auth().onAuthStateChanged(function(user) {
+        if(user) handleLogin(user);
+        else {
+          loginBtn.style.display = "";
+          profileCircleContainer.style.display = "none";
+          userInfo.textContent = "";
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('userPhoto');
+        }
+      });
+    </script>
+</body>
+</html>

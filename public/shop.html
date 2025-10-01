@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shop - Bonnie Lass Florals</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
+      authDomain: "bonnie-lass-florals.firebaseapp.com",
+      projectId: "bonnie-lass-florals",
+      storageBucket: "bonnie-lass-florals.firebasestorage.app",
+      messagingSenderId: "1009091302977",
+      appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
+      measurementId: "G-DQRB98D0WY"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <style>
+    .shop-tabs {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .shop-tabs button {
+      background: #f6f2fe;
+      color: #d946ef;
+      font-weight: bold;
+      border: 2px solid #d946ef;
+      border-radius: 1rem;
+      padding: 0.7rem 2rem;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .shop-tabs button.active {
+      background: #d946ef;
+      color: #fff;
+    }
+    .shop-section {
+      display: none;
+    }
+    .shop-section.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="shop.html">Shop</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="contact.html">Contact</a>
+    <a href="cart.html" class="cart-btn">
+      🛒 Cart <span id="cart-count">0</span>
+    </a>
+  </nav>
+  <main>
+    <h1>Shop</h1>
+    <div class="shop-tabs">
+      <button id="decorTab" class="active" onclick="showShopSection('decor')">Decor</button>
+      <button id="foodTab" onclick="showShopSection('food')">Cottage Foods</button>
+    </div>
+    <section id="shop-decor" class="shop-section active">
+      <h2>Decor</h2>
+      <div id="decor-products"></div>
+    </section>
+    <section id="shop-food" class="shop-section">
+      <h2>Cottage Foods</h2>
+      <p class="disclaimer" style="color: #d946ef; font-weight: bold; margin-top:1rem;">
+        All food products sold here are homemade and produced in a kitchen that has not been inspected by the Iowa Department of Inspections and Appeals.<br>
+        <span style="font-size:0.98em; color:#d946ef;">
+          Direct-to-consumer only. <strong>Cottage food items can only be shipped to addresses within Iowa.</strong> For additional information, see
+          <a href="https://dia.iowa.gov/food-health/cottage-food" target="_blank" style="color:#a21caf;">Iowa Cottage Food Law</a>.
+        </span>
+      </p>
+      <div id="food-products"></div>
+    </section>
+  </main>
+  <script>
+    function showShopSection(type) {
+      document.getElementById('shop-decor').classList.remove('active');
+      document.getElementById('shop-food').classList.remove('active');
+      document.getElementById('decorTab').classList.remove('active');
+      document.getElementById('foodTab').classList.remove('active');
+      if (type === 'decor') {
+        document.getElementById('shop-decor').classList.add('active');
+        document.getElementById('decorTab').classList.add('active');
+      } else {
+        document.getElementById('shop-food').classList.add('active');
+        document.getElementById('foodTab').classList.add('active');
+      }
+    }
+
+    // Load products dynamically from backend
+    async function loadProducts() {
+      // UPDATED: Use full Render API URL
+      const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
+      const products = await res.json();
+      const decor = products.filter(p => p.type === 'decor');
+      const food = products.filter(p => p.type === 'food');
+      document.getElementById('decor-products').innerHTML = decor.map(productToCard).join('');
+      document.getElementById('food-products').innerHTML = food.map(productToCard).join('');
+    }
+
+    function productToCard(p) {
+      return `
+        <div class="product-card">
+          <img src="${p.image}" alt="${p.name}" class="product-img"/>
+          <div class="product-title">${p.name}</div>
+          <div class="product-price">$${p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : ''}</div>
+          <div class="product-stock">Stock: ${p.stock !== undefined ? p.stock : 'N/A'}</div>
+          ${p.options && p.options.length ? `<div><strong>Options:</strong> ${p.options.join(', ')}</div>` : ''}
+          <div class="product-desc">${p.description || ''}</div>
+          <button onclick='addToCart(${JSON.stringify({name: p.name, price: p.price, id: p._id})})'>Add to Cart</button>
+        </div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProducts);
+  </script>
+  <script src="cart.js"></script>
+</body>
+</html>
