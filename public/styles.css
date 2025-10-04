@@ -1,226 +1,306 @@
 body {
-  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(135deg, #f8b4cb 0%, #a8d5ba 50%, #c8a8d8 100%);
   margin: 0;
-  min-height: 100vh;
-  color: #333;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f5f7fa;
+  color: #222;
+}
+
+/* --- HEADER FIX: Make logo and nav side by side and centered --- */
+header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, #421e7c 0%, #6e33b7 100%);
+  color: #fff;
+  padding: 28px 0 14px 0;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(80,30,140,.06);
+  /* text-align: center; -- no longer needed with flex */
+}
+
+header .logo {
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(80,30,140,.18);
+  margin-right: 48px; /* Add space between logo and nav */
 }
 
 nav {
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 2px 12px #c8a8d833;
   display: flex;
-  justify-content: center;
   gap: 2rem;
-  padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 99;
+  margin: 0;
 }
+
 nav a {
-  color: #d946ef;
+  color: #e4d8f7;
   text-decoration: none;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: color 0.2s;
-  padding: 0.4rem 1rem;
-  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 1.05rem;
+  transition: color .25s;
 }
-nav a:hover,
-nav a.active {
-  color: #fff;
-  background: linear-gradient(90deg, #f8b4cb, #c8a8d8);
+
+nav a:hover {
+  color: #ffd86b;
+}
+
+.cta-btn {
+  background: linear-gradient(90deg, #ffd86b 0%, #ffb44d 100%);
+  color: #421e7c;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 24px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-left: 18px;
+  box-shadow: 0 2px 8px rgba(255, 216, 107, 0.14);
+  transition: background .18s;
+}
+
+.cta-btn:hover {
+  background: linear-gradient(90deg, #ffb44d 0%, #ffd86b 100%);
+}
+
+section {
+  max-width: 1100px;
+  margin: 64px auto 0 auto;
+  background: #fff;
+  border-radius: 26px;
+  box-shadow: 0 8px 40px rgba(80,30,140,.07);
+  padding: 54px 34px;
 }
 
 h1, h2, h3 {
-  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
-  color: #d946ef;
-  text-align: center;
-  margin-top: 2rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #421e7c;
+  font-weight: bold;
 }
 
-.team-photo {
-  max-width: 180px;      /* or any size you want! */
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-  display: block;
-  margin: 1rem auto;
-  box-shadow: 0 2px 12px #c8a8d833;
+h1 {
+  font-size: 2.8rem;
+  margin-bottom: 18px;
 }
 
-.color-block {
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px #c8a8d833;
-  display: inline-block;
-  margin: 0.5rem 0;
-  color: #222; /* default text color, can override per color */
+h2 {
+  font-size: 2.1rem;
+  margin-top: 32px;
+  margin-bottom: 12px;
 }
 
-/* Example color modifiers */
-.bg-white    { background: #fff; }
-.bg-pink     { background: #f8bbd0; color: #880e4f; }
-.bg-purple   { background: #d1c4e9; color: #4a148c; }
-.bg-yellow   { background: #fff9c4; color: #f57c00; }
-.bg-green    { background: #c8e6c9; color: #1b5e20; }
-.bg-blue     { background: #bbdefb; color: #0d47a1; }
-.bg-gray     { background: #f5f5f5; color: #333; }
-
-section, main {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 1.2rem;
-  box-shadow: 0 2px 12px #d946ef33;
+h3 {
+  font-size: 1.35rem;
+  margin-top: 22px;
+  margin-bottom: 8px;
 }
 
-button, input[type="submit"] {
-  background: #d946ef;
-  color: #fff;
-  border: none;
-  border-radius: 0.7rem;
-  padding: 0.7rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  margin-top: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-button:hover, input[type="submit"]:hover {
-  background: #c026d3;
+p {
+  font-size: 1.12rem;
+  line-height: 1.6;
+  color: #444;
 }
 
-input, textarea {
-  width: 100%;
-  padding: 0.7rem;
-  border-radius: 0.5rem;
-  border: 1px solid #ddd;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-.product-card, .gallery-card {
-  background: #f6f2fe;
-  border-radius: 1rem;
-  box-shadow: 0 1px 8px #c8a8d844;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+.features {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: box-shadow 0.2s;
-}
-.product-card:hover, .gallery-card:hover {
-  box-shadow: 0 4px 16px #d946ef44;
-}
-.product-img, .gallery-img {
-  width: 160px; height: 160px; object-fit: cover;
-  border-radius: 0.7rem;
-  background: #eee; margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 26px;
+  margin-top: 34px;
 }
 
-.product-title, .gallery-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #d946ef;
+.feature-card {
+  flex: 1 1 270px;
+  background: linear-gradient(90deg, #6e33b7 0%, #421e7c 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 22px 18px;
+  box-shadow: 0 2px 12px rgba(80,30,140,.10);
+  transition: transform .13s;
+  min-width: 220px;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px) scale(1.03);
+}
+
+.feature-card i {
+  font-size: 2.1rem;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 28px;
+  margin-top: 32px;
+}
+
+.gallery-item {
+  background: #f5f0ff;
+  border: 1px solid #e4d8f7;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(80,30,140,.08);
+  transition: box-shadow .18s;
+}
+
+.gallery-item:hover {
+  box-shadow: 0 8px 32px rgba(110,51,183,.13);
+}
+
+.gallery-item img, .gallery-item video {
+  width: 100%;
+  display: block;
+  border-bottom: 1px solid #e4d8f7;
+}
+
+.gallery-item .caption {
+  padding: 14px 14px 16px 14px;
+  font-size: 1rem;
+  color: #421e7c;
+  font-weight: 500;
+}
+
+.pricing-table {
+  display: flex;
+  gap: 18px;
+  margin: 34px 0 0 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pricing-card {
+  background: #fff;
+  border: 2px solid #e4d8f7;
+  border-radius: 22px;
+  box-shadow: 0 2px 14px rgba(110,51,183,.09);
+  padding: 32px 28px;
+  flex: 1 1 220px;
+  max-width: 330px;
+  min-width: 200px;
   text-align: center;
-  margin-bottom: 0.7rem;
-}
-.product-price {
-  color: #f472b6;
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
+  transition: border .18s, box-shadow .16s;
 }
 
-@media (max-width: 700px) {
-  section, main {
-    padding: 1rem;
+.pricing-card.highlight {
+  border: 2.5px solid #ffd86b;
+  box-shadow: 0 6px 28px rgba(255, 216, 107, 0.13);
+}
+
+.pricing-card h3 {
+  color: #6e33b7;
+  font-size: 1.38rem;
+  margin-bottom: 12px;
+}
+
+.pricing-card .price {
+  font-size: 2.2rem;
+  color: #421e7c;
+  font-weight: bold;
+  margin: 18px 0 16px 0;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+  color: #444;
+  text-align: left;
+  font-size: 1.09rem;
+}
+
+.pricing-card ul li {
+  margin: 12px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.pricing-card ul li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #ffd86b;
+  font-size: 1.2em;
+}
+
+.pricing-card .plan-btn {
+  background: linear-gradient(90deg, #ffd86b 0%, #ffb44d 100%);
+  color: #421e7c;
+  border: none;
+  border-radius: 18px;
+  padding: 10px 0;
+  width: 100%;
+  font-weight: bold;
+  font-size: 1.09rem;
+  cursor: pointer;
+  transition: background .16s;
+}
+
+.pricing-card .plan-btn:hover {
+  background: linear-gradient(90deg, #ffb44d 0%, #ffd86b 100%);
+}
+
+footer {
+  background: #421e7c;
+  color: #fff;
+  text-align: center;
+  padding: 29px 0 22px 0;
+  margin-top: 90px;
+  border-radius: 24px 24px 0 0;
+  font-size: 1.08rem;
+  letter-spacing: .2px;
+  box-shadow: 0 -2px 13px rgba(80,30,140,.10);
+}
+
+footer a {
+  color: #ffd86b;
+  text-decoration: underline;
+}
+
+@media (max-width: 800px) {
+  section {
+    padding: 18px 6vw;
+    margin-top: 36px;
+  }
+  header {
+    flex-direction: column;
+    padding: 20px 0 6px 0;
+  }
+  header .logo {
+    margin-right: 0;
+    margin-bottom: 18px;
+  }
+  .features, .pricing-table {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
   nav {
     gap: 1rem;
-    font-size: 0.95rem;
-    flex-wrap: wrap;
-  }
-  .product-img, .gallery-img {
-    width: 100px; height: 100px;
   }
 }
 
-/* Add this section to your CSS file for Instagram gallery sizing */
-.instagram-gallery {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.instagram-gallery .instagram-media {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  display: block !important;
-}
-
-@media (max-width: 700px) {
-  section, main {
-    padding: 0.5rem !important;
-    margin: 0.5rem auto !important;
-    border-radius: 0.7rem !important;
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  section {
+    padding: 10px 2vw;
   }
   nav {
-    gap: 0.5rem !important;
-    font-size: 0.95rem !important;
-    flex-wrap: wrap !important;
-    padding: 0.5rem 0 !important;
-  }
-  nav a, nav .cart-btn {
-    padding: 0.4rem 0.7rem !important;
-    font-size: 1rem !important;
-    border-radius: 0.5rem !important;
-    display: inline-block !important;
-  }
-  h1, h2, h3 {
-    font-size: 1.3rem !important;
-    margin-top: 1rem !important;
-  }
-  .product-img, .gallery-img, .team-photo {
-    width: 100px !important;
-    height: 100px !important;
-    object-fit: cover !important;
-    margin-bottom: 0.5rem !important;
-  }
-  .product-card, .gallery-card, .color-block {
-    padding: 1rem !important;
-    margin-bottom: 1rem !important;
-    border-radius: 0.7rem !important;
-  }
-  input, textarea, select, button {
-    font-size: 1.1rem !important;
-    padding: 0.6rem !important;
-  }
-  .shop-tabs {
-    flex-direction: column !important;
-    gap: 0.5rem !important;
-    align-items: stretch !important;
-    margin-bottom: 1rem !important;
-  }
-  .shop-tabs button {
-    width: 100% !important;
-    font-size: 1.1rem !important;
-    padding: 0.7rem !important;
-  }
-  .cart-btn span {
-    font-size: 1rem !important;
-    padding-left: 0.2em !important;
-  }
-  /* Instagram gallery sizing */
-  .instagram-gallery .instagram-media {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    display: block !important;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
