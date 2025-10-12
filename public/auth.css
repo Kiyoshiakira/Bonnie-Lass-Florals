@@ -22,7 +22,7 @@
   background: #fff;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 12px #d946ef44;
+  box-shadow: 0 2px 12px #60a5fa33;
   min-width: 300px;
   max-width: 90vw;
 }
@@ -44,7 +44,7 @@
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
-  border: 2px solid #d946ef;
+  border: 2px solid #60a5fa;
   background: #fff;
 }
 
@@ -55,10 +55,11 @@
   right: 0;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 12px #d946ef88;
+  box-shadow: 0 2px 12px #60a5fa33;
   min-width: 200px;
   z-index: 999;
   text-align: left;
+  border: 1.5px solid #60a5fa;
 }
 
 #profileDropdown a,
@@ -67,7 +68,7 @@
   width: 100%;
   padding: 0.8em 1.2em;
   border-bottom: 1px solid #eee;
-  color: #d946ef;
+  color: #2563eb;
   text-decoration: none;
   background: none;
   text-align: left;
@@ -75,6 +76,8 @@
   cursor: pointer;
   border: none;
   outline: none;
+  border-radius: 0.7em;
+  transition: background 0.18s, color 0.18s;
 }
 
 #profileDropdown a:last-child,
@@ -84,10 +87,12 @@
 
 #profileDropdown a:hover,
 #profileDropdown button:hover {
-  background: #f6f2fe;
-  color: #c026d3;
+  background: #e0f2fe;
+  color: #2563eb;
 }
 
 #userInfoDropdown {
   border-bottom: 1px solid #eee;
+  color: #60a5fa;
+  background: #f1f5f9;
 }
