@@ -51,27 +51,30 @@
   </style>
 </head>
 <body>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="shop.html">Shop</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="contact.html">Contact</a>
-    <a href="cart.html" class="cart-btn">
-      🛒 Cart <span id="cart-count">0</span>
-    </a>
-    <!-- Profile Circle Dropdown (hidden until logged in) -->
-    <div id="profileCircleContainer">
-      <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
-      <div id="profileDropdown">
-        <div id="userInfoDropdown"></div>
-        <a href="profile.html">Profile</a>
-        <a href="orders.html">Orders</a>
-        <button id="logoutMenu">Logout</button>
-      </div>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
     </div>
-    <a id="loginBtn" href="#">Login</a>
-  </nav>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="shop.html">Shop</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a href="cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
+        <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
+          <a href="profile.html">Profile</a>
+          <a href="orders.html">Orders</a>
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
+    </nav>
+  </header>
   <div id="loginModal">
     <div id="loginModalContent">
       <h2 id="loginTitle">Login</h2>
@@ -90,17 +93,17 @@
       <div id="loginError" style="color:red;margin-top:1em;"></div>
     </div>
   </div>
-  <main>
+  <section>
     <h1>Shop</h1>
     <div class="shop-tabs">
       <button id="decorTab" class="active" onclick="showShopSection('decor')">Decor</button>
       <button id="foodTab" onclick="showShopSection('food')">Cottage Foods</button>
     </div>
-    <section id="shop-decor" class="shop-section active">
+    <div id="shop-decor" class="shop-section active">
       <h2>Decor</h2>
       <div id="decor-products"></div>
-    </section>
-    <section id="shop-food" class="shop-section">
+    </div>
+    <div id="shop-food" class="shop-section">
       <h2>Cottage Foods</h2>
       <p class="disclaimer" style="color: #d946ef; font-weight: bold; margin-top:1rem;">
         All food products sold here are homemade and produced in a kitchen that has not been inspected by the Iowa Department of Inspections and Appeals.<br>
@@ -110,9 +113,10 @@
         </span>
       </p>
       <div id="food-products"></div>
-    </section>
-  </main>
+    </div>
+  </section>
   <script>
+    // Expose showShopSection for tab switching
     function showShopSection(type) {
       document.getElementById('shop-decor').classList.remove('active');
       document.getElementById('shop-food').classList.remove('active');
@@ -129,7 +133,6 @@
 
     // Load products dynamically from backend
     async function loadProducts() {
-      // UPDATED: Use full Render API URL
       const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
       const products = await res.json();
       const decor = products.filter(p => p.type === 'decor');
@@ -153,6 +156,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadProducts);
+    window.showShopSection = showShopSection;
   </script>
   <script src="cart.js"></script>
   <script src="auth.js"></script>
