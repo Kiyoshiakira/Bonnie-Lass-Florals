@@ -347,8 +347,11 @@ footer a {
   align-items: center;
   justify-content: center;
 }
-#loginModal:not(.hidden) {
+#loginModal.active {
   display: flex;
+}
+.hidden {
+  display: none !important;
 }
 #loginModalContent {
   background: #fff;
