@@ -146,7 +146,7 @@
       }
 
       if (loginBtn) loginBtn.style.display = "none";
-      if (profileCircleContainer) profileCircleContainer.style.display = "inline-block";
+      if (profileCircleContainer) profileCircleContainer.style.display = "flex";
       if (profileCircle) profileCircle.src = user.photoURL || "img/default-avatar.png";
       
       // Store user info in localStorage
