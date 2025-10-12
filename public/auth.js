@@ -19,6 +19,7 @@
     const profileDropdown = document.getElementById('profileDropdown');
     const logoutMenu = document.getElementById('logoutMenu');
     const userInfoDropdown = document.getElementById('userInfoDropdown');
+    const uploadProductLink = document.getElementById('uploadProductLink'); // NEW: for admin upload link
 
     let isSignup = false;
 
@@ -135,6 +136,15 @@
         `;
       }
 
+      // Show Upload Product link for admins only
+      if (uploadProductLink) {
+        if (role === "Admin") {
+          uploadProductLink.style.display = "";
+        } else {
+          uploadProductLink.style.display = "none";
+        }
+      }
+
       if (loginBtn) loginBtn.style.display = "none";
       if (profileCircleContainer) profileCircleContainer.style.display = "inline-block";
       if (profileCircle) profileCircle.src = user.photoURL || "img/default-avatar.png";
@@ -151,6 +161,7 @@
       if (loginBtn) loginBtn.style.display = "";
       if (profileCircleContainer) profileCircleContainer.style.display = "none";
       if (userInfoDropdown) userInfoDropdown.innerHTML = "";
+      if (uploadProductLink) uploadProductLink.style.display = "none";
       
       // Clear localStorage
       localStorage.removeItem('userRole');
