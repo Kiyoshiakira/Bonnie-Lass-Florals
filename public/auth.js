@@ -125,13 +125,13 @@
       const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
       let role = admins.includes(user.email.toLowerCase()) ? "Admin" : "Customer";
       
-      // Update user info in dropdown
+      // Update user info in dropdown (ALL BLUE NOW)
       if (userInfoDropdown) {
         userInfoDropdown.innerHTML = `
           <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
-            <div style="font-weight: bold; color: #d946ef;">${user.displayName || user.email}</div>
+            <div style="font-weight: bold; color: #2563eb;">${user.displayName || user.email}</div>
             <div style="font-size: 0.85em; color: #666;">${user.email}</div>
-            <div style="font-size: 0.85em; color: #d946ef; margin-top: 0.3em;">Role: ${role}</div>
+            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${role}</div>
           </div>
         `;
       }
