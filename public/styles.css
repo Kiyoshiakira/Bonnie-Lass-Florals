@@ -302,5 +302,179 @@ footer a {
   nav {
     flex-direction: column;
     gap: 0.5rem;
-  }
+
+    /* --- Profile Circle and Dropdown in Nav --- */
+#profileCircleContainer {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
 }
+#profileCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #d946ef;
+  object-fit: cover;
+  background: #fff;
+  margin-right: 0.5em;
+}
+#profileDropdown {
+  display: none;
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background: #fff;
+  color: #421e7c;
+  min-width: 180px;
+  border-radius: 1em;
+  box-shadow: 0 4px 24px rgba(110,51,183,0.11);
+  z-index: 100;
+  padding: 0.8em 0.5em;
+}
+#profileCircleContainer.active #profileDropdown {
+  display: block;
+}
+#profileDropdown a,
+#profileDropdown button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #421e7c;
+  text-align: left;
+  padding: 0.7em 1.1em;
+  font-size: 1em;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 0.7em;
+  transition: background 0.18s;
+}
+#profileDropdown a:hover,
+#profileDropdown button:hover {
+  background: #f6f2fe;
+}
+#userInfoDropdown {
+  font-size: 0.96em;
+  color: #d946ef;
+  padding: 0.7em 1em 0.7em 1.1em;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.4em;
+}
+
+/* Login button style */
+#loginBtn {
+  margin-left: 0.7em;
+  background: #d946ef;
+  color: #fff;
+  border-radius: 1em;
+  padding: 0.44em 1.2em;
+  font-weight: bold;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#loginBtn:hover {
+  background: #a21caf;
+}
+
+/* --- Login Modal --- */
+#loginModal {
+  display: none;
+  position: fixed;
+  z-index: 200;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(66,30,124,0.18);
+  align-items: center;
+  justify-content: center;
+}
+#loginModal:not(.hidden) {
+  display: flex;
+}
+#loginModalContent {
+  background: #fff;
+  padding: 2.5em 2em 2em 2em;
+  border-radius: 1.2em;
+  min-width: 320px;
+  max-width: 95vw;
+  box-shadow: 0 8px 38px rgba(110,51,183,0.15);
+}
+#loginModalContent input,
+#loginModalContent button {
+  width: 100%;
+  margin-bottom: 1em;
+  font-size: 1.09em;
+  padding: 0.7em 0.6em;
+  border-radius: 0.7em;
+  border: 1px solid #d946ef;
+}
+#loginModalContent button {
+  background: #d946ef;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  transition: background 0.18s;
+}
+#loginModalContent button:hover {
+  background: #a21caf;
+}
+
+/* --- Product Cards (shop) --- */
+.product-card {
+  background: #fff;
+  border: 2px solid #e4d8f7;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(110,51,183,0.10);
+  padding: 1.2em 1.4em 1.4em 1.4em;
+  margin: 1.2em 0;
+  max-width: 340px;
+  display: inline-block;
+  vertical-align: top;
+  text-align: left;
+  margin-right: 1.1em;
+}
+.product-img {
+  width: 100%;
+  max-width: 270px;
+  height: auto;
+  border-radius: 1em;
+  margin-bottom: 1em;
+}
+.product-title {
+  font-weight: bold;
+  color: #421e7c;
+  font-size: 1.15em;
+  margin-bottom: 0.3em;
+}
+.product-price {
+  color: #d946ef;
+  font-weight: bold;
+  font-size: 1.05em;
+  margin-bottom: 0.3em;
+}
+.product-stock {
+  font-size: 0.97em;
+  color: #888;
+  margin-bottom: 0.2em;
+}
+.product-desc {
+  color: #444;
+  margin-bottom: 0.7em;
+}
+.product-card button {
+  background: #d946ef;
+  color: #fff;
+  border: none;
+  border-radius: 0.7em;
+  padding: 0.6em 1.6em;
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+.product-card button:hover {
+  background: #a21caf;
+  }
+          
