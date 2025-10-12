@@ -37,8 +37,17 @@
       <a href="../gallery.html">Gallery</a>
       <a href="../contact.html">Contact</a>
       <a href="../cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
-      <a href="../profile.html">Profile</a>
-      <a href="upload.html" style="background: #d946ef; color: #fff; border-radius: 0.5em; padding: 0.5em 1em;">Upload</a>
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="../img/default-avatar.png" alt="Profile" />
+        <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
+          <a href="../profile.html">Profile</a>
+          <a href="../orders.html">Orders</a>
+          <a id="uploadProductLink" href="upload.html" style="display:none;">Upload Product</a>
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
     </nav>
   </header>
   <div id="loginModal">
