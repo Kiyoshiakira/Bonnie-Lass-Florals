@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Use relative path for CSS since we're in /public/admin/ -->
   <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../auth.css">
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
@@ -24,17 +25,41 @@
   </script>
 </head>
 <body>
-  <nav>
-    <a href="../index.html">Home</a>
-    <a href="../about.html">About</a>
-    <a href="../shop.html">Shop</a>
-    <a href="../gallery.html">Gallery</a>
-    <a href="../contact.html">Contact</a>
-    <a href="../cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
-    <a href="../profile.html">Profile</a>
-    <a href="upload.html" style="background: #d946ef; color: #fff; border-radius: 0.5em; padding: 0.5em 1em;">Upload</a>
-  </nav>
-  <main>
+  <header>
+    <div class="logo">
+      <img src="../img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
+    </div>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../shop.html">Shop</a>
+      <a href="../gallery.html">Gallery</a>
+      <a href="../contact.html">Contact</a>
+      <a href="../cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <a href="../profile.html">Profile</a>
+      <a href="upload.html" style="background: #d946ef; color: #fff; border-radius: 0.5em; padding: 0.5em 1em;">Upload</a>
+    </nav>
+  </header>
+  <div id="loginModal">
+    <div id="loginModalContent">
+      <h2 id="loginTitle">Login</h2>
+      <form id="authForm">
+        <div id="signupFields" class="hidden">
+          <input type="text" id="signupName" placeholder="Your Name" required>
+        </div>
+        <input type="email" id="emailField" placeholder="Email" required>
+        <input type="password" id="passwordField" placeholder="Password" required>
+        <button type="submit" id="loginEmailBtn">Login</button>
+        <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
+      </form>
+      <div style="margin:1em 0;">OR</div>
+      <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
+      <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
+      <div id="loginError" style="color:red;margin-top:1em;"></div>
+    </div>
+  </div>
+  <section>
     <h1>Upload New Product</h1>
     <form id="uploadForm" enctype="multipart/form-data">
       <label for="name">Product Name</label>
@@ -68,7 +93,7 @@
     </form>
     <div id="upload-success" style="color:green;display:none;margin-top:1rem;">Product uploaded successfully!</div>
     <div id="upload-error" style="color:red;display:none;margin-top:1rem;"></div>
-  </main>
+  </section>
   <script>
     // Cart count
     function updateCartCount() {
@@ -112,5 +137,6 @@
       }
     });
   </script>
+  <script src="../auth.js"></script>
 </body>
 </html>
