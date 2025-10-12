@@ -72,20 +72,32 @@
   <section>
     <h1>Checkout</h1>
     <div id="cart-summary"></div>
-    <form id="shippingForm">
-      <label for="name">Full Name</label>
-      <input type="text" name="name" required>
-      <label for="street">Street Address</label>
-      <input type="text" name="street" required>
-      <label for="city">City</label>
-      <input type="text" name="city" required>
-      <label for="state">State</label>
-      <input type="text" name="state" required>
-      <label for="zip">ZIP Code</label>
-      <input type="text" name="zip" required>
-      <label for="country">Country</label>
-      <input type="text" name="country" required>
-      <div>
+    <form id="shippingForm" class="checkout-form">
+      <div class="form-row">
+        <label for="name">Full Name</label>
+        <input type="text" name="name" required>
+      </div>
+      <div class="form-row">
+        <label for="street">Street Address</label>
+        <input type="text" name="street" required>
+      </div>
+      <div class="form-row">
+        <label for="city">City</label>
+        <input type="text" name="city" required>
+      </div>
+      <div class="form-row">
+        <label for="state">State</label>
+        <input type="text" name="state" required>
+      </div>
+      <div class="form-row">
+        <label for="zip">ZIP Code</label>
+        <input type="text" name="zip" required>
+      </div>
+      <div class="form-row">
+        <label for="country">Country</label>
+        <input type="text" name="country" required>
+      </div>
+      <div class="form-row">
         <strong>Payment Method:</strong><br>
         <label><input type="radio" name="paymentMethod" value="square" checked> Credit/Debit Card (Square)</label>
       </div>
