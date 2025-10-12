@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All Orders | Bonnie Lass Florals Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../auth.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
+      authDomain: "bonnie-lass-florals.firebaseapp.com",
+      projectId: "bonnie-lass-florals",
+      storageBucket: "bonnie-lass-florals.firebasestorage.app",
+      messagingSenderId: "1009091302977",
+      appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
+      measurementId: "G-DQRB98D0WY"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="../img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
+    </div>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../shop.html">Shop</a>
+      <a href="../gallery.html">Gallery</a>
+      <a href="../contact.html">Contact</a>
+      <a href="../cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="../img/default-avatar.png" alt="Profile" />
+        <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
+          <a href="../profile.html">Profile</a>
+          <a href="../orders.html">Orders</a>
+          <a id="uploadProductLink" href="upload.html" style="display:none;">Upload Product</a>
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
+    </nav>
+  </header>
+  <div id="loginModal">
+    <div id="loginModalContent">
+      <h2 id="loginTitle">Login</h2>
+      <form id="authForm">
+        <div id="signupFields" class="hidden">
+          <input type="text" id="signupName" placeholder="Your Name" required>
+        </div>
+        <input type="email" id="emailField" placeholder="Email" required>
+        <input type="password" id="passwordField" placeholder="Password" required>
+        <button type="submit" id="loginEmailBtn">Login</button>
+        <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
+      </form>
+      <div style="margin:1em 0;">OR</div>
+      <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
+      <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
+      <div id="loginError" style="color:red;margin-top:1em;"></div>
+    </div>
+  </div>
+  <section>
+    <h1>All Orders (Admin)</h1>
+    <div id="adminOrders"></div>
+    <div id="notAdminMsg" style="display:none; color:#d946ef; text-align:center; margin-top:2em;">
+      <b>You must be an admin to view all orders.</b>
+    </div>
+  </section>
+  <script src="../auth.js"></script>
+  <script>
+    // Cart count for nav
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      document.querySelectorAll('.cart-btn span').forEach(el => el.textContent = cart.length);
+    }
+    updateCartCount();
+
+    const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
+
+    // Wait for Firebase auth to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      firebase.auth().onAuthStateChanged(async function(user) {
+        if (user && admins.includes(user.email.toLowerCase())) {
+          document.getElementById('notAdminMsg').style.display = 'none';
+          fetchAndShowOrders(await user.getIdToken());
+        } else {
+          document.getElementById('adminOrders').innerHTML = '';
+          document.getElementById('notAdminMsg').style.display = '';
+        }
+      });
+    });
+
+    async function fetchAndShowOrders(token) {
+      const container = document.getElementById('adminOrders');
+      container.innerHTML = "Loading orders...";
+      try {
+        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/orders', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (!res.ok) {
+          container.innerHTML = "<div style='color:red'>Could not fetch orders (forbidden or error).</div>";
+          return;
+        }
+        const orders = await res.json();
+        if (!orders.length) {
+          container.innerHTML = "<div>No orders yet.</div>";
+          return;
+        }
+        container.innerHTML = orders.map(orderToHtml).join("");
+      } catch (err) {
+        container.innerHTML = "<div style='color:red'>Failed to load orders.</div>";
+      }
+    }
+
+    function orderToHtml(order) {
+      const date = new Date(order.createdAt).toLocaleString();
+      const total = order.total ? `$${Number(order.total).toFixed(2)}` : "";
+      const status = order.status || "Processing";
+      const txid = order.payment && order.payment.transactionId ? order.payment.transactionId : "N/A";
+      const items = (order.items || []).map(item =>
+        `<li>${item.quantity} × <span style="font-weight:bold">${item.product && item.product.name ? item.product.name : item.product || "Product"}</span></li>`
+      ).join("");
+      const shipping = order.shippingAddress ? `
+        <div>
+          <strong>Ship To:</strong><br>
+          ${order.shippingAddress.name}<br>
+          ${order.shippingAddress.street}<br>
+          ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zip}<br>
+          ${order.shippingAddress.country}
+        </div>` : "";
+      return `
+        <div class="order-card" style="margin:1.8em 0;padding:1.2em 0;border-bottom:1px solid #eee;">
+          <div><strong>Order ID:</strong> ${order._id}</div>
+          <div><strong>Date:</strong> ${date}</div>
+          <div><strong>Total:</strong> ${total}</div>
+          <div><strong>Status:</strong> ${status}</div>
+          <div><strong>Transaction ID:</strong> ${txid}</div>
+          ${shipping}
+          <div style="margin-top:0.5em;"><strong>Items:</strong></div>
+          <ul>${items}</ul>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
