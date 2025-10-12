@@ -128,7 +128,7 @@
       formData.append("image", document.getElementById('image').files[0]);
 
       try {
-        const res = await fetch('/api/products', {
+         const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products', {
           method: 'POST',
           body: formData
         });
