@@ -394,19 +394,78 @@ footer a {
   background: #a21caf;
 }
 
+/* ------------------------------ CONTACT FORM ------------------------------ */
+#contactForm {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#contactForm label {
+  display: block;
+  font-weight: 600;
+  color: #421e7c;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+#contactForm input,
+#contactForm textarea {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #e4d8f7;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: border-color 0.2s;
+}
+
+#contactForm input:focus,
+#contactForm textarea:focus {
+  outline: none;
+  border-color: #d946ef;
+}
+
+#contactForm button {
+  display: block;
+  width: 100%;
+  margin-top: 1.5rem;
+  background: #d946ef;
+  color: #fff;
+  border: none;
+  border-radius: 0.7em;
+  padding: 0.9em 1.6em;
+  font-weight: bold;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#contactForm button:hover {
+  background: #a21caf;
+}
+
 /* ------------------------------ PRODUCT CARDS (SHOP) ------------------------------ */
+#decor-products,
+#food-products {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
 .product-card {
   background: #fff;
   border: 2px solid #e4d8f7;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(110,51,183,0.10);
   padding: 1.2em 1.4em 1.4em 1.4em;
-  margin: 1.2em 0;
   max-width: 340px;
-  display: inline-block;
-  vertical-align: top;
+  flex: 0 1 340px;
   text-align: left;
-  margin-right: 1.1em;
 }
 .product-img {
   width: 100%;
@@ -451,6 +510,21 @@ footer a {
   background: #a21caf;
 }
 
+/* ------------------------------ INSTAGRAM GALLERY ------------------------------ */
+.instagram-gallery {
+  margin-top: 2rem;
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.instagram-media {
+  min-width: 90% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
 /* ------------------------------ MEDIA QUERIES ------------------------------ */
 @media (max-width: 800px) {
   section {
@@ -476,6 +550,13 @@ footer a {
   nav {
     gap: 1rem;
   }
+  #contactForm {
+    max-width: 100%;
+  }
+  .product-card {
+    flex: 0 1 100%;
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -495,5 +576,11 @@ footer a {
   nav {
     flex-direction: column;
     gap: 0.5rem;
+  }
+  .instagram-gallery {
+    min-height: 400px;
+  }
+  .instagram-media {
+    min-width: 100% !important;
   }
 }
