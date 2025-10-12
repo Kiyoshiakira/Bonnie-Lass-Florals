@@ -16,7 +16,6 @@ header {
   padding: 28px 0 14px 0;
   position: relative;
   box-shadow: 0 2px 8px rgba(80,30,140,.06);
-  /* text-align: center; -- no longer needed with flex */
 }
 
 header .logo {
@@ -25,7 +24,7 @@ header .logo {
   letter-spacing: 1.5px;
   color: #fff;
   text-shadow: 0 2px 8px rgba(80,30,140,.18);
-  margin-right: 48px; /* Add space between logo and nav */
+  margin-right: 48px;
 }
 
 nav {
@@ -71,6 +70,10 @@ section {
   border-radius: 26px;
   box-shadow: 0 8px 40px rgba(80,30,140,.07);
   padding: 54px 34px;
+}
+
+section h1 {
+  text-align: center;
 }
 
 h1, h2, h3 {
@@ -128,6 +131,16 @@ p {
   font-size: 2.1rem;
   margin-bottom: 15px;
   display: block;
+}
+
+/* HIGH CONTRAST FOR FEATURE CARDS */
+.feature-card,
+.feature-card strong,
+.feature-card p,
+.feature-card h1,
+.feature-card h2,
+.feature-card h3 {
+  color: #fff !important;
 }
 
 .gallery-grid {
@@ -257,18 +270,6 @@ footer {
 footer a {
   color: #ffd86b;
   text-decoration: underline;
-}
-
-/* ...existing styles... */
-
-/* HIGH CONTRAST FOR FEATURE CARDS */
-.feature-card,
-.feature-card strong,
-.feature-card p,
-.feature-card h1,
-.feature-card h2,
-.feature-card h3 {
-  color: #fff !important;
 }
 
 /* ------------------------------ NAV & DROPDOWN PROFILE ------------------------------ */
