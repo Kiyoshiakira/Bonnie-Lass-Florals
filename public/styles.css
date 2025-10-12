@@ -599,6 +599,67 @@ footer a {
   margin-top: 1em;
 }
 
+/* ------------------------------ CHECKOUT FORM PATCH ------------------------------ */
+.checkout-form {
+  max-width: 450px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5em;
+}
+
+.checkout-form label {
+  font-weight: 600;
+  margin-bottom: 0.2em;
+}
+
+.checkout-form input[type="text"],
+.checkout-form input[type="email"],
+.checkout-form input[type="password"] {
+  padding: 0.7em;
+  border: 1.5px solid #e4d8f7;
+  border-radius: 7px;
+  font-size: 1em;
+  background: #fff;
+}
+
+.checkout-form input:focus {
+  border-color: #d946ef;
+  outline: none;
+}
+
+/* ------------------------------ CART SUMMARY TABLE ------------------------------ */
+#cart-summary {
+  margin-bottom: 2em;
+}
+#cart-summary table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+#cart-summary th, #cart-summary td {
+  padding: 6px 3px;
+  border-bottom: 1px solid #e4d8f7;
+  font-size: 1.04em;
+}
+#cart-summary th {
+  background: #f6f2fe;
+  color: #6e33b7;
+  font-weight: bold;
+}
+#cart-summary tfoot td {
+  background: #fffbe7;
+  color: #d946ef;
+  font-weight: bold;
+  font-size: 1.08em;
+}
+
 /* ------------------------------ MEDIA QUERIES ------------------------------ */
 @media (max-width: 800px) {
   section {
@@ -658,6 +719,10 @@ footer a {
     min-width: 100% !important;
   }
   #uploadForm {
+    max-width: 98vw;
+    padding: 1em 1vw 1em 1vw;
+  }
+  .checkout-form {
     max-width: 98vw;
     padding: 1em 1vw 1em 1vw;
   }
