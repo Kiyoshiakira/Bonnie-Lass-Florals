@@ -19,7 +19,8 @@
     const profileDropdown = document.getElementById('profileDropdown');
     const logoutMenu = document.getElementById('logoutMenu');
     const userInfoDropdown = document.getElementById('userInfoDropdown');
-    const uploadProductLink = document.getElementById('uploadProductLink'); // NEW: for admin upload link
+    const uploadProductLink = document.getElementById('uploadProductLink'); // for admin upload link
+    const adminOrdersLink = document.getElementById('adminOrdersLink'); // for admin all orders link
 
     let isSignup = false;
 
@@ -125,7 +126,7 @@
       const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
       let role = admins.includes(user.email.toLowerCase()) ? "Admin" : "Customer";
       
-      // Update user info in dropdown (ALL BLUE NOW)
+      // Update user info in dropdown
       if (userInfoDropdown) {
         userInfoDropdown.innerHTML = `
           <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
@@ -136,13 +137,12 @@
         `;
       }
 
-      // Show Upload Product link for admins only
+      // Show admin-only links for admins only
       if (uploadProductLink) {
-        if (role === "Admin") {
-          uploadProductLink.style.display = "";
-        } else {
-          uploadProductLink.style.display = "none";
-        }
+        uploadProductLink.style.display = role === "Admin" ? "" : "none";
+      }
+      if (adminOrdersLink) {
+        adminOrdersLink.style.display = role === "Admin" ? "" : "none";
       }
 
       if (loginBtn) loginBtn.style.display = "none";
@@ -162,6 +162,7 @@
       if (profileCircleContainer) profileCircleContainer.style.display = "none";
       if (userInfoDropdown) userInfoDropdown.innerHTML = "";
       if (uploadProductLink) uploadProductLink.style.display = "none";
+      if (adminOrdersLink) adminOrdersLink.style.display = "none";
       
       // Clear localStorage
       localStorage.removeItem('userRole');

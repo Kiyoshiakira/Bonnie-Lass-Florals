@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Your Profile - Bonnie Lass Florals</title>
+  <title>My Orders - Bonnie Lass Florals</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="auth.css">
@@ -68,18 +68,10 @@
     </div>
   </div>
   <section>
-    <h1>Your Profile</h1>
-    <div id="profileInfo" style="display:none; text-align:center;">
-      <img id="profilePhoto" src="img/default-avatar.png" alt="Profile Photo" style="width:90px; height:90px; border-radius:50%; margin-bottom:1em;">
-      <div id="profileName" style="font-size:1.2em; font-weight:bold;"></div>
-      <div id="profileEmail" style="color:#d946ef; margin-bottom:0.7em;"></div>
-      <div>
-        <span style="font-weight:bold;">Role:</span> <span id="profileRole"></span>
-      </div>
-    </div>
+    <h1>My Orders</h1>
     <div id="orderHistory"></div>
     <div id="guestPrompt" style="display:none; text-align:center; color:#d946ef; margin-top:2em;">
-      <p><strong>Please <a href="#" onclick="window.location='index.html'">log in</a> to see your profile and order history.</strong></p>
+      <p><strong>Please <a href="#" onclick="document.getElementById('loginBtn').click(); return false;">log in</a> to view your order history.</strong></p>
     </div>
   </section>
   <script>
