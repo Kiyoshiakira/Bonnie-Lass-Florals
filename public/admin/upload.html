@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Admin Upload | Bonnie Lass Florals</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Use relative path for CSS since we're in /public/admin/ -->
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="../auth.css">
   <!-- Firebase SDKs -->
@@ -17,7 +16,7 @@
       apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
       authDomain: "bonnie-lass-florals.firebaseapp.com",
       projectId: "bonnie-lass-florals",
-      storageBucket: "bonnie-lass-florals.firebasestorage.app",
+      storageBucket: "bonnie-lass-florals.appspot.com",
       messagingSenderId: "1009091302977",
       appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
       measurementId: "G-DQRB98D0WY"
@@ -101,7 +100,10 @@
 
       <button type="submit">Upload Product</button>
     </form>
-    <div id="upload-success" style="color:green;display:none;margin-top:1rem;">Product uploaded successfully!</div>
+    <div id="upload-success" style="color:green;display:none;margin-top:1rem;">
+      Product uploaded successfully!
+      <button type="button" id="uploadAnotherBtn" style="margin-left:1em; display:none;">Upload Another</button>
+    </div>
     <div id="upload-error" style="color:red;display:none;margin-top:1rem;"></div>
   </section>
   <script>
@@ -112,11 +114,54 @@
     }
     updateCartCount();
 
+    // --- DRAFT RESTORE FOR ADMIN UPLOAD FORM ---
+    const UPLOAD_FORM_KEY = 'adminUploadFormDraft';
+
+    // Save form values on change
+    function saveUploadDraft() {
+      const data = {
+        name: document.getElementById('name').value,
+        description: document.getElementById('description').value,
+        price: document.getElementById('price').value,
+        type: document.getElementById('type').value,
+        subcategory: document.getElementById('subcategory').value,
+        stock: document.getElementById('stock').value,
+        options: document.getElementById('options').value
+      };
+      localStorage.setItem(UPLOAD_FORM_KEY, JSON.stringify(data));
+    }
+
+    // Restore form values on load
+    function restoreUploadDraft() {
+      const data = JSON.parse(localStorage.getItem(UPLOAD_FORM_KEY) || '{}');
+      if (data.name) document.getElementById('name').value = data.name;
+      if (data.description) document.getElementById('description').value = data.description;
+      if (data.price) document.getElementById('price').value = data.price;
+      if (data.type) document.getElementById('type').value = data.type;
+      if (data.subcategory) document.getElementById('subcategory').value = data.subcategory;
+      if (data.stock) document.getElementById('stock').value = data.stock;
+      if (data.options) document.getElementById('options').value = data.options;
+    }
+
+    // Clear draft after successful upload or manual reset
+    function clearUploadDraft() {
+      localStorage.removeItem(UPLOAD_FORM_KEY);
+    }
+
+    // Listen to input changes
+    ['name','description','price','type','subcategory','stock','options'].forEach(id => {
+      document.getElementById(id).addEventListener('input', saveUploadDraft);
+    });
+
+    // On page load
+    restoreUploadDraft();
+
     // Upload product
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       document.getElementById('upload-success').style.display = "none";
       document.getElementById('upload-error').style.display = "none";
+      document.getElementById('uploadAnotherBtn').style.display = "none";
 
       const imageFile = document.getElementById('image').files[0];
       if (!imageFile) {
@@ -153,6 +198,8 @@
         if (res.ok) {
           document.getElementById('upload-success').style.display = "block";
           document.getElementById('uploadForm').reset();
+          clearUploadDraft();
+          document.getElementById('uploadAnotherBtn').style.display = "inline-block";
         } else {
           document.getElementById('upload-error').textContent = data.error || 'Upload failed.';
           document.getElementById('upload-error').style.display = "block";
@@ -161,6 +208,14 @@
         document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
         document.getElementById('upload-error').style.display = "block";
       }
+    });
+
+    // Upload Another Product button handler
+    document.getElementById('uploadAnotherBtn').addEventListener('click', function() {
+      document.getElementById('uploadForm').reset();
+      clearUploadDraft();
+      this.style.display = 'none';
+      document.getElementById('upload-success').style.display = 'none';
     });
   </script>
   <script src="../auth.js"></script>
