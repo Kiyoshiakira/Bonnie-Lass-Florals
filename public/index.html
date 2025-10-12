@@ -24,6 +24,11 @@
     </script>
 </head>
 <body>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
+    </div>
     <nav>
       <a href="index.html">Home</a>
       <a href="about.html">About</a>
@@ -31,52 +36,67 @@
       <a href="gallery.html">Gallery</a>
       <a href="contact.html">Contact</a>
       <a href="cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
-      <!-- Profile Circle Dropdown (hidden until logged in) -->
       <div id="profileCircleContainer">
         <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
         <div id="profileDropdown">
           <div id="userInfoDropdown"></div>
           <a href="profile.html">Profile</a>
           <a href="orders.html">Orders</a>
-          <!-- Optionally add settings or admin links here -->
           <button id="logoutMenu">Logout</button>
         </div>
       </div>
       <a id="loginBtn" href="#">Login</a>
     </nav>
-    <div id="loginModal">
-      <div id="loginModalContent">
-        <h2 id="loginTitle">Login</h2>
-        <form id="authForm">
-          <div id="signupFields" class="hidden">
-            <input type="text" id="signupName" placeholder="Your Name" required>
-          </div>
-          <input type="email" id="emailField" placeholder="Email" required>
-          <input type="password" id="passwordField" placeholder="Password" required>
-          <button type="submit" id="loginEmailBtn">Login</button>
-          <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
-        </form>
-        <div style="margin:1em 0;">OR</div>
-        <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
-        <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
-        <div id="loginError" style="color:red;margin-top:1em;"></div>
+  </header>
+  <div id="loginModal">
+    <div id="loginModalContent">
+      <h2 id="loginTitle">Login</h2>
+      <form id="authForm">
+        <div id="signupFields" class="hidden">
+          <input type="text" id="signupName" placeholder="Your Name" required>
+        </div>
+        <input type="email" id="emailField" placeholder="Email" required>
+        <input type="password" id="passwordField" placeholder="Password" required>
+        <button type="submit" id="loginEmailBtn">Login</button>
+        <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
+      </form>
+      <div style="margin:1em 0;">OR</div>
+      <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
+      <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
+      <div id="loginError" style="color:red;margin-top:1em;"></div>
+    </div>
+  </div>
+  <section>
+    <h1>Welcome to Bonnie Lass Florals</h1>
+    <p style="font-size:1.25em;max-width:500px;margin:1em auto;color:#d946ef;text-align:center;">
+      Handcrafted silk flower arrangements, wreaths, and cottage foods for every season and celebration. Shop, customize, and enjoy our one-of-a-kind creations!
+    </p>
+    <div class="features">
+      <div class="feature-card">
+        <i>🌸</i>
+        <strong>Handmade Silk Arrangements</strong>
+        <p>Beautiful, lasting pieces for every occasion.</p>
+      </div>
+      <div class="feature-card">
+        <i>🧁</i>
+        <strong>Cottage Food Treats</strong>
+        <p>Home-baked goodies made with love in Iowa.</p>
+      </div>
+      <div class="feature-card">
+        <i>🎁</i>
+        <strong>Custom Orders</strong>
+        <p>Personalized gifts for weddings, holidays, memorials, and more.</p>
       </div>
     </div>
-		<section>
-		  <img src="img/logo.png" alt="Bonnie Lass Florals Logo" style="width:300px;max-width:22vw;margin:1.5em auto;display:block;">
-		  <h1>Bonnie Lass Florals</h1>
-		  <p style="font-size:1.25em;max-width:500px;margin:1em auto;color:#d946ef;text-align:center;">
-			Handcrafted silk flower arrangements, wreaths, and cottage foods for every season and celebration. Shop, customize, and enjoy our one-of-a-kind creations!
-		  </p>
-		</section>
-    <script>
-      // Cart count update
-      function updateCartCount() {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        document.getElementById('cart-count').textContent = cart.length;
-      }
-      updateCartCount();
-    </script>
-    <script src="auth.js"></script>
+  </section>
+  <script>
+    // Cart count update
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      document.getElementById('cart-count').textContent = cart.length;
+    }
+    updateCartCount();
+  </script>
+  <script src="auth.js"></script>
 </body>
 </html>
