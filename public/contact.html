@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="auth.css">
-
   <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
@@ -25,27 +24,30 @@
   </script>
 </head>
 <body>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="shop.html">Shop</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="contact.html">Contact</a>
-    <a href="cart.html" class="cart-btn">
-      🛒 Cart <span id="cart-count">0</span>
-    </a>
-    <!-- Profile Circle Dropdown (hidden until logged in) -->
-    <div id="profileCircleContainer">
-      <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
-      <div id="profileDropdown">
-        <div id="userInfoDropdown"></div>
-        <a href="profile.html">Profile</a>
-        <a href="orders.html">Orders</a>
-        <button id="logoutMenu">Logout</button>
-      </div>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
     </div>
-    <a id="loginBtn" href="#">Login</a>
-  </nav>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="shop.html">Shop</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a href="cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
+        <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
+          <a href="profile.html">Profile</a>
+          <a href="orders.html">Orders</a>
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
+    </nav>
+  </header>
   <div id="loginModal">
     <div id="loginModalContent">
       <h2 id="loginTitle">Login</h2>
@@ -64,7 +66,7 @@
       <div id="loginError" style="color:red;margin-top:1em;"></div>
     </div>
   </div>
-  <main>
+  <section>
     <h1>Contact Us</h1>
     <p>Questions, feedback, custom requests? Use the form below or email us directly at <a href="mailto:bonnielassflorals@gmail.com">bonnielassflorals@gmail.com</a>.</p>
     <form id="contactForm">
@@ -85,7 +87,7 @@
       <a href="https://instagram.com/bonnielassflorals" target="_blank">Instagram</a> |
       <a href="https://facebook.com/bonnielassflorals" target="_blank">Facebook</a>
     </div>
-  </main>
+  </section>
   <script>
     // Update cart count
     function updateCartCount() {
