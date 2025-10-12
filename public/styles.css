@@ -535,68 +535,9 @@ footer a {
   width: 100% !important;
 }
 
-/* ------------------------------ MEDIA QUERIES ------------------------------ */
-@media (max-width: 800px) {
-  section {
-    padding: 18px 6vw;
-    margin-top: 36px;
-  }
-  header {
-    flex-direction: column;
-    padding: 20px 0 6px 0;
-  }
-  header .logo {
-    margin-right: 0;
-    margin-bottom: 18px;
-  }
-  .features, .pricing-table {
-    flex-direction: column;
-    gap: 18px;
-  }
-  .gallery-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-  nav {
-    gap: 1rem;
-  }
-  #contactForm {
-    max-width: 100%;
-  }
-  .product-card {
-    flex: 0 1 100%;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  h1 {
-    font-size: 2rem;
-  }
-  h2 {
-    font-size: 1.25rem;
-  }
-  .gallery-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  section {
-    padding: 10px 2vw;
-  }
-  nav {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .instagram-gallery {
-    min-height: 400px;
-  }
-  .instagram-media {
-    min-width: 100% !important;
-  }
-
-  /* --- Admin upload form styling --- */
+/* ------------------------------ ADMIN UPLOAD FORM ------------------------------ */
 #uploadForm {
-  max-width: 400px;
+  max-width: 440px;
   margin: 2em auto;
   display: flex;
   flex-direction: column;
@@ -657,4 +598,67 @@ footer a {
   font-size: 1.09em;
   margin-top: 1em;
 }
+
+/* ------------------------------ MEDIA QUERIES ------------------------------ */
+@media (max-width: 800px) {
+  section {
+    padding: 18px 6vw;
+    margin-top: 36px;
+  }
+  header {
+    flex-direction: column;
+    padding: 20px 0 6px 0;
+  }
+  header .logo {
+    margin-right: 0;
+    margin-bottom: 18px;
+  }
+  .features, .pricing-table {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  nav {
+    gap: 1rem;
+  }
+  #contactForm {
+    max-width: 100%;
+  }
+  .product-card {
+    flex: 0 1 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  section {
+    padding: 10px 2vw;
+  }
+  nav {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .instagram-gallery {
+    min-height: 400px;
+  }
+  .instagram-media {
+    min-width: 100% !important;
+  }
+  #uploadForm {
+    max-width: 98vw;
+    padding: 1em 1vw 1em 1vw;
+  }
 }
