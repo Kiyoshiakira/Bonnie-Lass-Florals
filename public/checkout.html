@@ -22,8 +22,8 @@
       };
       firebase.initializeApp(firebaseConfig);
     </script>
-        <!-- Production (for real payments) -->
-        <script type="text/javascript" src="https://web.squarecdn.com/v1/square.js"></script>
+    <!-- Production (for real payments) -->
+    <script type="text/javascript" src="https://web.squarecdn.com/v1/square.js"></script>
 </head>
 <body>
   <header>
@@ -75,27 +75,27 @@
     <form id="shippingForm" class="checkout-form">
       <div class="form-row">
         <label for="name">Full Name</label>
-        <input type="text" name="name" required>
+        <input type="text" id="name" name="name" required>
       </div>
       <div class="form-row">
         <label for="street">Street Address</label>
-        <input type="text" name="street" required>
+        <input type="text" id="street" name="street" required>
       </div>
       <div class="form-row">
         <label for="city">City</label>
-        <input type="text" name="city" required>
+        <input type="text" id="city" name="city" required>
       </div>
       <div class="form-row">
         <label for="state">State</label>
-        <input type="text" name="state" required>
+        <input type="text" id="state" name="state" required>
       </div>
       <div class="form-row">
         <label for="zip">ZIP Code</label>
-        <input type="text" name="zip" required>
+        <input type="text" id="zip" name="zip" required>
       </div>
       <div class="form-row">
         <label for="country">Country</label>
-        <input type="text" name="country" required>
+        <input type="text" id="country" name="country" required>
       </div>
       <div class="form-row">
         <strong>Payment Method:</strong><br>
