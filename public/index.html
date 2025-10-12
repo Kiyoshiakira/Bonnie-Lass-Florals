@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bonnie Lass Florals - Handcrafted Silk Flowers</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
@@ -21,57 +22,6 @@
       };
       firebase.initializeApp(firebaseConfig);
     </script>
-    <style>
-      #loginModal {
-        display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;
-      }
-      #loginModal.active { display: flex; }
-      #loginModalContent {
-        background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px #d946ef44;
-        min-width: 300px; max-width: 90vw;
-      }
-      .hidden { display: none; }
-      #userInfo { margin-left: 1em; color: #d946ef; }
-      /* Profile circle and dropdown styling */
-      #profileCircleContainer {
-        position: relative;
-        display: none;
-        vertical-align: middle;
-      }
-      #profileCircle {
-        width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-        cursor: pointer; border: 2px solid #d946ef; background: #fff;
-      }
-      #profileDropdown {
-        display: none;
-        position: absolute;
-        top: 48px;
-        right: 0;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px #d946ef88;
-        min-width: 160px;
-        z-index: 999;
-        text-align: left;
-      }
-      #profileDropdown a, #profileDropdown button {
-        display: block;
-        width: 100%;
-        padding: 0.8em 1.2em;
-        border-bottom: 1px solid #eee;
-        color: #d946ef;
-        text-decoration: none;
-        background: none;
-        text-align: left;
-        font-size: 1rem;
-        cursor: pointer;
-        border: none;
-        outline: none;
-      }
-      #profileDropdown a:last-child, #profileDropdown button:last-child { border-bottom: none; }
-      #profileDropdown a:hover, #profileDropdown button:hover { background: #f6f2fe; color: #c026d3; }
-    </style>
 </head>
 <body>
     <nav>
@@ -85,6 +35,7 @@
       <div id="profileCircleContainer">
         <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
         <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
           <a href="profile.html">Profile</a>
           <a href="orders.html">Orders</a>
           <!-- Optionally add settings or admin links here -->
@@ -125,119 +76,7 @@
         document.getElementById('cart-count').textContent = cart.length;
       }
       updateCartCount();
-
-      // Modal logic
-      const loginBtn = document.getElementById('loginBtn');
-      const loginModal = document.getElementById('loginModal');
-      const closeLogin = document.getElementById('closeLogin');
-      const toggleSignup = document.getElementById('toggleSignup');
-      const signupFields = document.getElementById('signupFields');
-      const loginTitle = document.getElementById('loginTitle');
-      const authForm = document.getElementById('authForm');
-      const googleLoginBtn = document.getElementById('googleLogin');
-      const loginError = document.getElementById('loginError');
-      const userInfo = document.getElementById('userInfo');
-
-      // Profile circle logic
-      const profileCircleContainer = document.getElementById('profileCircleContainer');
-      const profileCircle = document.getElementById('profileCircle');
-      const profileDropdown = document.getElementById('profileDropdown');
-      const logoutMenu = document.getElementById('logoutMenu');
-
-      let isSignup = false;
-
-      loginBtn.onclick = () => { loginModal.classList.add('active'); };
-      closeLogin.onclick = () => { loginModal.classList.remove('active'); loginError.textContent = ""; };
-      toggleSignup.onclick = () => {
-        isSignup = !isSignup;
-        signupFields.classList.toggle('hidden', !isSignup);
-        loginTitle.textContent = isSignup ? "Sign Up" : "Login";
-        toggleSignup.textContent = isSignup ? "Login instead" : "Sign up instead";
-        document.getElementById('loginEmailBtn').textContent = isSignup ? "Sign Up" : "Login";
-        loginError.textContent = "";
-      };
-
-      // Profile dropdown toggle
-      profileCircle.onclick = function(e) {
-        e.stopPropagation();
-        profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block";
-      };
-      document.body.onclick = () => profileDropdown.style.display = "none";
-
-      // Logout
-      logoutMenu.onclick = async function(e) {
-        e.preventDefault();
-        await firebase.auth().signOut();
-        profileDropdown.style.display = "none";
-        window.location.reload();
-      };
-
-      // Firebase email/password login/signup
-      authForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        loginError.textContent = "";
-        const email = document.getElementById('emailField').value;
-        const password = document.getElementById('passwordField').value;
-        const name = isSignup ? document.getElementById('signupName').value : "";
-
-        try {
-          if(isSignup) {
-            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-            if(name) {
-              await userCredential.user.updateProfile({ displayName: name });
-            }
-            handleLogin(userCredential.user);
-          } else {
-            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-            handleLogin(userCredential.user);
-          }
-          loginModal.classList.remove('active');
-        } catch(err) {
-          loginError.textContent = err.message;
-        }
-      });
-
-      // Google login
-      googleLoginBtn.onclick = async function() {
-        loginError.textContent = "";
-        const provider = new firebase.auth.GoogleAuthProvider();
-        try {
-          const result = await firebase.auth().signInWithPopup(provider);
-          handleLogin(result.user);
-          loginModal.classList.remove('active');
-        } catch(err) {
-          loginError.textContent = err.message;
-        }
-      };
-
-      // Show user info and role, update nav
-      function handleLogin(user) {
-        // Set admin if email matches (case-insensitive)
-        const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
-        let role = admins.includes(user.email.toLowerCase()) ? "Admin" : "Customer";
-        userInfo.textContent = `Logged in as: ${user.displayName || user.email} (${role})`;
-        loginBtn.style.display = "none";
-        profileCircleContainer.style.display = "inline-block";
-        profileCircle.src = user.photoURL || "img/default-avatar.png";
-        localStorage.setItem('userRole', role);
-        localStorage.setItem('userEmail', user.email);
-        localStorage.setItem('userName', user.displayName || "");
-        localStorage.setItem('userPhoto', user.photoURL || "");
-      }
-
-      // Auth state listener
-      firebase.auth().onAuthStateChanged(function(user) {
-        if(user) handleLogin(user);
-        else {
-          loginBtn.style.display = "";
-          profileCircleContainer.style.display = "none";
-          userInfo.textContent = "";
-          localStorage.removeItem('userRole');
-          localStorage.removeItem('userEmail');
-          localStorage.removeItem('userName');
-          localStorage.removeItem('userPhoto');
-        }
-      });
     </script>
+    <script src="auth.js"></script>
 </body>
 </html>
