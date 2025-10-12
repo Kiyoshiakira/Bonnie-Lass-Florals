@@ -259,6 +259,18 @@ footer a {
   text-decoration: underline;
 }
 
+/* ...existing styles... */
+
+/* HIGH CONTRAST FOR FEATURE CARDS */
+.feature-card,
+.feature-card strong,
+.feature-card p,
+.feature-card h1,
+.feature-card h2,
+.feature-card h3 {
+  color: #fff !important;
+}
+
 /* ------------------------------ NAV & DROPDOWN PROFILE ------------------------------ */
 
 #profileCircleContainer {
