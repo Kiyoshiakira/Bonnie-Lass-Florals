@@ -285,11 +285,14 @@ footer a {
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #d946ef;
+  border: 2px solid #60a5fa; /* Light blue */
   object-fit: cover;
   background: #fff;
   margin-right: 0.5em;
+  box-shadow: 0 0 0 2px #e4d8f7;
 }
+
+/* Profile dropdown styles - light blue */
 #profileDropdown {
   display: none;
   position: absolute;
@@ -299,13 +302,16 @@ footer a {
   color: #421e7c;
   min-width: 180px;
   border-radius: 1em;
-  box-shadow: 0 4px 24px rgba(110,51,183,0.11);
+  box-shadow: 0 4px 24px rgba(96,165,250,0.18); /* blue shadow */
   z-index: 100;
   padding: 0.8em 0.5em;
+  border: 1.5px solid #60a5fa;
 }
+
 #profileCircleContainer.active #profileDropdown {
   display: block;
 }
+
 #profileDropdown a,
 #profileDropdown button {
   display: block;
@@ -319,18 +325,22 @@ footer a {
   cursor: pointer;
   text-decoration: none;
   border-radius: 0.7em;
-  transition: background 0.18s;
+  transition: background 0.18s, color 0.18s;
 }
+
 #profileDropdown a:hover,
 #profileDropdown button:hover {
-  background: #f6f2fe;
+  background: #e0f2fe; /* very light blue */
+  color: #2563eb;      /* deeper blue */
 }
+
 #userInfoDropdown {
   font-size: 0.96em;
-  color: #d946ef;
+  color: #60a5fa;
   padding: 0.7em 1em 0.7em 1.1em;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e4d8f7;
   margin-bottom: 0.4em;
+  background: #f1f5f9; /* off-white blue */
 }
 
 /* Login button style */
