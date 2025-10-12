@@ -11,6 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
@@ -70,7 +71,7 @@
   </div>
   <section>
     <h1>Upload New Product</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
+    <form id="uploadForm">
       <label for="name">Product Name</label>
       <input type="text" id="name" name="name" required>
 
@@ -117,20 +118,36 @@
       document.getElementById('upload-success').style.display = "none";
       document.getElementById('upload-error').style.display = "none";
 
-      const formData = new FormData();
-      formData.append("name", document.getElementById('name').value);
-      formData.append("description", document.getElementById('description').value);
-      formData.append("price", document.getElementById('price').value);
-      formData.append("type", document.getElementById('type').value);
-      formData.append("subcategory", document.getElementById('subcategory').value);
-      formData.append("stock", document.getElementById('stock').value);
-      formData.append("options", document.getElementById('options').value);
-      formData.append("image", document.getElementById('image').files[0]);
+      const imageFile = document.getElementById('image').files[0];
+      if (!imageFile) {
+        document.getElementById('upload-error').textContent = 'Please select an image file.';
+        document.getElementById('upload-error').style.display = "block";
+        return;
+      }
 
       try {
-         const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products', {
+        // 1. Upload image to Firebase Storage
+        const storageRef = firebase.storage().ref('product-images/' + Date.now() + '_' + imageFile.name);
+        await storageRef.put(imageFile);
+        const imageUrl = await storageRef.getDownloadURL();
+
+        // 2. Prepare product data with image URL
+        const productData = {
+          name: document.getElementById('name').value,
+          description: document.getElementById('description').value,
+          price: document.getElementById('price').value,
+          type: document.getElementById('type').value,
+          subcategory: document.getElementById('subcategory').value,
+          stock: document.getElementById('stock').value,
+          options: document.getElementById('options').value,
+          image: imageUrl
+        };
+
+        // 3. Send product data as JSON to backend
+        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products', {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
         });
         const data = await res.json();
         if (res.ok) {
@@ -141,7 +158,7 @@
           document.getElementById('upload-error').style.display = "block";
         }
       } catch (err) {
-        document.getElementById('upload-error').textContent = 'Network error!';
+        document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
         document.getElementById('upload-error').style.display = "block";
       }
     });
