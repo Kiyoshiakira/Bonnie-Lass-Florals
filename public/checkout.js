@@ -1,6 +1,6 @@
 // Replace these with your real Square values from developer dashboard
-const SQUARE_APP_ID = 'sq0idp-MvxpqBo-vgra-5CNbtbRNA';
-const SQUARE_LOCATION_ID = 'LRQ7E9SCJND41';
+const SQUARE_APP_ID = 'sq0idp-MvxpqBo-vgra-5CNbtbRNA'; // Use your real PRODUCTION App ID here
+const SQUARE_LOCATION_ID = 'LRQ7E9SCJND41'; // Use your real PRODUCTION Location ID
 
 let payments, card;
 
@@ -76,16 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.getElementById('shippingForm').addEventListener('submit', async function(e) {
   e.preventDefault();
+  console.log('Pay Now clicked'); // For debugging - see if handler is running
   document.getElementById('checkoutStatus').textContent = '';
 
   const form = e.target;
   const shippingAddress = {
-    name: form.querySelector('[name="name"]').value,
-    street: form.querySelector('[name="street"]').value,
-    city: form.querySelector('[name="city"]').value,
-    state: form.querySelector('[name="state"]').value,
-    zip: form.querySelector('[name="zip"]').value,
-    country: form.querySelector('[name="country"]').value
+    name: document.getElementById('name').value,
+    street: document.getElementById('street').value,
+    city: document.getElementById('city').value,
+    state: document.getElementById('state').value,
+    zip: document.getElementById('zip').value,
+    country: document.getElementById('country').value
   };
 
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
