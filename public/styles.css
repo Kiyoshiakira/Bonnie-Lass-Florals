@@ -5,6 +5,11 @@ body {
   color: #222;
 }
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
 /* --- HEADER FIX: Make logo and nav side by side and centered --- */
 header {
   display: flex;
@@ -571,6 +576,12 @@ footer a {
   max-width: 340px;
   flex: 0 1 340px;
   text-align: left;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(110,51,183,0.15);
 }
 .product-img {
   width: 100%;
@@ -625,10 +636,14 @@ footer a {
   font-weight: bold;
   font-size: 1em;
   cursor: pointer;
-  transition: background 0.16s;
+  transition: background 0.3s, transform 0.2s;
 }
-.product-card button:hover {
+.product-card button:hover:not(:disabled) {
   background: #a21caf;
+  transform: scale(1.05);
+}
+.product-card button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 /* ------------------------------ IMAGE LIGHTBOX/MODAL ------------------------------ */
@@ -782,6 +797,21 @@ footer a {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
 }
 
 .notification.success {

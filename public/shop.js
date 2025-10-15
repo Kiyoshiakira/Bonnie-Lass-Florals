@@ -56,8 +56,17 @@ function renderProducts() {
     ? food.map(productToCard).join('') 
     : '<div style="color:#888;padding:1rem;">No products found.</div>';
   
-  // Re-initialize image zoom for new products
-  setTimeout(() => initImageZoom(), 100);
+  // Add fade-in animation to product cards
+  setTimeout(() => {
+    document.querySelectorAll('.product-card').forEach((card, index) => {
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.classList.add('fade-in');
+        card.style.opacity = '1';
+      }, index * 50);
+    });
+    initImageZoom();
+  }, 50);
 }
 
 // Apply filters to products
@@ -88,8 +97,17 @@ function applyFilters(type) {
     ? filtered.map(productToCard).join('') 
     : '<div style="color:#888;padding:1rem;">No products found.</div>';
   
-  // Re-initialize image zoom
-  setTimeout(() => initImageZoom(), 100);
+  // Add fade-in animation
+  setTimeout(() => {
+    document.querySelectorAll(`#${containerId} .product-card`).forEach((card, index) => {
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.classList.add('fade-in');
+        card.style.opacity = '1';
+      }, index * 50);
+    });
+    initImageZoom();
+  }, 50);
 }
 
 // Reset filters
