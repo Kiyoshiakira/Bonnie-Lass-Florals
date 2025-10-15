@@ -18,19 +18,19 @@ function renderCartSummary() {
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   const summaryDiv = document.getElementById('cart-summary');
   if (!cart.length) {
-    summaryDiv.innerHTML = '<div style="color:#d946ef;font-weight:bold;">Your cart is empty.</div>';
+    summaryDiv.innerHTML = '<div style="color:#d946ef;font-weight:bold;text-align:center;padding:2rem;">Your cart is empty.</div>';
     return;
   }
   let total = 0;
   let html = `
-    <h2>Your Items</h2>
-    <table style="width:100%;margin-bottom:1em;border-collapse:collapse;">
+    <h2 style="color:#421e7c;margin-bottom:1rem;">Order Summary</h2>
+    <table style="width:100%;margin-bottom:1.5em;border-collapse:collapse;">
       <thead>
-        <tr>
-          <th style="text-align:left;padding:4px 0;">Product</th>
-          <th style="text-align:center;">Qty</th>
-          <th style="text-align:right;">Price</th>
-          <th style="text-align:right;">Subtotal</th>
+        <tr style="border-bottom:2px solid #e4d8f7;">
+          <th style="text-align:left;padding:0.8rem;">Product</th>
+          <th style="text-align:center;padding:0.8rem;">Qty</th>
+          <th style="text-align:right;padding:0.8rem;">Price</th>
+          <th style="text-align:right;padding:0.8rem;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
@@ -41,20 +41,25 @@ function renderCartSummary() {
     const subtotal = price * qty;
     total += subtotal;
     html += `
-      <tr>
-        <td style="padding:3px 0;">${item.name}</td>
-        <td style="text-align:center;">${qty}</td>
-        <td style="text-align:right;">$${price.toFixed(2)}</td>
-        <td style="text-align:right;">$${subtotal.toFixed(2)}</td>
+      <tr style="border-bottom:1px solid #f0f0f0;">
+        <td style="padding:0.8rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;">
+            ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail">` : ''}
+            <span style="font-weight:500;color:#421e7c;">${item.name}</span>
+          </div>
+        </td>
+        <td style="text-align:center;padding:0.8rem;color:#666;">${qty}</td>
+        <td style="text-align:right;padding:0.8rem;color:#666;">$${price.toFixed(2)}</td>
+        <td style="text-align:right;padding:0.8rem;font-weight:bold;color:#421e7c;">$${subtotal.toFixed(2)}</td>
       </tr>
     `;
   });
   html += `
       </tbody>
       <tfoot>
-        <tr>
-          <td colspan="3" style="text-align:right;font-weight:bold;">Total:</td>
-          <td style="text-align:right;font-weight:bold;">$${total.toFixed(2)}</td>
+        <tr style="border-top:2px solid #e4d8f7;">
+          <td colspan="3" style="text-align:right;font-weight:bold;padding:1rem;color:#421e7c;font-size:1.1rem;">Total:</td>
+          <td style="text-align:right;font-weight:bold;padding:1rem;color:#d946ef;font-size:1.2rem;">$${total.toFixed(2)}</td>
         </tr>
       </tfoot>
     </table>
@@ -65,7 +70,8 @@ function renderCartSummary() {
 // Update cart count in nav
 function updateCartCount() {
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-  document.querySelectorAll('.cart-btn span').forEach(el => el.textContent = cart.length);
+  const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  document.querySelectorAll('.cart-btn span').forEach(el => el.textContent = totalItems);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -77,7 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('shippingForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   console.log('Pay Now clicked'); // For debugging - see if handler is running
-  document.getElementById('checkoutStatus').textContent = '';
+  
+  const statusDiv = document.getElementById('checkoutStatus');
+  statusDiv.textContent = '';
 
   const form = e.target;
   const shippingAddress = {
@@ -91,9 +99,14 @@ document.getElementById('shippingForm').addEventListener('submit', async functio
 
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   if (!cart.length) {
-    alert('Your cart is empty!');
+    if (typeof showNotification === 'function') {
+      showNotification('Your cart is empty!', 'error');
+    } else {
+      alert('Your cart is empty!');
+    }
     return;
   }
+  
   const items = cart.map(item => ({
     product: item.id,
     quantity: item.quantity || 1
@@ -102,12 +115,19 @@ document.getElementById('shippingForm').addEventListener('submit', async functio
 
   // Only handling Square for now
   try {
+    // Show loading
+    if (typeof showLoading === 'function') {
+      showLoading('Processing payment...');
+    }
+    
     // 1. Tokenize card
     const result = await card.tokenize();
     if (result.status !== 'OK') {
-      document.getElementById('checkoutStatus').textContent = "Card entry failed. Please check your info.";
+      if (typeof hideLoading === 'function') hideLoading();
+      statusDiv.innerHTML = '<div style="color:#ef4444;padding:1rem;background:#fee;border-radius:0.5rem;margin-top:1rem;">Card entry failed. Please check your information.</div>';
       return;
     }
+    
     // 2. POST to backend to process payment and create order
     const res = await fetch('https://bonnie-lass-florals.onrender.com/api/payments/square', {
       method: 'POST',
@@ -119,15 +139,36 @@ document.getElementById('shippingForm').addEventListener('submit', async functio
         total
       })
     });
+    
     const data = await res.json();
+    
+    if (typeof hideLoading === 'function') hideLoading();
+    
     if(res.ok) {
-      document.getElementById('checkoutStatus').textContent = data.message || 'Order placed and paid!';
+      statusDiv.innerHTML = '<div style="color:#10b981;padding:1rem;background:#d1fae5;border-radius:0.5rem;margin-top:1rem;font-weight:bold;">' + (data.message || 'Order placed and paid successfully!') + ' Redirecting to shop...</div>';
+      
+      if (typeof showNotification === 'function') {
+        showNotification('Order placed successfully!', 'success');
+      }
+      
       localStorage.removeItem('cart');
+      updateCartCount();
       setTimeout(() => window.location = 'shop.html', 3000);
     } else {
-      document.getElementById('checkoutStatus').textContent = data.error || 'Payment failed.';
+      statusDiv.innerHTML = '<div style="color:#ef4444;padding:1rem;background:#fee;border-radius:0.5rem;margin-top:1rem;">' + (data.error || 'Payment failed.') + '</div>';
+      
+      if (typeof showNotification === 'function') {
+        showNotification(data.error || 'Payment failed', 'error');
+      }
     }
   } catch(err) {
-    document.getElementById('checkoutStatus').textContent = "Payment error: " + (err.message || err);
+    if (typeof hideLoading === 'function') hideLoading();
+    
+    const errorMsg = "Payment error: " + (err.message || err);
+    statusDiv.innerHTML = '<div style="color:#ef4444;padding:1rem;background:#fee;border-radius:0.5rem;margin-top:1rem;">' + errorMsg + '</div>';
+    
+    if (typeof showNotification === 'function') {
+      showNotification(errorMsg, 'error');
+    }
   }
 });

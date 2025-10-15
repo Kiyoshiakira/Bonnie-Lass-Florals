@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI Features Demo - Bonnie Lass Florals</title>
+  <link rel="stylesheet" href="public/styles.css">
+  <style>
+    .demo-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 2rem;
+    }
+    .demo-section {
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .demo-title {
+      color: #421e7c;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .demo-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .demo-btn {
+      background: #d946ef;
+      color: #fff;
+      border: none;
+      border-radius: 0.7em;
+      padding: 0.6em 1.6em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .demo-btn:hover {
+      background: #a21caf;
+      transform: scale(1.05);
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .feature-card {
+      padding: 1rem;
+      border: 2px solid #e4d8f7;
+      border-radius: 0.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(110,51,183,0.15);
+    }
+    .status-demo {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .status-item {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1 style="text-align: center; color: #421e7c;">Bonnie Lass Florals - UI Features Demo</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+      This page demonstrates all the new UI features implemented
+    </p>
+
+    <!-- Notifications Demo -->
+    <div class="demo-section">
+      <div class="demo-title">1. Notification System</div>
+      <p>Click the buttons below to see different notification types:</p>
+      <div class="demo-buttons">
+        <button class="demo-btn" onclick="showNotification('Item added to cart!', 'success')">
+          Show Success
+        </button>
+        <button class="demo-btn" onclick="showNotification('Payment failed. Please try again.', 'error')">
+          Show Error
+        </button>
+        <button class="demo-btn" onclick="showNotification('Your order is being processed.', 'info')">
+          Show Info
+        </button>
+        <button class="demo-btn" onclick="showNotification('Low stock warning!', 'warning')">
+          Show Warning
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading States Demo -->
+    <div class="demo-section">
+      <div class="demo-title">2. Loading States</div>
+      <p>Click to see loading overlay (will auto-hide after 2 seconds):</p>
+      <div class="demo-buttons">
+        <button class="demo-btn" onclick="demoLoading()">
+          Show Loading
+        </button>
+      </div>
+      <div style="margin-top: 1rem;">
+        <div class="demo-title" style="font-size: 1rem;">Inline Spinner:</div>
+        <div id="spinnerDemo"></div>
+      </div>
+    </div>
+
+    <!-- Stock Indicators Demo -->
+    <div class="demo-section">
+      <div class="demo-title">3. Stock Status Indicators</div>
+      <p>Different color-coded stock levels:</p>
+      <div class="status-demo">
+        <div class="status-item product-stock out-of-stock">Out of Stock</div>
+        <div class="status-item product-stock low-stock">Low Stock: 3 left</div>
+        <div class="status-item product-stock">Stock: 25</div>
+      </div>
+    </div>
+
+    <!-- Image Modal Demo -->
+    <div class="demo-section">
+      <div class="demo-title">4. Image Zoom/Lightbox</div>
+      <p>Click the image to open in full-screen lightbox:</p>
+      <img 
+        src="public/img/logo.png" 
+        alt="Demo" 
+        style="width: 200px; cursor: zoom-in; border-radius: 0.5rem; transition: transform 0.2s;"
+        onclick="openImageModal(this.src)"
+        onmouseover="this.style.transform='scale(1.02)'"
+        onmouseout="this.style.transform='scale(1)'"
+      >
+    </div>
+
+    <!-- Animations Demo -->
+    <div class="demo-section">
+      <div class="demo-title">5. Smooth Animations</div>
+      <p>Hover over these cards to see the lift effect:</p>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3 style="color: #d946ef; margin: 0 0 0.5rem 0;">Product Filtering</h3>
+          <p style="margin: 0; color: #666;">Sort and filter products by price, name, and stock</p>
+        </div>
+        <div class="feature-card">
+          <h3 style="color: #d946ef; margin: 0 0 0.5rem 0;">Cart Controls</h3>
+          <p style="margin: 0; color: #666;">Adjust quantities with +/- buttons</p>
+        </div>
+        <div class="feature-card">
+          <h3 style="color: #d946ef; margin: 0 0 0.5rem 0;">Breadcrumbs</h3>
+          <p style="margin: 0; color: #666;">Navigate easily with breadcrumb trails</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breadcrumb Demo -->
+    <div class="demo-section">
+      <div class="demo-title">6. Breadcrumb Navigation</div>
+      <div class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="breadcrumb-separator">›</span>
+        <a href="#">Shop</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Product Details</span>
+      </div>
+    </div>
+
+    <!-- Button States Demo -->
+    <div class="demo-section">
+      <div class="demo-title">7. Interactive Buttons</div>
+      <p>Hover and click to see smooth transitions:</p>
+      <div class="demo-buttons">
+        <button class="demo-btn">Hover Me</button>
+        <button class="demo-btn" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+      </div>
+    </div>
+
+    <!-- Cart Controls Demo -->
+    <div class="demo-section">
+      <div class="demo-title">8. Cart Quantity Controls</div>
+      <p>Adjust item quantity:</p>
+      <div class="cart-quantity-controls" style="margin-top: 1rem;">
+        <button class="cart-quantity-btn" onclick="adjustDemoQty(-1)">-</button>
+        <span class="cart-quantity-display" id="demoQty">1</span>
+        <button class="cart-quantity-btn" onclick="adjustDemoQty(1)">+</button>
+      </div>
+    </div>
+
+    <!-- Filter Controls Demo -->
+    <div class="demo-section">
+      <div class="demo-title">9. Product Filters</div>
+      <div class="shop-filters">
+        <div class="filter-group">
+          <label>Sort by:</label>
+          <select>
+            <option>Default</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+            <option>Name: A-Z</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Stock:</label>
+          <select>
+            <option>All Products</option>
+            <option>In Stock</option>
+            <option>Out of Stock</option>
+          </select>
+        </div>
+        <button class="filter-reset">Reset Filters</button>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="demo-section" style="background: linear-gradient(90deg, #f5f0ff 0%, #fff 100%); border: 2px solid #d946ef;">
+      <div class="demo-title">✨ All Features Working!</div>
+      <p style="margin: 0; color: #666;">
+        This demo page showcases all the new UI improvements. The actual implementation 
+        is fully integrated into the shop, cart, checkout, and other pages.
+      </p>
+      <div style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 0.5rem;">
+        <strong style="color: #421e7c;">Key Improvements:</strong>
+        <ul style="margin: 0.5rem 0 0 1.5rem; color: #666;">
+          <li>Toast notifications with auto-dismiss</li>
+          <li>Loading overlays and spinners</li>
+          <li>Product filtering and sorting</li>
+          <li>Image zoom/lightbox</li>
+          <li>Cart quantity controls</li>
+          <li>Smooth animations and transitions</li>
+          <li>Color-coded stock indicators</li>
+          <li>Breadcrumb navigation</li>
+          <li>Enhanced mobile responsiveness</li>
+          <li>Better SEO with meta tags</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="public/ui-utils.js"></script>
+  <script>
+    // Demo loading
+    function demoLoading() {
+      showLoading('Loading demo...');
+      setTimeout(() => {
+        hideLoading();
+        showNotification('Loading complete!', 'success');
+      }, 2000);
+    }
+
+    // Show inline spinner
+    showInlineLoading('spinnerDemo');
+
+    // Demo quantity
+    let demoQty = 1;
+    function adjustDemoQty(delta) {
+      demoQty = Math.max(1, demoQty + delta);
+      document.getElementById('demoQty').textContent = demoQty;
+      showNotification(`Quantity updated to ${demoQty}`, 'info', 2000);
+    }
+
+    // Welcome message
+    setTimeout(() => {
+      showNotification('Welcome to the UI demo! Click the buttons to see features in action.', 'info', 8000);
+    }, 500);
+  </script>
+</body>
+</html>

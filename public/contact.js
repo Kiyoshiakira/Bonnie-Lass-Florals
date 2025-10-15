@@ -6,6 +6,11 @@ document.getElementById('contactForm').addEventListener('submit', async function
   const message = e.target.querySelector('textarea[name="message"]').value;
 
   try {
+    // Show loading
+    if (typeof showLoading === 'function') {
+      showLoading('Sending message...');
+    }
+    
     // UPDATED: Use full Render API URL
     const res = await fetch('https://bonnie-lass-florals.onrender.com/api/contact', {
       method: 'POST',
@@ -14,13 +19,36 @@ document.getElementById('contactForm').addEventListener('submit', async function
     });
     const data = await res.json();
 
+    // Hide loading
+    if (typeof hideLoading === 'function') {
+      hideLoading();
+    }
+
     if (res.ok) {
-      alert(data.message || 'Message sent!');
+      if (typeof showNotification === 'function') {
+        showNotification(data.message || 'Message sent successfully!', 'success');
+      } else {
+        alert(data.message || 'Message sent!');
+      }
       e.target.reset();
     } else {
-      alert(data.error || 'There was a problem.');
+      if (typeof showNotification === 'function') {
+        showNotification(data.error || 'There was a problem sending your message.', 'error');
+      } else {
+        alert(data.error || 'There was a problem.');
+      }
     }
   } catch (error) {
-    alert('Network error!');
+    // Hide loading
+    if (typeof hideLoading === 'function') {
+      hideLoading();
+    }
+    
+    if (typeof showNotification === 'function') {
+      showNotification('Network error! Please check your connection and try again.', 'error');
+    } else {
+      alert('Network error!');
+    }
   }
 });
+

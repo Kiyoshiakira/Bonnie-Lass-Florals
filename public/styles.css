@@ -5,6 +5,11 @@ body {
   color: #222;
 }
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
 /* --- HEADER FIX: Make logo and nav side by side and centered --- */
 header {
   display: flex;
@@ -31,6 +36,102 @@ nav {
   display: flex;
   gap: 2rem;
   margin: 0;
+}
+
+nav a {
+  color: #e4d8f7;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.05rem;
+  transition: color .25s;
+}
+
+/* ------------------------------ PRODUCT FILTERS & SORTING ------------------------------ */
+.shop-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f5f0ff;
+  border-radius: 1rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  color: #421e7c;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.filter-group select {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e4d8f7;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #421e7c;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #d946ef;
+}
+
+.filter-reset {
+  background: #6e33b7;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.filter-reset:hover {
+  background: #421e7c;
+}
+
+/* ------------------------------ BREADCRUMBS ------------------------------ */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.8rem 1rem;
+  background: #f5f0ff;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.breadcrumb a {
+  color: #6e33b7;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: #d946ef;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #888;
+}
+
+.breadcrumb-current {
+  color: #421e7c;
+  font-weight: 500;
 }
 
 nav a {
@@ -475,6 +576,12 @@ footer a {
   max-width: 340px;
   flex: 0 1 340px;
   text-align: left;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(110,51,183,0.15);
 }
 .product-img {
   width: 100%;
@@ -482,6 +589,12 @@ footer a {
   height: auto;
   border-radius: 1em;
   margin-bottom: 1em;
+  cursor: zoom-in;
+  transition: transform 0.2s;
+}
+
+.product-img:hover {
+  transform: scale(1.02);
 }
 .product-title {
   font-weight: bold;
@@ -500,6 +613,16 @@ footer a {
   color: #888;
   margin-bottom: 0.2em;
 }
+
+.product-stock.out-of-stock {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.product-stock.low-stock {
+  color: #f59e0b;
+  font-weight: bold;
+}
 .product-desc {
   color: #444;
   margin-bottom: 0.7em;
@@ -513,10 +636,219 @@ footer a {
   font-weight: bold;
   font-size: 1em;
   cursor: pointer;
-  transition: background 0.16s;
+  transition: background 0.3s, transform 0.2s;
 }
-.product-card button:hover {
+.product-card button:hover:not(:disabled) {
   background: #a21caf;
+  transform: scale(1.05);
+}
+.product-card button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* ------------------------------ IMAGE LIGHTBOX/MODAL ------------------------------ */
+.image-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  align-items: center;
+  justify-content: center;
+}
+
+.image-modal.active {
+  display: flex;
+}
+
+.image-modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.image-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  color: #fff;
+  font-size: 3rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.image-modal-close:hover {
+  color: #d946ef;
+}
+
+/* ------------------------------ CART ENHANCEMENTS ------------------------------ */
+.cart-item-thumbnail {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  margin-right: 1rem;
+}
+
+.cart-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cart-quantity-btn {
+  background: #d946ef;
+  color: #fff;
+  border: none;
+  border-radius: 0.3rem;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.cart-quantity-btn:hover {
+  background: #a21caf;
+}
+
+.cart-quantity-display {
+  min-width: 40px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* ------------------------------ LOADING SPINNER ------------------------------ */
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #d946ef;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 2rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-overlay.active {
+  display: flex;
+}
+
+.loading-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ------------------------------ NOTIFICATIONS ------------------------------ */
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.notification.success {
+  border-left: 4px solid #10b981;
+}
+
+.notification.error {
+  border-left: 4px solid #ef4444;
+}
+
+.notification.info {
+  border-left: 4px solid #3b82f6;
+}
+
+.notification.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.notification-message {
+  flex: 1;
+  color: #222;
+  font-size: 1rem;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.notification-close:hover {
+  color: #222;
 }
 
 /* ------------------------------ INSTAGRAM GALLERY ------------------------------ */
@@ -672,6 +1004,7 @@ footer a {
   header .logo {
     margin-right: 0;
     margin-bottom: 18px;
+    font-size: 2rem;
   }
   .features, .pricing-table {
     flex-direction: column;
@@ -683,6 +1016,10 @@ footer a {
   }
   nav {
     gap: 1rem;
+    font-size: 0.95rem;
+  }
+  nav a {
+    font-size: 1rem;
   }
   #contactForm {
     max-width: 100%;
@@ -691,14 +1028,38 @@ footer a {
     flex: 0 1 100%;
     max-width: 100%;
   }
+  p {
+    font-size: 1.05rem;
+  }
+  .shop-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-group select {
+    width: 100%;
+  }
+  .breadcrumb {
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 480px) {
   h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   h2 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+  }
+  h3 {
+    font-size: 1.2rem;
+  }
+  p {
+    font-size: 1.05rem;
   }
   .gallery-grid {
     grid-template-columns: 1fr;
@@ -710,6 +1071,9 @@ footer a {
   nav {
     flex-direction: column;
     gap: 0.5rem;
+  }
+  nav a {
+    font-size: 1.05rem;
   }
   .instagram-gallery {
     min-height: 400px;
@@ -724,5 +1088,23 @@ footer a {
   .checkout-form {
     max-width: 98vw;
     padding: 1em 1vw 1em 1vw;
+  }
+  .cart-item-thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+  .notification {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  .product-card {
+    padding: 1rem;
+  }
+  .product-title {
+    font-size: 1.1rem;
+  }
+  table {
+    font-size: 0.9rem;
   }
 }
