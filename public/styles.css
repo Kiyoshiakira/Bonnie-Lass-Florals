@@ -1069,6 +1069,18 @@ footer a {
     right: 0;
   }
   
+  /* Mobile-optimized Instagram gallery */
+  .instagram-gallery {
+    margin-top: 1rem;
+    min-height: 500px;
+    padding: 0.5rem;
+  }
+  
+  .instagram-media {
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+  
   nav a {
     font-size: 1.1rem;
     padding: 1rem 2rem;
@@ -1156,10 +1168,13 @@ footer a {
     width: 250px;
   }
   .instagram-gallery {
-    min-height: 400px;
+    min-height: 450px;
+    padding: 0.25rem;
+    margin-top: 0.5rem;
   }
   .instagram-media {
     min-width: 100% !important;
+    margin: 0 auto !important;
   }
   #uploadForm {
     max-width: 98vw;
