@@ -375,18 +375,20 @@ footer a {
 
 /* ------------------------------ NAV & DROPDOWN PROFILE ------------------------------ */
 
-/* Hamburger Menu Icon (hidden on desktop) */
+/* Hamburger Menu Icon - Hidden on desktop, shown on mobile (≤800px) */
+/* Created dynamically by mobile-nav.js and inserted before nav element */
 .hamburger {
-  display: none;
+  display: none; /* Hidden by default on desktop */
   flex-direction: column;
   cursor: pointer;
   padding: 0.5rem;
   gap: 0.3rem;
   background: none;
   border: none;
-  z-index: 1001;
+  z-index: 1001; /* Above most content but below mobile nav */
 }
 
+/* Hamburger icon bars */
 .hamburger span {
   width: 25px;
   height: 3px;
@@ -395,12 +397,13 @@ footer a {
   transition: all 0.3s ease;
 }
 
+/* Hamburger animation when menu is active (transforms to X) */
 .hamburger.active span:nth-child(1) {
   transform: rotate(45deg) translate(5px, 5px);
 }
 
 .hamburger.active span:nth-child(2) {
-  opacity: 0;
+  opacity: 0; /* Hide middle bar */
 }
 
 .hamburger.active span:nth-child(3) {
@@ -1024,17 +1027,21 @@ footer a {
 }
 
 /* ------------------------------ MEDIA QUERIES ------------------------------ */
+/* Mobile devices (≤800px) - Show hamburger menu and hide desktop navigation */
 @media (max-width: 800px) {
   section {
     padding: 18px 6vw;
     margin-top: 36px;
   }
+  
+  /* Header layout adjustments for mobile */
   header {
     flex-direction: row;
     justify-content: space-between;
     padding: 20px 1.5rem;
     flex-wrap: wrap;
   }
+  
   header .logo {
     margin-right: 0;
     margin-bottom: 0;
@@ -1042,17 +1049,19 @@ footer a {
     flex: 1;
   }
   
-  /* Show hamburger menu on mobile */
+  /* Show hamburger menu button on mobile devices */
+  /* Button is created by mobile-nav.js and positioned in header */
   .hamburger {
-    display: flex;
-    order: 2;
+    display: flex; /* Show on mobile */
+    order: 2; /* Position after logo */
   }
   
-  /* Mobile navigation - slide-in menu */
+  /* Mobile navigation - slide-in menu from right side */
+  /* Hidden by default (off-screen), slides in when .active class is added */
   nav {
     position: fixed;
     top: 0;
-    right: -100%;
+    right: -100%; /* Initially hidden off-screen */
     height: 100vh;
     width: 280px;
     background: linear-gradient(180deg, #421e7c 0%, #6e33b7 100%);
@@ -1060,13 +1069,14 @@ footer a {
     gap: 0;
     padding: 80px 0 2rem 0;
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
-    transition: right 0.3s ease;
-    z-index: 1000;
-    overflow-y: auto;
+    transition: right 0.3s ease; /* Smooth slide animation */
+    z-index: 1000; /* Above page content */
+    overflow-y: auto; /* Allow scrolling if content exceeds viewport */
   }
   
+  /* Active state - menu slides into view */
   nav.active {
-    right: 0;
+    right: 0; /* Slide menu into view */
   }
   
   /* Mobile-optimized Instagram gallery */
@@ -1081,6 +1091,7 @@ footer a {
     max-width: 100% !important;
   }
   
+  /* Navigation links styling for mobile menu */
   nav a {
     font-size: 1.1rem;
     padding: 1rem 2rem;
@@ -1093,12 +1104,14 @@ footer a {
     background: rgba(255, 255, 255, 0.1);
   }
   
+  /* Profile circle container in mobile menu */
   #profileCircleContainer {
     padding: 1rem 2rem;
     margin-left: 0;
     border-bottom: 1px solid rgba(228, 216, 247, 0.2);
   }
   
+  /* Login button in mobile menu */
   #loginBtn {
     margin: 1rem 2rem;
     text-align: center;
