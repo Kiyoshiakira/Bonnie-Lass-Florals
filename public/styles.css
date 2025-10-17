@@ -1,8 +1,34 @@
+/* ============================================================================
+   BONNIE LASS FLORALS - FLORAL-INSPIRED DESIGN SYSTEM
+   ============================================================================
+   
+   COLOR PALETTE (Inspired by vibrant floral arrangements):
+   - Primary Coral/Red: #ff6b6b (vibrant coral-red from flowers)
+   - Accent Coral: #ff8787 (lighter coral)
+   - Sunny Yellow: #ffd93d (bright, cheerful yellow)
+   - Lush Green: #6bcf7f (fresh, natural green)
+   - Soft Pink/Blush: #ffb3ba (gentle pink tones)
+   - Warm Cream: #fff5e6 (soft, warm background)
+   - Deep Rose: #e63946 (rich accent color)
+   
+   BACKGROUNDS:
+   - Main Background: Light cream (#fef9f3) for warmth and readability
+   - Card Backgrounds: Pure white (#fff) with floral-colored accents
+   - Optional: Canva background image support (see .custom-background class)
+   
+   DESIGN PRINCIPLES:
+   - Centered layouts for clean presentation
+   - Vibrant accent colors from floral arrangements
+   - Modern, bold CTAs with smooth hover effects
+   - Light backgrounds for excellent readability
+   - Accessible high-contrast combinations
+   ============================================================================ */
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f5f7fa;
-  color: #222;
+  background: #fef9f3; /* Warm cream background - can be overridden with .custom-background */
+  color: #2d2d2d;
 }
 
 /* Smooth scrolling */
@@ -10,17 +36,33 @@ html {
   scroll-behavior: smooth;
 }
 
-/* --- HEADER FIX: Make logo and nav side by side and centered --- */
+/* OPTIONAL: Custom Canva Background Support
+   To use a custom background image from Canva:
+   1. Export your design from Canva
+   2. Upload to /public/img/custom-background.png (or .jpg)
+   3. Uncomment the CSS below and adjust the image path
+   
+   Example:
+   body.custom-background {
+     background: url('img/custom-background.png') center/cover no-repeat fixed;
+     background-color: #fef9f3; // Fallback color
+   }
+*/
+
+/* ============================================================================
+   HEADER - Vibrant floral gradient inspired by colorful arrangements
+   ============================================================================ */
 header {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, #421e7c 0%, #6e33b7 100%);
+  /* Vibrant floral gradient: coral-red to soft pink */
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 50%, #ffb3ba 100%);
   color: #fff;
   padding: 28px 0 14px 0;
   position: relative;
-  box-shadow: 0 2px 8px rgba(80,30,140,.06);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
 }
 
 header .logo {
@@ -28,10 +70,13 @@ header .logo {
   font-weight: bold;
   letter-spacing: 1.5px;
   color: #fff;
-  text-shadow: 0 2px 8px rgba(80,30,140,.18);
+  text-shadow: 0 2px 10px rgba(230, 57, 70, 0.3);
   margin-right: 48px;
 }
 
+/* ============================================================================
+   NAVIGATION - Clean, modern nav links with floral accent colors
+   ============================================================================ */
 nav {
   display: flex;
   gap: 2rem;
@@ -39,23 +84,59 @@ nav {
 }
 
 nav a {
-  color: #e4d8f7;
+  color: #fff;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 1.05rem;
-  transition: color .25s;
+  transition: all 0.25s ease;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
 }
 
-/* ------------------------------ PRODUCT FILTERS & SORTING ------------------------------ */
+nav a:hover {
+  color: #ffd93d; /* Sunny yellow on hover */
+  border-bottom: 2px solid #ffd93d;
+  transform: translateY(-2px);
+}
+
+/* ============================================================================
+   CTA BUTTONS - Large, bold, and colorful with modern effects
+   ============================================================================ */
+.cta-btn {
+  /* Vibrant sunny yellow gradient */
+  background: linear-gradient(135deg, #ffd93d 0%, #ffed4e 100%);
+  color: #2d2d2d;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1.15rem;
+  cursor: pointer;
+  margin-left: 18px;
+  box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cta-btn:hover {
+  background: linear-gradient(135deg, #ffed4e 0%, #ffd93d 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 217, 61, 0.5);
+}
+/* ============================================================================
+   PRODUCT FILTERS & SORTING - Fresh floral styling
+   ============================================================================ */
 .shop-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #f5f0ff;
-  border-radius: 1rem;
+  padding: 1.2rem;
+  background: #fff5e6; /* Warm cream background */
+  border-radius: 16px;
   align-items: center;
+  border: 2px solid #ffb3ba; /* Soft pink border */
 }
 
 .filter-group {
@@ -65,147 +146,146 @@ nav a {
 }
 
 .filter-group label {
-  color: #421e7c;
-  font-weight: 500;
+  color: #e63946; /* Deep rose */
+  font-weight: 600;
   font-size: 0.95rem;
 }
 
 .filter-group select {
-  padding: 0.5rem 1rem;
-  border: 2px solid #e4d8f7;
-  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: 2px solid #ff8787; /* Accent coral */
+  border-radius: 10px;
   background: #fff;
-  color: #421e7c;
+  color: #2d2d2d;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .filter-group select:focus {
   outline: none;
-  border-color: #d946ef;
+  border-color: #ff6b6b; /* Primary coral */
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
 .filter-reset {
-  background: #6e33b7;
+  background: #6bcf7f; /* Lush green */
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  padding: 0.6rem 1.3rem;
   font-size: 0.95rem;
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .filter-reset:hover {
-  background: #421e7c;
+  background: #5bb56d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 207, 127, 0.3);
 }
 
-/* ------------------------------ BREADCRUMBS ------------------------------ */
+/* ============================================================================
+   BREADCRUMBS - Floral navigation trail
+   ============================================================================ */
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  padding: 0.8rem 1rem;
-  background: #f5f0ff;
-  border-radius: 0.5rem;
+  padding: 0.9rem 1.2rem;
+  background: #fff5e6; /* Warm cream */
+  border-radius: 12px;
   font-size: 0.95rem;
+  border-left: 4px solid #ff6b6b; /* Coral accent */
 }
 
 .breadcrumb a {
-  color: #6e33b7;
+  color: #ff6b6b; /* Primary coral */
   text-decoration: none;
   transition: color 0.2s;
+  font-weight: 500;
 }
 
 .breadcrumb a:hover {
-  color: #d946ef;
+  color: #e63946; /* Deep rose */
   text-decoration: underline;
 }
 
 .breadcrumb-separator {
-  color: #888;
+  color: #999;
 }
 
 .breadcrumb-current {
-  color: #421e7c;
-  font-weight: 500;
+  color: #e63946; /* Deep rose */
+  font-weight: 600;
 }
 
-nav a {
-  color: #e4d8f7;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1.05rem;
-  transition: color .25s;
-}
+/* Duplicate nav styling removed - already defined above */
 
-nav a:hover {
-  color: #ffd86b;
-}
-
-.cta-btn {
-  background: linear-gradient(90deg, #ffd86b 0%, #ffb44d 100%);
-  color: #421e7c;
-  border: none;
-  padding: 10px 28px;
-  border-radius: 24px;
-  font-weight: bold;
-  font-size: 1.1rem;
-  cursor: pointer;
-  margin-left: 18px;
-  box-shadow: 0 2px 8px rgba(255, 216, 107, 0.14);
-  transition: background .18s;
-}
-
-.cta-btn:hover {
-  background: linear-gradient(90deg, #ffb44d 0%, #ffd86b 100%);
-}
-
+/* ============================================================================
+   SECTIONS - Clean, centered content areas with subtle floral accents
+   ============================================================================ */
 section {
   max-width: 1100px;
   margin: 64px auto 0 auto;
   background: #fff;
-  border-radius: 26px;
-  box-shadow: 0 8px 40px rgba(80,30,140,.07);
+  border-radius: 30px;
+  box-shadow: 0 8px 30px rgba(255, 107, 107, 0.12);
   padding: 54px 34px;
+  border-top: 4px solid #ff8787; /* Accent coral border */
 }
 
 section h1 {
   text-align: center;
 }
 
+/* ============================================================================
+   TYPOGRAPHY - Vibrant floral-inspired headings
+   ============================================================================ */
 h1, h2, h3 {
   font-family: 'Segoe UI', Arial, sans-serif;
-  color: #421e7c;
+  color: #e63946; /* Deep rose for headers */
   font-weight: bold;
 }
 
 h1 {
   font-size: 2.8rem;
   margin-bottom: 18px;
+  background: linear-gradient(135deg, #ff6b6b, #e63946);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 h2 {
   font-size: 2.1rem;
   margin-top: 32px;
   margin-bottom: 12px;
+  color: #ff6b6b; /* Primary coral */
+  border-bottom: 3px solid #ffb3ba; /* Soft pink underline */
+  padding-bottom: 8px;
+  display: inline-block;
 }
 
 h3 {
   font-size: 1.35rem;
   margin-top: 22px;
   margin-bottom: 8px;
+  color: #ff6b6b;
 }
 
 p {
   font-size: 1.12rem;
-  line-height: 1.6;
+  line-height: 1.7;
   color: #444;
 }
 
+/* ============================================================================
+   FEATURE CARDS - Vibrant, colorful cards inspired by floral arrangements
+   ============================================================================ */
 .features {
   display: flex;
   flex-wrap: wrap;
@@ -215,26 +295,30 @@ p {
 
 .feature-card {
   flex: 1 1 270px;
-  background: linear-gradient(90deg, #6e33b7 0%, #421e7c 100%);
+  /* Vibrant gradient matching the floral theme */
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
   color: #fff;
-  border-radius: 20px;
-  padding: 22px 18px;
-  box-shadow: 0 2px 12px rgba(80,30,140,.10);
-  transition: transform .13s;
+  border-radius: 24px;
+  padding: 28px 22px;
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.25);
+  transition: all 0.3s ease;
   min-width: 220px;
+  border: 3px solid #ffb3ba; /* Soft pink border for extra pop */
 }
 
 .feature-card:hover {
-  transform: translateY(-6px) scale(1.03);
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 12px 30px rgba(255, 107, 107, 0.35);
 }
 
 .feature-card i {
-  font-size: 2.1rem;
+  font-size: 2.5rem;
   margin-bottom: 15px;
   display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-/* HIGH CONTRAST FOR FEATURE CARDS */
+/* HIGH CONTRAST FOR FEATURE CARDS - Ensure text is always readable */
 .feature-card,
 .feature-card strong,
 .feature-card p,
@@ -242,8 +326,12 @@ p {
 .feature-card h2,
 .feature-card h3 {
   color: #fff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* ============================================================================
+   GALLERY GRID - Showcase floral work beautifully
+   ============================================================================ */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -252,34 +340,40 @@ p {
 }
 
 .gallery-item {
-  background: #f5f0ff;
-  border: 1px solid #e4d8f7;
+  background: #fff;
+  border: 3px solid #ffb3ba; /* Soft pink border */
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(80,30,140,.08);
-  transition: box-shadow .18s;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.15);
+  transition: all 0.3s ease;
 }
 
 .gallery-item:hover {
-  box-shadow: 0 8px 32px rgba(110,51,183,.13);
+  transform: translateY(-6px);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.25);
+  border-color: #ff8787; /* Accent coral on hover */
 }
 
 .gallery-item img, .gallery-item video {
   width: 100%;
   display: block;
-  border-bottom: 1px solid #e4d8f7;
+  border-bottom: 3px solid #ffb3ba;
 }
 
 .gallery-item .caption {
-  padding: 14px 14px 16px 14px;
+  padding: 16px;
   font-size: 1rem;
-  color: #421e7c;
-  font-weight: 500;
+  color: #e63946; /* Deep rose */
+  font-weight: 600;
+  background: #fff5e6; /* Warm cream background */
 }
 
+/* ============================================================================
+   PRICING TABLE - Beautiful pricing cards with floral accents
+   ============================================================================ */
 .pricing-table {
   display: flex;
-  gap: 18px;
+  gap: 24px;
   margin: 34px 0 0 0;
   justify-content: center;
   flex-wrap: wrap;
@@ -287,93 +381,132 @@ p {
 
 .pricing-card {
   background: #fff;
-  border: 2px solid #e4d8f7;
-  border-radius: 22px;
-  box-shadow: 0 2px 14px rgba(110,51,183,.09);
-  padding: 32px 28px;
+  border: 3px solid #ffb3ba; /* Soft pink border */
+  border-radius: 24px;
+  box-shadow: 0 4px 18px rgba(255, 107, 107, 0.15);
+  padding: 36px 32px;
   flex: 1 1 220px;
   max-width: 330px;
   min-width: 200px;
   text-align: center;
-  transition: border .18s, box-shadow .16s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pricing-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #ff6b6b, #ff8787, #ffb3ba);
+}
+
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(255, 107, 107, 0.25);
+  border-color: #ff8787;
 }
 
 .pricing-card.highlight {
-  border: 2.5px solid #ffd86b;
-  box-shadow: 0 6px 28px rgba(255, 216, 107, 0.13);
+  border: 3px solid #ffd93d; /* Sunny yellow for highlighted plan */
+  box-shadow: 0 8px 28px rgba(255, 217, 61, 0.3);
+  background: linear-gradient(180deg, #fffef5 0%, #fff 100%);
+}
+
+.pricing-card.highlight::before {
+  background: linear-gradient(90deg, #ffd93d, #ffed4e);
 }
 
 .pricing-card h3 {
-  color: #6e33b7;
-  font-size: 1.38rem;
+  color: #ff6b6b; /* Primary coral */
+  font-size: 1.5rem;
   margin-bottom: 12px;
 }
 
 .pricing-card .price {
-  font-size: 2.2rem;
-  color: #421e7c;
+  font-size: 2.4rem;
+  color: #e63946; /* Deep rose */
   font-weight: bold;
-  margin: 18px 0 16px 0;
+  margin: 20px 0 18px 0;
 }
 
 .pricing-card ul {
   list-style: none;
   padding: 0;
-  margin: 0 0 18px 0;
+  margin: 0 0 24px 0;
   color: #444;
   text-align: left;
   font-size: 1.09rem;
 }
 
 .pricing-card ul li {
-  margin: 12px 0;
-  padding-left: 20px;
+  margin: 14px 0;
+  padding-left: 26px;
   position: relative;
 }
 
 .pricing-card ul li:before {
-  content: "•";
+  content: "✿"; /* Floral bullet point */
   position: absolute;
   left: 0;
-  color: #ffd86b;
-  font-size: 1.2em;
+  color: #ff6b6b; /* Primary coral */
+  font-size: 1.3em;
 }
 
 .pricing-card .plan-btn {
-  background: linear-gradient(90deg, #ffd86b 0%, #ffb44d 100%);
-  color: #421e7c;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+  color: #fff;
   border: none;
-  border-radius: 18px;
-  padding: 10px 0;
+  border-radius: 20px;
+  padding: 12px 0;
   width: 100%;
   font-weight: bold;
-  font-size: 1.09rem;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: background .16s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
 
 .pricing-card .plan-btn:hover {
-  background: linear-gradient(90deg, #ffb44d 0%, #ffd86b 100%);
+  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 107, 107, 0.4);
 }
 
+/* ============================================================================
+   FOOTER - Warm, welcoming footer with floral accent
+   ============================================================================ */
 footer {
-  background: #421e7c;
+  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
   color: #fff;
   text-align: center;
-  padding: 29px 0 22px 0;
+  padding: 32px 0 26px 0;
   margin-top: 90px;
-  border-radius: 24px 24px 0 0;
+  border-radius: 30px 30px 0 0;
   font-size: 1.08rem;
-  letter-spacing: .2px;
-  box-shadow: 0 -2px 13px rgba(80,30,140,.10);
+  letter-spacing: .3px;
+  box-shadow: 0 -4px 16px rgba(255, 107, 107, 0.15);
 }
 
 footer a {
-  color: #ffd86b;
+  color: #ffd93d; /* Sunny yellow */
   text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
-/* ------------------------------ NAV & DROPDOWN PROFILE ------------------------------ */
+footer a:hover {
+  color: #ffed4e;
+}
+
+/* ============================================================================
+   NAVIGATION & DROPDOWN PROFILE - Modern, accessible navigation
+   ============================================================================ */
 
 /* Hamburger Menu Icon - Hidden on desktop, shown on mobile (≤800px) */
 /* Created dynamically by mobile-nav.js and inserted before nav element */
@@ -415,32 +548,39 @@ footer a {
   margin-left: auto;
   align-items: center;
 }
+
 #profileCircle {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #60a5fa; /* Light blue */
+  border: 3px solid #ffd93d; /* Sunny yellow border */
   object-fit: cover;
   background: #fff;
   margin-right: 0.5em;
-  box-shadow: 0 0 0 2px #e4d8f7;
+  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3);
+  transition: all 0.2s ease;
 }
 
-/* Profile dropdown styles - light blue */
+#profileCircle:hover {
+  border-color: #ffed4e;
+  transform: scale(1.05);
+}
+
+/* Profile dropdown styles - floral theme */
 #profileDropdown {
   display: none;
   position: absolute;
   top: 48px;
   right: 0;
   background: #fff;
-  color: #421e7c;
-  min-width: 180px;
-  border-radius: 1em;
-  box-shadow: 0 4px 24px rgba(96,165,250,0.18); /* blue shadow */
+  color: #2d2d2d;
+  min-width: 200px;
+  border-radius: 16px;
+  box-shadow: 0 6px 30px rgba(255, 107, 107, 0.2);
   z-index: 100;
   padding: 0.8em 0.5em;
-  border: 1.5px solid #60a5fa;
+  border: 2px solid #ff8787; /* Accent coral border */
 }
 
 #profileCircleContainer.active #profileDropdown {
@@ -453,93 +593,122 @@ footer a {
   width: 100%;
   background: none;
   border: none;
-  color: #421e7c;
+  color: #2d2d2d;
   text-align: left;
-  padding: 0.7em 1.1em;
+  padding: 0.8em 1.2em;
   font-size: 1em;
   cursor: pointer;
   text-decoration: none;
-  border-radius: 0.7em;
-  transition: background 0.18s, color 0.18s;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 #profileDropdown a:hover,
 #profileDropdown button:hover {
-  background: #e0f2fe; /* very light blue */
-  color: #2563eb;      /* deeper blue */
+  background: #fff5e6; /* Warm cream */
+  color: #ff6b6b; /* Primary coral */
 }
 
 #userInfoDropdown {
   font-size: 0.96em;
-  color: #60a5fa;
-  padding: 0.7em 1em 0.7em 1.1em;
-  border-bottom: 1px solid #e4d8f7;
+  color: #ff6b6b;
+  padding: 0.7em 1em 0.7em 1.2em;
+  border-bottom: 2px solid #ffb3ba;
   margin-bottom: 0.4em;
-  background: #f1f5f9; /* off-white blue */
+  background: #fff5e6; /* Warm cream */
+  font-weight: 600;
 }
 
 /* Login button style */
 #loginBtn {
   margin-left: 0.7em;
-  background: #e0f2fe;
-  color: #fff;
-  border-radius: 1em;
-  padding: 0.44em 1.2em;
+  background: #ffd93d; /* Sunny yellow */
+  color: #2d2d2d;
+  border-radius: 16px;
+  padding: 0.5em 1.4em;
   font-weight: bold;
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: background 0.2s;
-}
-#loginBtn:hover {
-  background: #a21caf;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3);
 }
 
-/* ------------------------------ LOGIN MODAL ------------------------------ */
+#loginBtn:hover {
+  background: #ffed4e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+}
+
+/* ============================================================================
+   LOGIN MODAL - Friendly, accessible login interface
+   ============================================================================ */
 #loginModal {
   display: none;
   position: fixed;
   z-index: 200;
   left: 0; top: 0; right: 0; bottom: 0;
-  background: rgba(66,30,124,0.18);
+  background: rgba(230, 57, 70, 0.15);
   align-items: center;
   justify-content: center;
 }
+
 #loginModal.active {
   display: flex;
 }
+
 .hidden {
   display: none !important;
 }
+
 #loginModalContent {
   background: #fff;
   padding: 2.5em 2em 2em 2em;
-  border-radius: 1.2em;
+  border-radius: 20px;
   min-width: 320px;
   max-width: 95vw;
-  box-shadow: 0 8px 38px rgba(110,51,183,0.15);
+  box-shadow: 0 10px 40px rgba(255, 107, 107, 0.25);
+  border-top: 5px solid #ff6b6b; /* Primary coral accent */
 }
+
 #loginModalContent input,
 #loginModalContent button {
   width: 100%;
   margin-bottom: 1em;
   font-size: 1.09em;
-  padding: 0.7em 0.6em;
-  border-radius: 0.7em;
-  border: 1px solid #d946ef;
+  padding: 0.8em 0.7em;
+  border-radius: 12px;
+  border: 2px solid #ffb3ba; /* Soft pink border */
+  transition: all 0.2s ease;
 }
+
+#loginModalContent input:focus {
+  outline: none;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
 #loginModalContent button {
-  background: #d946ef;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
   color: #fff;
   border: none;
   font-weight: bold;
-  transition: background 0.18s;
-}
-#loginModalContent button:hover {
-  background: #a21caf;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* ------------------------------ CONTACT FORM ------------------------------ */
+#loginModalContent button:hover {
+  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+/* ============================================================================
+   CONTACT FORM - Beautiful, accessible form design
+   ============================================================================ */
 #contactForm {
   max-width: 600px;
   margin: 2rem auto;
@@ -550,7 +719,7 @@ footer a {
 #contactForm label {
   display: block;
   font-weight: 600;
-  color: #421e7c;
+  color: #e63946; /* Deep rose */
   margin-bottom: 0.5rem;
   margin-top: 1rem;
 }
@@ -559,94 +728,121 @@ footer a {
 #contactForm textarea {
   display: block;
   width: 100%;
-  padding: 0.8rem;
-  border: 2px solid #e4d8f7;
-  border-radius: 0.5rem;
+  padding: 0.9rem;
+  border: 2px solid #ffb3ba; /* Soft pink */
+  border-radius: 12px;
   font-size: 1rem;
   font-family: 'Segoe UI', Arial, sans-serif;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 #contactForm input:focus,
 #contactForm textarea:focus {
   outline: none;
-  border-color: #d946ef;
+  border-color: #ff6b6b; /* Primary coral */
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
 #contactForm button {
   display: block;
   width: 100%;
   margin-top: 1.5rem;
-  background: #6e33b7;
+  background: linear-gradient(135deg, #6bcf7f 0%, #5bb56d 100%);
   color: #fff;
   border: none;
-  border-radius: 0.7em;
-  padding: 0.9em 1.6em;
+  border-radius: 14px;
+  padding: 1em 1.8em;
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1.15em;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(107, 207, 127, 0.3);
 }
 
 #contactForm button:hover {
-  background: #60a5fa;
+  background: linear-gradient(135deg, #5bb56d 0%, #4a9c5a 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(107, 207, 127, 0.4);
 }
 
-/* ------------------------------ PRODUCT CARDS (SHOP) ------------------------------ */
+/* ============================================================================
+   PRODUCT CARDS (SHOP) - Vibrant, eye-catching product displays
+   ============================================================================ */
 #decor-products,
 #food-products {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1.8rem;
   margin-top: 1.5rem;
 }
 
 .product-card {
   background: #fff;
-  border: 2px solid #e4d8f7;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(110,51,183,0.10);
-  padding: 1.2em 1.4em 1.4em 1.4em;
+  border: 3px solid #ffb3ba; /* Soft pink border */
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.15);
+  padding: 1.4em 1.6em 1.6em 1.6em;
   max-width: 340px;
   flex: 0 1 340px;
   text-align: left;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff6b6b, #ff8787, #ffb3ba);
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 20px rgba(110,51,183,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.25);
+  border-color: #ff8787;
 }
+
 .product-img {
   width: 100%;
   max-width: 270px;
   height: auto;
-  border-radius: 1em;
+  border-radius: 12px;
   margin-bottom: 1em;
   cursor: zoom-in;
-  transition: transform 0.2s;
+  transition: transform 0.3s ease;
+  border: 2px solid #fff5e6;
 }
 
 .product-img:hover {
-  transform: scale(1.02);
+  transform: scale(1.04);
 }
+
 .product-title {
   font-weight: bold;
-  color: #421e7c;
-  font-size: 1.15em;
-  margin-bottom: 0.3em;
+  color: #e63946; /* Deep rose */
+  font-size: 1.2em;
+  margin-bottom: 0.4em;
 }
+
 .product-price {
-  color: #d946ef;
+  color: #ff6b6b; /* Primary coral */
   font-weight: bold;
-  font-size: 1.05em;
-  margin-bottom: 0.3em;
+  font-size: 1.15em;
+  margin-bottom: 0.4em;
 }
+
 .product-stock {
   font-size: 0.97em;
   color: #888;
-  margin-bottom: 0.2em;
+  margin-bottom: 0.3em;
+  font-weight: 500;
 }
 
 .product-stock.out-of-stock {
@@ -658,30 +854,48 @@ footer a {
   color: #f59e0b;
   font-weight: bold;
 }
+
 .product-desc {
-  color: #444;
-  margin-bottom: 0.7em;
-}
-.product-card button {
-  background: #d946ef;
-  color: #fff;
-  border: none;
-  border-radius: 0.7em;
-  padding: 0.6em 1.6em;
-  font-weight: bold;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-}
-.product-card button:hover:not(:disabled) {
-  background: #a21caf;
-  transform: scale(1.05);
-}
-.product-card button:active:not(:disabled) {
-  transform: scale(0.98);
+  color: #555;
+  margin-bottom: 0.9em;
+  line-height: 1.5;
 }
 
-/* ------------------------------ IMAGE LIGHTBOX/MODAL ------------------------------ */
+.product-card button {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7em 1.8em;
+  font-weight: bold;
+  font-size: 1.05em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.product-card button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+.product-card button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.product-card button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ============================================================================
+   IMAGE LIGHTBOX/MODAL - Clean image viewing
+   ============================================================================ */
 .image-modal {
   display: none;
   position: fixed;
@@ -723,54 +937,64 @@ footer a {
 }
 
 .image-modal-close:hover {
-  color: #d946ef;
+  color: #ff6b6b; /* Primary coral */
 }
 
-/* ------------------------------ CART ENHANCEMENTS ------------------------------ */
+/* ============================================================================
+   CART ENHANCEMENTS - Modern, user-friendly cart controls
+   ============================================================================ */
 .cart-item-thumbnail {
   width: 60px;
   height: 60px;
   object-fit: cover;
-  border-radius: 0.5rem;
+  border-radius: 10px;
   margin-right: 1rem;
+  border: 2px solid #ffb3ba;
 }
 
 .cart-quantity-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .cart-quantity-btn {
-  background: #d946ef;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
   color: #fff;
   border: none;
-  border-radius: 0.3rem;
-  width: 30px;
-  height: 30px;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 1rem;
-  transition: background 0.2s;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
 }
 
 .cart-quantity-btn:hover {
-  background: #a21caf;
+  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
 }
 
 .cart-quantity-display {
-  min-width: 40px;
+  min-width: 45px;
   text-align: center;
   font-weight: bold;
+  color: #e63946;
+  font-size: 1.1rem;
 }
 
-/* ------------------------------ LOADING SPINNER ------------------------------ */
+/* ============================================================================
+   LOADING SPINNER - Floral-themed loading animation
+   ============================================================================ */
 .loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #d946ef;
+  border: 5px solid #fff5e6;
+  border-top: 5px solid #ff6b6b; /* Primary coral */
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   animation: spin 1s linear infinite;
   margin: 2rem auto;
 }
@@ -787,7 +1011,7 @@ footer a {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(230, 57, 70, 0.15);
   z-index: 9999;
   justify-content: center;
   align-items: center;
@@ -799,21 +1023,24 @@ footer a {
 
 .loading-content {
   background: #fff;
-  padding: 2rem;
-  border-radius: 1rem;
+  padding: 2.5rem;
+  border-radius: 20px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 30px rgba(255, 107, 107, 0.25);
+  border-top: 4px solid #ff6b6b;
 }
 
-/* ------------------------------ NOTIFICATIONS ------------------------------ */
+/* ============================================================================
+   NOTIFICATIONS - Colorful, modern notification system
+   ============================================================================ */
 .notification {
   position: fixed;
   top: 80px;
   right: 20px;
   background: #fff;
-  padding: 1rem 1.5rem;
-  border-radius: 0.8rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 1.1rem 1.7rem;
+  border-radius: 14px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
   z-index: 10000;
   max-width: 400px;
   display: flex;
@@ -850,32 +1077,33 @@ footer a {
 }
 
 .notification.success {
-  border-left: 4px solid #10b981;
+  border-left: 5px solid #6bcf7f; /* Lush green */
 }
 
 .notification.error {
-  border-left: 4px solid #ef4444;
+  border-left: 5px solid #ef4444;
 }
 
 .notification.info {
-  border-left: 4px solid #3b82f6;
+  border-left: 5px solid #ff6b6b; /* Primary coral */
 }
 
 .notification.warning {
-  border-left: 4px solid #f59e0b;
+  border-left: 5px solid #ffd93d; /* Sunny yellow */
 }
 
 .notification-message {
   flex: 1;
-  color: #222;
+  color: #2d2d2d;
   font-size: 1rem;
+  font-weight: 500;
 }
 
 .notification-close {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #888;
+  color: #999;
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -883,10 +1111,12 @@ footer a {
 }
 
 .notification-close:hover {
-  color: #222;
+  color: #e63946;
 }
 
-/* ------------------------------ INSTAGRAM GALLERY ------------------------------ */
+/* ============================================================================
+   INSTAGRAM GALLERY - Social media integration
+   ============================================================================ */
 .instagram-gallery {
   margin-top: 2rem;
   min-height: 600px;
@@ -901,22 +1131,25 @@ footer a {
   width: 100% !important;
 }
 
-/* ------------------------------ ADMIN UPLOAD FORM ------------------------------ */
+/* ============================================================================
+   ADMIN UPLOAD FORM - Professional admin interface
+   ============================================================================ */
 #uploadForm {
   max-width: 440px;
   margin: 2em auto;
   display: flex;
   flex-direction: column;
   gap: 1.1em;
-  padding: 2em 2em 1.5em 2em;
-  background: #f9fafb;
-  border-radius: 18px;
-  box-shadow: 0 4px 22px rgba(96,165,250,0.13);
+  padding: 2.2em 2em 1.8em 2em;
+  background: #fff5e6; /* Warm cream */
+  border-radius: 20px;
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.15);
+  border-top: 4px solid #ff6b6b;
 }
 
 #uploadForm label {
   font-weight: 600;
-  color: #421e7c;
+  color: #e63946; /* Deep rose */
   margin-bottom: 0.25em;
 }
 
@@ -925,47 +1158,56 @@ footer a {
 #uploadForm input[type="file"],
 #uploadForm textarea,
 #uploadForm select {
-  padding: 0.7em 0.7em;
-  border: 1.5px solid #e4d8f7;
-  border-radius: 7px;
+  padding: 0.8em 0.8em;
+  border: 2px solid #ffb3ba; /* Soft pink */
+  border-radius: 10px;
   font-size: 1em;
   font-family: 'Segoe UI', Arial, sans-serif;
   margin-bottom: 0.05em;
   background: #fff;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 #uploadForm input:focus,
 #uploadForm textarea:focus,
 #uploadForm select:focus {
   outline: none;
-  border-color: #60a5fa;
+  border-color: #ff6b6b; /* Primary coral */
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
 #uploadForm button[type="submit"] {
-  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #6bcf7f 0%, #5bb56d 100%);
   color: #fff;
   border: none;
-  border-radius: 1.2em;
-  padding: 0.85em 1.5em;
+  border-radius: 14px;
+  padding: 0.95em 1.6em;
   font-weight: bold;
-  font-size: 1.09em;
-  margin-top: 0.7em;
+  font-size: 1.12em;
+  margin-top: 0.8em;
   cursor: pointer;
-  transition: background 0.18s;
-  box-shadow: 0 2px 10px #60a5fa22;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(107, 207, 127, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
+
 #uploadForm button[type="submit"]:hover {
-  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  background: linear-gradient(135deg, #5bb56d 0%, #4a9c5a 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(107, 207, 127, 0.4);
 }
 
 #upload-success, #upload-error {
   text-align: center;
   font-size: 1.09em;
   margin-top: 1em;
+  font-weight: 500;
 }
 
-/* ------------------------------ CHECKOUT FORM PATCH ------------------------------ */
+/* ============================================================================
+   CHECKOUT FORM - Clean, trustworthy checkout experience
+   ============================================================================ */
 .checkout-form {
   max-width: 450px;
   margin: 0 auto;
@@ -982,51 +1224,63 @@ footer a {
 
 .checkout-form label {
   font-weight: 600;
-  margin-bottom: 0.2em;
+  margin-bottom: 0.3em;
+  color: #e63946; /* Deep rose */
 }
 
 .checkout-form input[type="text"],
 .checkout-form input[type="email"],
 .checkout-form input[type="password"] {
-  padding: 0.7em;
-  border: 1.5px solid #e4d8f7;
-  border-radius: 7px;
+  padding: 0.8em;
+  border: 2px solid #ffb3ba; /* Soft pink */
+  border-radius: 10px;
   font-size: 1em;
   background: #fff;
+  transition: all 0.2s ease;
 }
 
 .checkout-form input:focus {
-  border-color: #d946ef;
+  border-color: #ff6b6b; /* Primary coral */
   outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
-/* ------------------------------ CART SUMMARY TABLE ------------------------------ */
+/* ============================================================================
+   CART SUMMARY TABLE - Clear order overview
+   ============================================================================ */
 #cart-summary {
   margin-bottom: 2em;
 }
+
 #cart-summary table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1em;
 }
+
 #cart-summary th, #cart-summary td {
-  padding: 6px 3px;
-  border-bottom: 1px solid #e4d8f7;
+  padding: 8px 4px;
+  border-bottom: 2px solid #ffb3ba; /* Soft pink */
   font-size: 1.04em;
 }
+
 #cart-summary th {
-  background: #f6f2fe;
-  color: #6e33b7;
+  background: #fff5e6; /* Warm cream */
+  color: #e63946; /* Deep rose */
   font-weight: bold;
-}
-#cart-summary tfoot td {
-  background: #fffbe7;
-  color: #d946ef;
-  font-weight: bold;
-  font-size: 1.08em;
 }
 
-/* ------------------------------ MEDIA QUERIES ------------------------------ */
+#cart-summary tfoot td {
+  background: #fff5e6; /* Warm cream */
+  color: #ff6b6b; /* Primary coral */
+  font-weight: bold;
+  font-size: 1.15em;
+}
+
+/* ============================================================================
+   MEDIA QUERIES - Mobile Responsiveness with Floral Theme
+   ============================================================================ */
+
 /* Mobile devices (≤800px) - Show hamburger menu and hide desktop navigation */
 @media (max-width: 800px) {
   section {
@@ -1064,11 +1318,12 @@ footer a {
     right: -100%; /* Initially hidden off-screen */
     height: 100vh;
     width: 280px;
-    background: linear-gradient(180deg, #421e7c 0%, #6e33b7 100%);
+    /* Vibrant floral gradient for mobile menu */
+    background: linear-gradient(180deg, #ff6b6b 0%, #ff8787 50%, #ffb3ba 100%);
     flex-direction: column;
     gap: 0;
     padding: 80px 0 2rem 0;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    box-shadow: -4px 0 20px rgba(255, 107, 107, 0.3);
     transition: right 0.3s ease; /* Smooth slide animation */
     z-index: 1000; /* Above page content */
     overflow-y: auto; /* Allow scrolling if content exceeds viewport */
@@ -1095,20 +1350,21 @@ footer a {
   nav a {
     font-size: 1.1rem;
     padding: 1rem 2rem;
-    border-bottom: 1px solid rgba(228, 216, 247, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     width: 100%;
     text-align: left;
   }
   
   nav a:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    border-bottom-color: #ffd93d; /* Sunny yellow */
   }
   
   /* Profile circle container in mobile menu */
   #profileCircleContainer {
     padding: 1rem 2rem;
     margin-left: 0;
-    border-bottom: 1px solid rgba(228, 216, 247, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   /* Login button in mobile menu */
@@ -1123,95 +1379,120 @@ footer a {
     flex-direction: column;
     gap: 18px;
   }
+  
   .gallery-grid {
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
+  
   #contactForm {
     max-width: 100%;
   }
+  
   .product-card {
     flex: 0 1 100%;
     max-width: 100%;
   }
+  
   p {
     font-size: 1.05rem;
   }
+  
   .shop-filters {
     flex-direction: column;
     align-items: stretch;
   }
+  
   .filter-group {
     flex-direction: column;
     align-items: stretch;
   }
+  
   .filter-group select {
     width: 100%;
   }
+  
   .breadcrumb {
     font-size: 0.85rem;
     flex-wrap: wrap;
   }
 }
 
+/* Extra small mobile devices (≤480px) */
 @media (max-width: 480px) {
   h1 {
     font-size: 2.2rem;
   }
+  
   h2 {
     font-size: 1.5rem;
   }
+  
   h3 {
     font-size: 1.2rem;
   }
+  
   p {
     font-size: 1.05rem;
   }
+  
   .gallery-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+  
   section {
     padding: 10px 2vw;
   }
+  
   header .logo {
     font-size: 1.5rem;
   }
+  
   nav {
     width: 250px;
   }
+  
   .instagram-gallery {
     min-height: 450px;
     padding: 0.25rem;
     margin-top: 0.5rem;
   }
+  
   .instagram-media {
     min-width: 100% !important;
     margin: 0 auto !important;
   }
+  
   #uploadForm {
     max-width: 98vw;
     padding: 1em 1vw 1em 1vw;
   }
+  
   .checkout-form {
     max-width: 98vw;
     padding: 1em 1vw 1em 1vw;
   }
+  
   .cart-item-thumbnail {
     width: 50px;
     height: 50px;
   }
+  
   .notification {
     right: 10px;
     left: 10px;
     max-width: none;
   }
+  
   .product-card {
     padding: 1rem;
   }
+  
   .product-title {
     font-size: 1.1rem;
   }
+  
   table {
     font-size: 0.9rem;
   }
