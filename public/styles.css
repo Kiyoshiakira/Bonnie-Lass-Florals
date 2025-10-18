@@ -176,9 +176,9 @@ nav a:hover {
 }
 
 .filter-reset {
-  background: #ff8c42; /* Fall orange */
-  color: #fff;
-  border: none;
+  background: #ffd700; /* Golden yellow for better contrast */
+  color: #081c15; /* Dark text for high contrast */
+  border: 2px solid #d4692d; /* Fall orange border accent */
   border-radius: 10px;
   padding: 0.6rem 1.3rem;
   font-size: 0.95rem;
@@ -188,9 +188,10 @@ nav a:hover {
 }
 
 .filter-reset:hover {
-  background: #d4692d; /* Darker fall orange */
+  background: #ffed4e; /* Lighter golden yellow */
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  border-color: #b8541f;
 }
 
 /* ============================================================================
@@ -635,11 +636,11 @@ footer a:hover {
   font-weight: 600;
 }
 
-/* Login button style */
+/* Login button style - using golden yellow for better contrast */
 #loginBtn {
   margin-left: 0.7em;
-  background: #ff8c42; /* Fall orange */
-  color: #fff;
+  background: #ffd700; /* Golden yellow */
+  color: #081c15; /* Dark text for high contrast */
   border-radius: 16px;
   padding: 0.5em 1.4em;
   font-weight: bold;
@@ -647,13 +648,15 @@ footer a:hover {
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  border: 2px solid #d4692d; /* Fall orange border accent */
 }
 
 #loginBtn:hover {
-  background: #d4692d; /* Darker fall orange */
+  background: #ffed4e; /* Lighter golden yellow */
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(212, 105, 45, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  border-color: #b8541f;
 }
 
 /* ============================================================================
