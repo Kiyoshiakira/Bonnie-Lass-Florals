@@ -1,4 +1,7 @@
-/* Shared authentication and profile styles */
+/* ============================================================================
+   BONNIE LASS FLORALS - AUTHENTICATION & PROFILE STYLES
+   Floral-inspired design for login and profile features
+   ============================================================================ */
 
 /* Login Modal */
 #loginModal {
@@ -8,7 +11,7 @@
   top: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(230, 57, 70, 0.2);
   z-index: 9999;
   justify-content: center;
   align-items: center;
@@ -20,11 +23,12 @@
 
 #loginModalContent {
   background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px #60a5fa33;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 35px rgba(255, 107, 107, 0.25);
   min-width: 300px;
   max-width: 90vw;
+  border-top: 5px solid #ff6b6b; /* Primary coral */
 }
 
 .hidden {
@@ -44,8 +48,14 @@
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
-  border: 2px solid #60a5fa;
+  border: 3px solid #ffd93d; /* Sunny yellow */
   background: #fff;
+  transition: all 0.2s ease;
+}
+
+#profileCircle:hover {
+  transform: scale(1.05);
+  border-color: #ffed4e;
 }
 
 #profileDropdown {
@@ -54,21 +64,21 @@
   top: 48px;
   right: 0;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px #60a5fa33;
+  border-radius: 16px;
+  box-shadow: 0 6px 30px rgba(255, 107, 107, 0.2);
   min-width: 200px;
   z-index: 999;
   text-align: left;
-  border: 1.5px solid #60a5fa;
+  border: 2px solid #ff8787; /* Accent coral */
 }
 
 #profileDropdown a,
 #profileDropdown button {
   display: block;
   width: 100%;
-  padding: 0.8em 1.2em;
-  border-bottom: 1px solid #eee;
-  color: #2563eb;
+  padding: 0.9em 1.3em;
+  border-bottom: 1px solid #ffb3ba;
+  color: #2d2d2d;
   text-decoration: none;
   background: none;
   text-align: left;
@@ -76,8 +86,9 @@
   cursor: pointer;
   border: none;
   outline: none;
-  border-radius: 0.7em;
-  transition: background 0.18s, color 0.18s;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 #profileDropdown a:last-child,
@@ -87,12 +98,14 @@
 
 #profileDropdown a:hover,
 #profileDropdown button:hover {
-  background: #e0f2fe;
-  color: #2563eb;
+  background: #fff5e6; /* Warm cream */
+  color: #ff6b6b; /* Primary coral */
 }
 
 #userInfoDropdown {
-  border-bottom: 1px solid #eee;
-  color: #60a5fa;
-  background: #f1f5f9;
+  border-bottom: 2px solid #ffb3ba;
+  color: #ff6b6b;
+  background: #fff5e6;
+  font-weight: 600;
 }
+
