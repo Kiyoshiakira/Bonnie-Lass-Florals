@@ -1,0 +1,87 @@
+<svg width="1600" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark brown background -->
+  <rect width="1600" height="1200" fill="#3d2817"/>
+  
+  <!-- Fall leaves pattern -->
+  <defs>
+    <!-- Maple leaf shape -->
+    <g id="maple">
+      <ellipse cx="0" cy="0" rx="15" ry="30" fill="currentColor"/>
+      <ellipse cx="-12" cy="-10" rx="10" ry="20" transform="rotate(-30)" fill="currentColor"/>
+      <ellipse cx="12" cy="-10" rx="10" ry="20" transform="rotate(30)" fill="currentColor"/>
+    </g>
+    
+    <!-- Simple leaf -->
+    <ellipse id="leaf" cx="0" cy="0" rx="12" ry="30" fill="currentColor"/>
+    
+    <!-- Ginkgo leaf -->
+    <path id="ginkgo" d="M 0,0 Q -15,-20 -15,-40 Q 0,-30 15,-40 Q 15,-20 0,0 Z" fill="currentColor"/>
+  </defs>
+  
+  <!-- Scatter leaves with fall colors -->
+  <!-- Orange leaves -->
+  <use href="#maple" x="120" y="80" color="#ff8c42" transform="rotate(45 120 80)"/>
+  <use href="#leaf" x="250" y="150" color="#ff6347" transform="rotate(120 250 150)"/>
+  <use href="#ginkgo" x="400" y="100" color="#ffd700" transform="scale(0.8)"/>
+  <use href="#maple" x="580" y="180" color="#ff8c42" transform="rotate(-30 580 180)"/>
+  <use href="#leaf" x="720" y="90" color="#ffb347" transform="rotate(60 720 90)"/>
+  <use href="#maple" x="880" y="140" color="#ff6347" transform="rotate(90 880 140)"/>
+  <use href="#ginkgo" x="1050" y="110" color="#ffd700" transform="scale(0.9)"/>
+  <use href="#leaf" x="1200" y="160" color="#ff8c42" transform="rotate(-45 1200 160)"/>
+  <use href="#maple" x="1380" y="100" color="#d4692d" transform="rotate(15 1380 100)"/>
+  <use href="#leaf" x="1500" y="190" color="#ffb347" transform="rotate(75 1500 190)"/>
+  
+  <!-- Red/burgundy leaves -->
+  <use href="#maple" x="90" y="300" color="#8b2635" transform="rotate(30 90 300)"/>
+  <use href="#leaf" x="230" y="380" color="#a0373f" transform="rotate(-60 230 380)"/>
+  <use href="#maple" x="420" y="320" color="#8b2635" transform="rotate(120 420 320)"/>
+  <use href="#leaf" x="610" y="360" color="#cd5c5c" transform="rotate(45 610 360)"/>
+  <use href="#ginkgo" x="780" y="340" color="#a0373f" transform="scale(0.7) rotate(90)"/>
+  <use href="#maple" x="950" y="380" color="#8b2635" transform="rotate(-45 950 380)"/>
+  <use href="#leaf" x="1100" y="320" color="#cd5c5c" transform="rotate(150 1100 320)"/>
+  <use href="#maple" x="1280" y="370" color="#a0373f" transform="rotate(60 1280 370)"/>
+  <use href="#leaf" x="1450" y="340" color="#8b2635" transform="rotate(-30 1450 340)"/>
+  
+  <!-- Yellow/gold leaves -->
+  <use href="#ginkgo" x="150" y="520" color="#ffd700" transform="scale(0.9)"/>
+  <use href="#leaf" x="310" y="580" color="#ffeb3b" transform="rotate(90 310 580)"/>
+  <use href="#maple" x="470" y="540" color="#ffd700" transform="rotate(-60 470 540)"/>
+  <use href="#ginkgo" x="640" y="590" color="#ffb347" transform="scale(0.8) rotate(45)"/>
+  <use href="#leaf" x="800" y="550" color="#ffd700" transform="rotate(135 800 550)"/>
+  <use href="#maple" x="970" y="600" color="#ffeb3b" transform="rotate(30 970 600)"/>
+  <use href="#ginkgo" x="1140" y="560" color="#ffd700" transform="scale(0.85)"/>
+  <use href="#leaf" x="1310" y="590" color="#ffb347" transform="rotate(-90 1310 590)"/>
+  <use href="#maple" x="1470" y="540" color="#ffd700" transform="rotate(75 1470 540)"/>
+  
+  <!-- Brown/tan leaves -->
+  <use href="#leaf" x="100" y="750" color="#cd853f" transform="rotate(45 100 750)"/>
+  <use href="#maple" x="280" y="800" color="#8b4513" transform="rotate(-30 280 800)"/>
+  <use href="#leaf" x="440" y="770" color="#d2b48c" transform="rotate(120 440 770)"/>
+  <use href="#ginkgo" x="600" y="820" color="#cd853f" transform="scale(0.75)"/>
+  <use href="#maple" x="770" y="780" color="#8b4513" transform="rotate(60 770 780)"/>
+  <use href="#leaf" x="930" y="810" color="#d2b48c" transform="rotate(-75 930 810)"/>
+  <use href="#maple" x="1100" y="790" color="#cd853f" transform="rotate(30 1100 790)"/>
+  <use href="#leaf" x="1260" y="820" color="#8b4513" transform="rotate(150 1260 820)"/>
+  <use href="#ginkgo" x="1420" y="770" color="#d2b48c" transform="scale(0.8) rotate(-45)"/>
+  
+  <!-- Additional scattered leaves for bottom -->
+  <use href="#maple" x="130" y="980" color="#ff8c42" transform="rotate(-45 130 980)"/>
+  <use href="#leaf" x="290" y="1020" color="#a0373f" transform="rotate(90 290 1020)"/>
+  <use href="#ginkgo" x="450" y="990" color="#ffd700" transform="scale(0.9)"/>
+  <use href="#maple" x="620" y="1040" color="#8b2635" transform="rotate(120 620 1040)"/>
+  <use href="#leaf" x="780" y="1000" color="#ffb347" transform="rotate(-60 780 1000)"/>
+  <use href="#maple" x="950" y="1050" color="#ff6347" transform="rotate(45 950 1050)"/>
+  <use href="#ginkgo" x="1120" y="1010" color="#ffd700" transform="scale(0.85) rotate(75)"/>
+  <use href="#leaf" x="1280" y="1060" color="#cd853f" transform="rotate(-30 1280 1060)"/>
+  <use href="#maple" x="1450" y="1000" color="#ff8c42" transform="rotate(60 1450 1000)"/>
+  
+  <!-- Some small leaves for texture -->
+  <use href="#leaf" x="180" y="230" color="#d4692d" transform="scale(0.5) rotate(45)"/>
+  <use href="#leaf" x="350" y="470" color="#b8860b" transform="scale(0.5) rotate(-30)"/>
+  <use href="#leaf" x="520" y="680" color="#ff6347" transform="scale(0.5) rotate(90)"/>
+  <use href="#leaf" x="690" y="920" color="#ffd700" transform="scale(0.5) rotate(-60)"/>
+  <use href="#leaf" x="860" y="250" color="#cd853f" transform="scale(0.5) rotate(120)"/>
+  <use href="#leaf" x="1030" y="490" color="#ffb347" transform="scale(0.5) rotate(-90)"/>
+  <use href="#leaf" x="1200" y="710" color="#a0373f" transform="scale(0.5) rotate(30)"/>
+  <use href="#leaf" x="1370" y="940" color="#ffd700" transform="scale(0.5) rotate(-45)"/>
+</svg>
