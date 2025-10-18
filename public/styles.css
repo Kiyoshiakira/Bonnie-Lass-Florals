@@ -1,34 +1,37 @@
 /* ============================================================================
-   BONNIE LASS FLORALS - FLORAL-INSPIRED DESIGN SYSTEM
+   BONNIE LASS FLORALS - GREEN & FALL-INSPIRED DESIGN SYSTEM
    ============================================================================
    
-   COLOR PALETTE (Inspired by vibrant floral arrangements):
-   - Primary Coral/Red: #ff6b6b (vibrant coral-red from flowers)
-   - Accent Coral: #ff8787 (lighter coral)
-   - Sunny Yellow: #ffd93d (bright, cheerful yellow)
-   - Lush Green: #6bcf7f (fresh, natural green)
-   - Soft Pink/Blush: #ffb3ba (gentle pink tones)
-   - Warm Cream: #fff5e6 (soft, warm background)
-   - Deep Rose: #e63946 (rich accent color)
+   COLOR PALETTE (Inspired by autumn foliage and evergreen nature):
+   - Emerald Green: #2d6a4f (rich, deep emerald)
+   - Pine Green: #1b4332 (dark pine, forest green)
+   - Sage Green: #52b788 (soft, muted sage)
+   - Forest Green: #40916c (medium forest green)
+   - Fall Orange: #ff8c42 (warm autumn orange)
+   - Fall Red: #d4692d (rustic red-orange)
+   - Golden Yellow: #ffd700 (bright fall gold)
+   - Light Sage: #95d5b2 (pale sage green)
+   - Cream: #f1faee (soft, neutral background)
+   - Dark Text: #081c15 (nearly black for contrast)
    
    BACKGROUNDS:
-   - Main Background: Light cream (#fef9f3) for warmth and readability
-   - Card Backgrounds: Pure white (#fff) with floral-colored accents
-   - Optional: Canva background image support (see .custom-background class)
+   - Main Background: Light cream (#f1faee) with fall leaves pattern
+   - Card Backgrounds: Pure white (#fff) with green/fall accents
+   - Pattern: Subtle fall leaves SVG background
    
    DESIGN PRINCIPLES:
-   - Centered layouts for clean presentation
-   - Vibrant accent colors from floral arrangements
-   - Modern, bold CTAs with smooth hover effects
-   - Light backgrounds for excellent readability
-   - Accessible high-contrast combinations
+   - Green-centric palette with fall color accents
+   - Leafy-themed buttons with proper text contrast
+   - White text on dark greens, dark text on light greens
+   - Accessible high-contrast combinations (WCAG AA compliant)
+   - Seasonal autumn feel with evergreen foundation
    ============================================================================ */
 
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #fef9f3; /* Warm cream background - can be overridden with .custom-background */
-  color: #2d2d2d;
+  background: #f1faee url('img/fall-background.svg') center/cover fixed; /* Light cream with fall leaves pattern */
+  color: #081c15; /* Dark text for contrast */
 }
 
 /* Smooth scrolling */
@@ -50,19 +53,19 @@ html {
 */
 
 /* ============================================================================
-   HEADER - Vibrant floral gradient inspired by colorful arrangements
+   HEADER - Rich green gradient inspired by forest and autumn
    ============================================================================ */
 header {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  /* Vibrant floral gradient: coral-red to soft pink */
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 50%, #ffb3ba 100%);
+  /* Rich green gradient: pine to emerald with subtle fall accent */
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
   color: #fff;
   padding: 28px 0 14px 0;
   position: relative;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
+  box-shadow: 0 4px 12px rgba(27, 67, 50, 0.35);
 }
 
 header .logo {
@@ -70,7 +73,7 @@ header .logo {
   font-weight: bold;
   letter-spacing: 1.5px;
   color: #fff;
-  text-shadow: 0 2px 10px rgba(230, 57, 70, 0.3);
+  text-shadow: 0 2px 10px rgba(27, 67, 50, 0.5);
   margin-right: 48px;
 }
 
@@ -94,18 +97,18 @@ nav a {
 }
 
 nav a:hover {
-  color: #ffd93d; /* Sunny yellow on hover */
-  border-bottom: 2px solid #ffd93d;
+  color: #ffd700; /* Golden yellow on hover */
+  border-bottom: 2px solid #ffd700;
   transform: translateY(-2px);
 }
 
 /* ============================================================================
-   CTA BUTTONS - Large, bold, and colorful with modern effects
+   CTA BUTTONS - Leafy-themed buttons with proper contrast
    ============================================================================ */
 .cta-btn {
-  /* Vibrant sunny yellow gradient */
-  background: linear-gradient(135deg, #ffd93d 0%, #ffed4e 100%);
-  color: #2d2d2d;
+  /* Sage green gradient for leaf-like appearance */
+  background: linear-gradient(135deg, #52b788 0%, #95d5b2 100%);
+  color: #081c15; /* Dark text on light green */
   border: none;
   padding: 14px 36px;
   border-radius: 30px;
@@ -113,19 +116,22 @@ nav a:hover {
   font-size: 1.15rem;
   cursor: pointer;
   margin-left: 18px;
-  box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+  box-shadow: 0 4px 15px rgba(82, 183, 136, 0.4);
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border: 2px solid #40916c; /* Forest green border for depth */
 }
 
 .cta-btn:hover {
-  background: linear-gradient(135deg, #ffed4e 0%, #ffd93d 100%);
+  background: linear-gradient(135deg, #40916c 0%, #52b788 100%);
+  color: #fff; /* White text on darker green */
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(255, 217, 61, 0.5);
+  box-shadow: 0 6px 20px rgba(64, 145, 108, 0.5);
+  border-color: #2d6a4f;
 }
 /* ============================================================================
-   PRODUCT FILTERS & SORTING - Fresh floral styling
+   PRODUCT FILTERS & SORTING - Green and fall styling
    ============================================================================ */
 .shop-filters {
   display: flex;
@@ -133,10 +139,10 @@ nav a:hover {
   gap: 1rem;
   margin-bottom: 1.5rem;
   padding: 1.2rem;
-  background: #fff5e6; /* Warm cream background */
+  background: #f1faee; /* Light cream background */
   border-radius: 16px;
   align-items: center;
-  border: 2px solid #ffb3ba; /* Soft pink border */
+  border: 2px solid #95d5b2; /* Light sage border */
 }
 
 .filter-group {
@@ -146,17 +152,17 @@ nav a:hover {
 }
 
 .filter-group label {
-  color: #e63946; /* Deep rose */
+  color: #2d6a4f; /* Emerald green */
   font-weight: 600;
   font-size: 0.95rem;
 }
 
 .filter-group select {
   padding: 0.6rem 1.2rem;
-  border: 2px solid #ff8787; /* Accent coral */
+  border: 2px solid #52b788; /* Sage green */
   border-radius: 10px;
   background: #fff;
-  color: #2d2d2d;
+  color: #081c15;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -165,14 +171,14 @@ nav a:hover {
 
 .filter-group select:focus {
   outline: none;
-  border-color: #ff6b6b; /* Primary coral */
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  border-color: #2d6a4f; /* Emerald green */
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
 }
 
 .filter-reset {
-  background: #6bcf7f; /* Lush green */
-  color: #fff;
-  border: none;
+  background: #ffd700; /* Golden yellow for better contrast */
+  color: #081c15; /* Dark text for high contrast */
+  border: 2px solid #d4692d; /* Fall orange border accent */
   border-radius: 10px;
   padding: 0.6rem 1.3rem;
   font-size: 0.95rem;
@@ -182,13 +188,14 @@ nav a:hover {
 }
 
 .filter-reset:hover {
-  background: #5bb56d;
+  background: #ffed4e; /* Lighter golden yellow */
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(107, 207, 127, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  border-color: #b8541f;
 }
 
 /* ============================================================================
-   BREADCRUMBS - Floral navigation trail
+   BREADCRUMBS - Green navigation trail with fall accent
    ============================================================================ */
 .breadcrumb {
   display: flex;
@@ -196,21 +203,21 @@ nav a:hover {
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   padding: 0.9rem 1.2rem;
-  background: #fff5e6; /* Warm cream */
+  background: #f1faee; /* Light cream */
   border-radius: 12px;
   font-size: 0.95rem;
-  border-left: 4px solid #ff6b6b; /* Coral accent */
+  border-left: 4px solid #2d6a4f; /* Emerald green accent */
 }
 
 .breadcrumb a {
-  color: #ff6b6b; /* Primary coral */
+  color: #2d6a4f; /* Emerald green */
   text-decoration: none;
   transition: color 0.2s;
   font-weight: 500;
 }
 
 .breadcrumb a:hover {
-  color: #e63946; /* Deep rose */
+  color: #ff8c42; /* Fall orange */
   text-decoration: underline;
 }
 
@@ -219,23 +226,23 @@ nav a:hover {
 }
 
 .breadcrumb-current {
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
   font-weight: 600;
 }
 
 /* Duplicate nav styling removed - already defined above */
 
 /* ============================================================================
-   SECTIONS - Clean, centered content areas with subtle floral accents
+   SECTIONS - Clean, centered content areas with green and fall accents
    ============================================================================ */
 section {
   max-width: 1100px;
   margin: 64px auto 0 auto;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
   border-radius: 30px;
-  box-shadow: 0 8px 30px rgba(255, 107, 107, 0.12);
+  box-shadow: 0 8px 30px rgba(27, 67, 50, 0.15);
   padding: 54px 34px;
-  border-top: 4px solid #ff8787; /* Accent coral border */
+  border-top: 4px solid #40916c; /* Forest green border */
 }
 
 section h1 {
@@ -243,18 +250,18 @@ section h1 {
 }
 
 /* ============================================================================
-   TYPOGRAPHY - Vibrant floral-inspired headings
+   TYPOGRAPHY - Green and fall-inspired headings
    ============================================================================ */
 h1, h2, h3 {
   font-family: 'Segoe UI', Arial, sans-serif;
-  color: #e63946; /* Deep rose for headers */
+  color: #1b4332; /* Pine green for headers */
   font-weight: bold;
 }
 
 h1 {
   font-size: 2.8rem;
   margin-bottom: 18px;
-  background: linear-gradient(135deg, #ff6b6b, #e63946);
+  background: linear-gradient(135deg, #2d6a4f, #1b4332);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -264,8 +271,8 @@ h2 {
   font-size: 2.1rem;
   margin-top: 32px;
   margin-bottom: 12px;
-  color: #ff6b6b; /* Primary coral */
-  border-bottom: 3px solid #ffb3ba; /* Soft pink underline */
+  color: #2d6a4f; /* Emerald green */
+  border-bottom: 3px solid #95d5b2; /* Light sage underline */
   padding-bottom: 8px;
   display: inline-block;
 }
@@ -274,7 +281,7 @@ h3 {
   font-size: 1.35rem;
   margin-top: 22px;
   margin-bottom: 8px;
-  color: #ff6b6b;
+  color: #2d6a4f; /* Emerald green */
 }
 
 p {
@@ -284,7 +291,7 @@ p {
 }
 
 /* ============================================================================
-   FEATURE CARDS - Vibrant, colorful cards inspired by floral arrangements
+   FEATURE CARDS - Fall-inspired leaf cards with proper contrast
    ============================================================================ */
 .features {
   display: flex;
@@ -295,20 +302,29 @@ p {
 
 .feature-card {
   flex: 1 1 270px;
-  /* Vibrant gradient matching the floral theme */
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
-  color: #fff;
+  /* Different fall colors for variety - like different leaves */
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border-radius: 24px;
   padding: 28px 22px;
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.25);
+  box-shadow: 0 6px 20px rgba(45, 106, 79, 0.3);
   transition: all 0.3s ease;
   min-width: 220px;
-  border: 3px solid #ffb3ba; /* Soft pink border for extra pop */
+  border: 3px solid #52b788; /* Sage border for leaf effect */
+}
+
+.feature-card:nth-child(2) {
+  background: linear-gradient(135deg, #ff8c42 0%, #d4692d 100%); /* Fall orange */
+}
+
+.feature-card:nth-child(3) {
+  background: linear-gradient(135deg, #52b788 0%, #95d5b2 100%); /* Light sage */
+  color: #081c15; /* Dark text on light green */
 }
 
 .feature-card:hover {
   transform: translateY(-8px) scale(1.04);
-  box-shadow: 0 12px 30px rgba(255, 107, 107, 0.35);
+  box-shadow: 0 12px 30px rgba(45, 106, 79, 0.4);
 }
 
 .feature-card i {
@@ -330,7 +346,7 @@ p {
 }
 
 /* ============================================================================
-   GALLERY GRID - Showcase floral work beautifully
+   GALLERY GRID - Showcase floral work with green and fall accents
    ============================================================================ */
 .gallery-grid {
   display: grid;
@@ -341,35 +357,35 @@ p {
 
 .gallery-item {
   background: #fff;
-  border: 3px solid #ffb3ba; /* Soft pink border */
+  border: 3px solid #95d5b2; /* Light sage border */
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
   transition: all 0.3s ease;
 }
 
 .gallery-item:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.25);
-  border-color: #ff8787; /* Accent coral on hover */
+  box-shadow: 0 8px 25px rgba(45, 106, 79, 0.25);
+  border-color: #52b788; /* Sage green on hover */
 }
 
 .gallery-item img, .gallery-item video {
   width: 100%;
   display: block;
-  border-bottom: 3px solid #ffb3ba;
+  border-bottom: 3px solid #95d5b2;
 }
 
 .gallery-item .caption {
   padding: 16px;
   font-size: 1rem;
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
   font-weight: 600;
-  background: #fff5e6; /* Warm cream background */
+  background: #f1faee; /* Light cream background */
 }
 
 /* ============================================================================
-   PRICING TABLE - Beautiful pricing cards with floral accents
+   PRICING TABLE - Beautiful pricing cards with green and fall accents
    ============================================================================ */
 .pricing-table {
   display: flex;
@@ -381,9 +397,9 @@ p {
 
 .pricing-card {
   background: #fff;
-  border: 3px solid #ffb3ba; /* Soft pink border */
+  border: 3px solid #95d5b2; /* Light sage border */
   border-radius: 24px;
-  box-shadow: 0 4px 18px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 4px 18px rgba(45, 106, 79, 0.15);
   padding: 36px 32px;
   flex: 1 1 220px;
   max-width: 330px;
@@ -401,34 +417,34 @@ p {
   left: 0;
   right: 0;
   height: 5px;
-  background: linear-gradient(90deg, #ff6b6b, #ff8787, #ffb3ba);
+  background: linear-gradient(90deg, #2d6a4f, #40916c, #52b788);
 }
 
 .pricing-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(255, 107, 107, 0.25);
-  border-color: #ff8787;
+  box-shadow: 0 12px 30px rgba(45, 106, 79, 0.25);
+  border-color: #52b788;
 }
 
 .pricing-card.highlight {
-  border: 3px solid #ffd93d; /* Sunny yellow for highlighted plan */
-  box-shadow: 0 8px 28px rgba(255, 217, 61, 0.3);
-  background: linear-gradient(180deg, #fffef5 0%, #fff 100%);
+  border: 3px solid #ff8c42; /* Fall orange for highlighted plan */
+  box-shadow: 0 8px 28px rgba(255, 140, 66, 0.3);
+  background: linear-gradient(180deg, #fffaf5 0%, #fff 100%);
 }
 
 .pricing-card.highlight::before {
-  background: linear-gradient(90deg, #ffd93d, #ffed4e);
+  background: linear-gradient(90deg, #ff8c42, #ffd700);
 }
 
 .pricing-card h3 {
-  color: #ff6b6b; /* Primary coral */
+  color: #2d6a4f; /* Emerald green */
   font-size: 1.5rem;
   margin-bottom: 12px;
 }
 
 .pricing-card .price {
   font-size: 2.4rem;
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
   font-weight: bold;
   margin: 20px 0 18px 0;
 }
@@ -449,16 +465,16 @@ p {
 }
 
 .pricing-card ul li:before {
-  content: "✿"; /* Floral bullet point */
+  content: "🍂"; /* Fall leaf bullet point */
   position: absolute;
   left: 0;
-  color: #ff6b6b; /* Primary coral */
+  color: #ff8c42; /* Fall orange */
   font-size: 1.3em;
 }
 
 .pricing-card .plan-btn {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border: none;
   border-radius: 20px;
   padding: 12px 0;
@@ -469,20 +485,20 @@ p {
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
 }
 
 .pricing-card .plan-btn:hover {
-  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 6px 18px rgba(27, 67, 50, 0.4);
 }
 
 /* ============================================================================
-   FOOTER - Warm, welcoming footer with floral accent
+   FOOTER - Rich green footer with fall accent
    ============================================================================ */
 footer {
-  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   color: #fff;
   text-align: center;
   padding: 32px 0 26px 0;
@@ -490,18 +506,18 @@ footer {
   border-radius: 30px 30px 0 0;
   font-size: 1.08rem;
   letter-spacing: .3px;
-  box-shadow: 0 -4px 16px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 -4px 16px rgba(27, 67, 50, 0.2);
 }
 
 footer a {
-  color: #ffd93d; /* Sunny yellow */
+  color: #ffd700; /* Golden yellow */
   text-decoration: underline;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 footer a:hover {
-  color: #ffed4e;
+  color: #ff8c42; /* Fall orange */
 }
 
 /* ============================================================================
@@ -554,33 +570,33 @@ footer a:hover {
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  border: 3px solid #ffd93d; /* Sunny yellow border */
+  border: 3px solid #ffd700; /* Golden yellow border */
   object-fit: cover;
   background: #fff;
   margin-right: 0.5em;
-  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
   transition: all 0.2s ease;
 }
 
 #profileCircle:hover {
-  border-color: #ffed4e;
+  border-color: #ff8c42; /* Fall orange */
   transform: scale(1.05);
 }
 
-/* Profile dropdown styles - floral theme */
+/* Profile dropdown styles - green and fall theme */
 #profileDropdown {
   display: none;
   position: absolute;
   top: 48px;
   right: 0;
   background: #fff;
-  color: #2d2d2d;
+  color: #081c15;
   min-width: 200px;
   border-radius: 16px;
-  box-shadow: 0 6px 30px rgba(255, 107, 107, 0.2);
+  box-shadow: 0 6px 30px rgba(45, 106, 79, 0.2);
   z-index: 100;
   padding: 0.8em 0.5em;
-  border: 2px solid #ff8787; /* Accent coral border */
+  border: 2px solid #52b788; /* Sage green border */
 }
 
 #profileCircleContainer.active #profileDropdown {
@@ -606,25 +622,25 @@ footer a:hover {
 
 #profileDropdown a:hover,
 #profileDropdown button:hover {
-  background: #fff5e6; /* Warm cream */
-  color: #ff6b6b; /* Primary coral */
+  background: #f1faee; /* Light cream */
+  color: #2d6a4f; /* Emerald green */
 }
 
 #userInfoDropdown {
   font-size: 0.96em;
-  color: #ff6b6b;
+  color: #2d6a4f; /* Emerald green */
   padding: 0.7em 1em 0.7em 1.2em;
-  border-bottom: 2px solid #ffb3ba;
+  border-bottom: 2px solid #95d5b2;
   margin-bottom: 0.4em;
-  background: #fff5e6; /* Warm cream */
+  background: #f1faee; /* Light cream */
   font-weight: 600;
 }
 
-/* Login button style */
+/* Login button style - using golden yellow for better contrast */
 #loginBtn {
   margin-left: 0.7em;
-  background: #ffd93d; /* Sunny yellow */
-  color: #2d2d2d;
+  background: #ffd700; /* Golden yellow */
+  color: #081c15; /* Dark text for high contrast */
   border-radius: 16px;
   padding: 0.5em 1.4em;
   font-weight: bold;
@@ -632,13 +648,15 @@ footer a:hover {
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  border: 2px solid #d4692d; /* Fall orange border accent */
 }
 
 #loginBtn:hover {
-  background: #ffed4e;
+  background: #ffed4e; /* Lighter golden yellow */
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  border-color: #b8541f;
 }
 
 /* ============================================================================
@@ -649,7 +667,7 @@ footer a:hover {
   position: fixed;
   z-index: 200;
   left: 0; top: 0; right: 0; bottom: 0;
-  background: rgba(230, 57, 70, 0.15);
+  background: rgba(27, 67, 50, 0.2);
   align-items: center;
   justify-content: center;
 }
@@ -668,8 +686,8 @@ footer a:hover {
   border-radius: 20px;
   min-width: 320px;
   max-width: 95vw;
-  box-shadow: 0 10px 40px rgba(255, 107, 107, 0.25);
-  border-top: 5px solid #ff6b6b; /* Primary coral accent */
+  box-shadow: 0 10px 40px rgba(45, 106, 79, 0.25);
+  border-top: 5px solid #2d6a4f; /* Emerald green accent */
 }
 
 #loginModalContent input,
@@ -679,31 +697,31 @@ footer a:hover {
   font-size: 1.09em;
   padding: 0.8em 0.7em;
   border-radius: 12px;
-  border: 2px solid #ffb3ba; /* Soft pink border */
+  border: 2px solid #95d5b2; /* Light sage border */
   transition: all 0.2s ease;
 }
 
 #loginModalContent input:focus {
   outline: none;
-  border-color: #ff6b6b;
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  border-color: #2d6a4f; /* Emerald green */
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
 }
 
 #loginModalContent button {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border: none;
   font-weight: bold;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 #loginModalContent button:hover {
-  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 6px 16px rgba(27, 67, 50, 0.4);
 }
 
 /* ============================================================================
@@ -719,7 +737,7 @@ footer a:hover {
 #contactForm label {
   display: block;
   font-weight: 600;
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
   margin-bottom: 0.5rem;
   margin-top: 1rem;
 }
@@ -729,7 +747,7 @@ footer a:hover {
   display: block;
   width: 100%;
   padding: 0.9rem;
-  border: 2px solid #ffb3ba; /* Soft pink */
+  border: 2px solid #95d5b2; /* Light sage */
   border-radius: 12px;
   font-size: 1rem;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -739,16 +757,16 @@ footer a:hover {
 #contactForm input:focus,
 #contactForm textarea:focus {
   outline: none;
-  border-color: #ff6b6b; /* Primary coral */
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  border-color: #2d6a4f; /* Emerald green */
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
 }
 
 #contactForm button {
   display: block;
   width: 100%;
   margin-top: 1.5rem;
-  background: linear-gradient(135deg, #6bcf7f 0%, #5bb56d 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border: none;
   border-radius: 14px;
   padding: 1em 1.8em;
@@ -758,17 +776,17 @@ footer a:hover {
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 15px rgba(107, 207, 127, 0.3);
+  box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
 }
 
 #contactForm button:hover {
-  background: linear-gradient(135deg, #5bb56d 0%, #4a9c5a 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(107, 207, 127, 0.4);
+  box-shadow: 0 6px 20px rgba(27, 67, 50, 0.4);
 }
 
 /* ============================================================================
-   PRODUCT CARDS (SHOP) - Vibrant, eye-catching product displays
+   PRODUCT CARDS (SHOP) - Green and fall-themed product displays
    ============================================================================ */
 #decor-products,
 #food-products {
@@ -781,9 +799,9 @@ footer a:hover {
 
 .product-card {
   background: #fff;
-  border: 3px solid #ffb3ba; /* Soft pink border */
+  border: 3px solid #95d5b2; /* Light sage border */
   border-radius: 20px;
-  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
   padding: 1.4em 1.6em 1.6em 1.6em;
   max-width: 340px;
   flex: 0 1 340px;
@@ -800,13 +818,13 @@ footer a:hover {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #ff6b6b, #ff8787, #ffb3ba);
+  background: linear-gradient(90deg, #2d6a4f, #40916c, #52b788);
 }
 
 .product-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.25);
-  border-color: #ff8787;
+  box-shadow: 0 8px 25px rgba(45, 106, 79, 0.25);
+  border-color: #52b788;
 }
 
 .product-img {
@@ -826,13 +844,13 @@ footer a:hover {
 
 .product-title {
   font-weight: bold;
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
   font-size: 1.2em;
   margin-bottom: 0.4em;
 }
 
 .product-price {
-  color: #ff6b6b; /* Primary coral */
+  color: #2d6a4f; /* Emerald green */
   font-weight: bold;
   font-size: 1.15em;
   margin-bottom: 0.4em;
@@ -862,8 +880,8 @@ footer a:hover {
 }
 
 .product-card button {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border: none;
   border-radius: 12px;
   padding: 0.7em 1.8em;
@@ -874,13 +892,13 @@ footer a:hover {
   width: 100%;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
 }
 
 .product-card button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 6px 16px rgba(27, 67, 50, 0.4);
 }
 
 .product-card button:active:not(:disabled) {
@@ -937,7 +955,7 @@ footer a:hover {
 }
 
 .image-modal-close:hover {
-  color: #ff6b6b; /* Primary coral */
+  color: #ff8c42; /* Fall orange */
 }
 
 /* ============================================================================
@@ -949,7 +967,7 @@ footer a:hover {
   object-fit: cover;
   border-radius: 10px;
   margin-right: 1rem;
-  border: 2px solid #ffb3ba;
+  border: 2px solid #95d5b2; /* Light sage */
 }
 
 .cart-quantity-controls {
@@ -959,8 +977,8 @@ footer a:hover {
 }
 
 .cart-quantity-btn {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border: none;
   border-radius: 8px;
   width: 32px;
@@ -969,29 +987,29 @@ footer a:hover {
   font-weight: bold;
   font-size: 1.1rem;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 6px rgba(45, 106, 79, 0.3);
 }
 
 .cart-quantity-btn:hover {
-  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 4px 10px rgba(27, 67, 50, 0.4);
 }
 
 .cart-quantity-display {
   min-width: 45px;
   text-align: center;
   font-weight: bold;
-  color: #e63946;
+  color: #1b4332; /* Pine green */
   font-size: 1.1rem;
 }
 
 /* ============================================================================
-   LOADING SPINNER - Floral-themed loading animation
+   LOADING SPINNER - Green-themed loading animation
    ============================================================================ */
 .loading-spinner {
-  border: 5px solid #fff5e6;
-  border-top: 5px solid #ff6b6b; /* Primary coral */
+  border: 5px solid #f1faee;
+  border-top: 5px solid #2d6a4f; /* Emerald green */
   border-radius: 50%;
   width: 60px;
   height: 60px;
@@ -1011,7 +1029,7 @@ footer a:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(230, 57, 70, 0.15);
+  background: rgba(27, 67, 50, 0.2);
   z-index: 9999;
   justify-content: center;
   align-items: center;
@@ -1026,12 +1044,12 @@ footer a:hover {
   padding: 2.5rem;
   border-radius: 20px;
   text-align: center;
-  box-shadow: 0 6px 30px rgba(255, 107, 107, 0.25);
-  border-top: 4px solid #ff6b6b;
+  box-shadow: 0 6px 30px rgba(45, 106, 79, 0.25);
+  border-top: 4px solid #2d6a4f; /* Emerald green */
 }
 
 /* ============================================================================
-   NOTIFICATIONS - Colorful, modern notification system
+   NOTIFICATIONS - Green and fall-themed notification system
    ============================================================================ */
 .notification {
   position: fixed;
@@ -1077,19 +1095,19 @@ footer a:hover {
 }
 
 .notification.success {
-  border-left: 5px solid #6bcf7f; /* Lush green */
+  border-left: 5px solid #40916c; /* Forest green */
 }
 
 .notification.error {
-  border-left: 5px solid #ef4444;
+  border-left: 5px solid #d4692d; /* Fall red-orange */
 }
 
 .notification.info {
-  border-left: 5px solid #ff6b6b; /* Primary coral */
+  border-left: 5px solid #2d6a4f; /* Emerald green */
 }
 
 .notification.warning {
-  border-left: 5px solid #ffd93d; /* Sunny yellow */
+  border-left: 5px solid #ffd700; /* Golden yellow */
 }
 
 .notification-message {
@@ -1111,7 +1129,7 @@ footer a:hover {
 }
 
 .notification-close:hover {
-  color: #e63946;
+  color: #ff8c42; /* Fall orange */
 }
 
 /* ============================================================================
@@ -1141,15 +1159,15 @@ footer a:hover {
   flex-direction: column;
   gap: 1.1em;
   padding: 2.2em 2em 1.8em 2em;
-  background: #fff5e6; /* Warm cream */
+  background: #f1faee; /* Light cream */
   border-radius: 20px;
-  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.15);
-  border-top: 4px solid #ff6b6b;
+  box-shadow: 0 6px 25px rgba(45, 106, 79, 0.15);
+  border-top: 4px solid #2d6a4f; /* Emerald green */
 }
 
 #uploadForm label {
   font-weight: 600;
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
   margin-bottom: 0.25em;
 }
 
@@ -1159,7 +1177,7 @@ footer a:hover {
 #uploadForm textarea,
 #uploadForm select {
   padding: 0.8em 0.8em;
-  border: 2px solid #ffb3ba; /* Soft pink */
+  border: 2px solid #95d5b2; /* Light sage */
   border-radius: 10px;
   font-size: 1em;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -1172,13 +1190,13 @@ footer a:hover {
 #uploadForm textarea:focus,
 #uploadForm select:focus {
   outline: none;
-  border-color: #ff6b6b; /* Primary coral */
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  border-color: #2d6a4f; /* Emerald green */
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
 }
 
 #uploadForm button[type="submit"] {
-  background: linear-gradient(135deg, #6bcf7f 0%, #5bb56d 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff; /* White text on dark green */
   border: none;
   border-radius: 14px;
   padding: 0.95em 1.6em;
@@ -1187,15 +1205,15 @@ footer a:hover {
   margin-top: 0.8em;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(107, 207, 127, 0.3);
+  box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 #uploadForm button[type="submit"]:hover {
-  background: linear-gradient(135deg, #5bb56d 0%, #4a9c5a 100%);
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(107, 207, 127, 0.4);
+  box-shadow: 0 6px 20px rgba(27, 67, 50, 0.4);
 }
 
 #upload-success, #upload-error {
@@ -1225,14 +1243,14 @@ footer a:hover {
 .checkout-form label {
   font-weight: 600;
   margin-bottom: 0.3em;
-  color: #e63946; /* Deep rose */
+  color: #1b4332; /* Pine green */
 }
 
 .checkout-form input[type="text"],
 .checkout-form input[type="email"],
 .checkout-form input[type="password"] {
   padding: 0.8em;
-  border: 2px solid #ffb3ba; /* Soft pink */
+  border: 2px solid #95d5b2; /* Light sage */
   border-radius: 10px;
   font-size: 1em;
   background: #fff;
@@ -1240,9 +1258,9 @@ footer a:hover {
 }
 
 .checkout-form input:focus {
-  border-color: #ff6b6b; /* Primary coral */
+  border-color: #2d6a4f; /* Emerald green */
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
 }
 
 /* ============================================================================
@@ -1260,19 +1278,19 @@ footer a:hover {
 
 #cart-summary th, #cart-summary td {
   padding: 8px 4px;
-  border-bottom: 2px solid #ffb3ba; /* Soft pink */
+  border-bottom: 2px solid #95d5b2; /* Light sage */
   font-size: 1.04em;
 }
 
 #cart-summary th {
-  background: #fff5e6; /* Warm cream */
-  color: #e63946; /* Deep rose */
+  background: #f1faee; /* Light cream */
+  color: #1b4332; /* Pine green */
   font-weight: bold;
 }
 
 #cart-summary tfoot td {
-  background: #fff5e6; /* Warm cream */
-  color: #ff6b6b; /* Primary coral */
+  background: #f1faee; /* Light cream */
+  color: #2d6a4f; /* Emerald green */
   font-weight: bold;
   font-size: 1.15em;
 }
@@ -1318,12 +1336,12 @@ footer a:hover {
     right: -100%; /* Initially hidden off-screen */
     height: 100vh;
     width: 280px;
-    /* Vibrant floral gradient for mobile menu */
-    background: linear-gradient(180deg, #ff6b6b 0%, #ff8787 50%, #ffb3ba 100%);
+    /* Green gradient for mobile menu */
+    background: linear-gradient(180deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
     flex-direction: column;
     gap: 0;
     padding: 80px 0 2rem 0;
-    box-shadow: -4px 0 20px rgba(255, 107, 107, 0.3);
+    box-shadow: -4px 0 20px rgba(27, 67, 50, 0.35);
     transition: right 0.3s ease; /* Smooth slide animation */
     z-index: 1000; /* Above page content */
     overflow-y: auto; /* Allow scrolling if content exceeds viewport */
@@ -1357,7 +1375,7 @@ footer a:hover {
   
   nav a:hover {
     background: rgba(255, 255, 255, 0.15);
-    border-bottom-color: #ffd93d; /* Sunny yellow */
+    border-bottom-color: #ffd700; /* Golden yellow */
   }
   
   /* Profile circle container in mobile menu */
