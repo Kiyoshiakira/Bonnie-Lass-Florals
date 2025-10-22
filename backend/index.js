@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -36,6 +37,12 @@ app.options('*', cors());
 
 // --- Middleware ---
 app.use(express.json());
+
+// --- Serve static files for uploaded images ---
+// This allows images to be accessed at /admin/uploads/filename.jpg
+const uploadsPath = path.join(__dirname, 'public', 'admin', 'uploads');
+app.use('/admin/uploads', express.static(uploadsPath));
+console.log('Serving static uploads from:', uploadsPath);
 
 // --- Connect to MongoDB ---
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })

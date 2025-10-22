@@ -22,11 +22,36 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Helper function to normalize image URLs to absolute URLs
+// Stores relative paths in DB but returns absolute URLs to clients
+const BACKEND_URL = process.env.BACKEND_URL || 'https://bonnie-lass-florals.onrender.com';
+function normalizeImageUrl(image) {
+  if (!image) return '';
+  // If already an absolute URL, return as-is
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    return image;
+  }
+  // Convert relative path to absolute URL
+  if (image.startsWith('/')) {
+    return BACKEND_URL + image;
+  }
+  return BACKEND_URL + '/' + image;
+}
+
+// Helper function to normalize a product object
+function normalizeProduct(product) {
+  const normalized = product.toObject ? product.toObject() : { ...product };
+  normalized.image = normalizeImageUrl(normalized.image);
+  return normalized;
+}
+
 // GET /api/products - list all products
 router.get('/', async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+    // Normalize image URLs to absolute URLs for all products
+    const normalizedProducts = products.map(p => normalizeProduct(p));
+    res.json(normalizedProducts);
   } catch (err) {
     console.error('GET /api/products error', err);
     res.status(500).json({ error: 'Failed to load products' });
@@ -39,7 +64,8 @@ router.get('/:id', async (req, res) => {
     const id = req.params.id;
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(product);
+    // Normalize image URL to absolute URL
+    res.json(normalizeProduct(product));
   } catch (err) {
     console.error('GET /api/products/:id error', err);
     res.status(500).json({ error: 'Failed to load product' });
@@ -65,7 +91,7 @@ router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => 
     };
 
     if (req.file) {
-      // Store relative path used by frontend
+      // Store relative path in DB for portability
       productData.image = `/admin/uploads/${req.file.filename}`;
     } else if (body.image) {
       productData.image = body.image;
@@ -75,7 +101,8 @@ router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => 
 
     const product = new Product(productData);
     await product.save();
-    res.status(201).json(product);
+    // Return normalized product with absolute image URL
+    res.status(201).json(normalizeProduct(product));
   } catch (err) {
     console.error('POST /api/products error', err);
     res.status(500).json({ error: err.message || 'Failed to create product' });
@@ -106,7 +133,7 @@ router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) =
       updates.featured = (body.featured === 'true' || body.featured === true);
     }
 
-    // If an image file was uploaded via multipart/form-data, set image path
+    // If an image file was uploaded via multipart/form-data, set image path (relative for DB)
     if (req.file) {
       updates.image = `/admin/uploads/${req.file.filename}`;
     } else if (body.image) {
@@ -117,7 +144,8 @@ router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) =
     // Update document
     const product = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(product);
+    // Return normalized product with absolute image URL
+    res.json(normalizeProduct(product));
   } catch (err) {
     console.error('PUT /api/products/:id error', err);
     res.status(500).json({ error: err.message || 'Failed to update product' });
