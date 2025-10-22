@@ -109,6 +109,81 @@ router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => 
   }
 });
 
+// POST /api/products/batch - batch create products (admin only)
+// Accepts JSON array of product objects
+router.post('/batch', firebaseAdminAuth, async (req, res) => {
+  try {
+    const { products } = req.body;
+    
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({ error: 'Request body must contain a "products" array' });
+    }
+    
+    if (products.length === 0) {
+      return res.status(400).json({ error: 'Products array cannot be empty' });
+    }
+    
+    if (products.length > 100) {
+      return res.status(400).json({ error: 'Batch size limited to 100 products' });
+    }
+    
+    const results = {
+      success: [],
+      errors: []
+    };
+    
+    for (let i = 0; i < products.length; i++) {
+      const productData = products[i];
+      
+      try {
+        // Validate required fields
+        if (!productData.name || !productData.price) {
+          results.errors.push({
+            row: i + 1,
+            error: 'Missing required fields: name and price are required'
+          });
+          continue;
+        }
+        
+        const newProduct = {
+          name: productData.name,
+          description: productData.description || '',
+          price: parseFloat(productData.price) || 0,
+          type: productData.type || 'decor',
+          subcategory: productData.subcategory || '',
+          stock: productData.stock ? parseInt(productData.stock, 10) : 1,
+          options: productData.options
+            ? (Array.isArray(productData.options) ? productData.options : String(productData.options).split(',').map(s => s.trim()).filter(Boolean))
+            : [],
+          image: productData.image || '',
+          featured: productData.featured === 'true' || productData.featured === true || false
+        };
+        
+        const product = new Product(newProduct);
+        await product.save();
+        
+        results.success.push({
+          name: product.name,
+          id: product._id
+        });
+      } catch (err) {
+        results.errors.push({
+          row: i + 1,
+          error: err.message || 'Failed to create product'
+        });
+      }
+    }
+    
+    res.status(201).json({
+      message: `Batch upload completed: ${results.success.length} succeeded, ${results.errors.length} failed`,
+      results
+    });
+  } catch (err) {
+    console.error('POST /api/products/batch error', err);
+    res.status(500).json({ error: err.message || 'Batch upload failed' });
+  }
+});
+
 // PUT /api/products/:id - update product (admin only)
 // Accepts multipart/form-data (image file optional) or JSON body
 router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) => {

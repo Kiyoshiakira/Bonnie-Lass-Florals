@@ -171,6 +171,34 @@
   <script src="../auth.js"></script>
 
   <script>
+    // Firebase Storage helper function
+    async function uploadImageToFirebase(file) {
+      if (!file) return null;
+      
+      try {
+        const storage = firebase.storage();
+        const storageRef = storage.ref();
+        
+        // Create a unique filename with timestamp
+        const timestamp = Date.now();
+        const safeName = file.name.replace(/\s+/g, '_');
+        const filename = `product-images/${timestamp}-${safeName}`;
+        
+        const imageRef = storageRef.child(filename);
+        
+        // Upload the file
+        const snapshot = await imageRef.put(file);
+        
+        // Get the download URL
+        const downloadURL = await snapshot.ref.getDownloadURL();
+        
+        return downloadURL;
+      } catch (error) {
+        console.error('Firebase Storage upload error:', error);
+        throw error;
+      }
+    }
+
     // Single product upload handler (existing behavior)
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -184,37 +212,49 @@
       const subcategory = document.getElementById('subcategory').value.trim();
       const stock = parseInt(document.getElementById('stock').value, 10) || 1;
       const options = document.getElementById('options').value;
-      const image = document.getElementById('image').value;
-
-      const form = new FormData();
-      form.append('name', name);
-      form.append('description', description);
-      form.append('price', price);
-      form.append('type', type);
-      form.append('subcategory', subcategory);
-      form.append('stock', stock);
-      form.append('options', options);
-      if (document.getElementById('imageFile').files[0]) {
-        form.append('image', document.getElementById('imageFile').files[0]);
-      } else {
-        form.append('image', image);
-      }
+      let imageUrl = document.getElementById('image').value;
 
       try {
+        // If user selected a file, upload to Firebase Storage first
+        const imageFile = document.getElementById('imageFile').files[0];
+        if (imageFile) {
+          document.getElementById('upload-error').textContent = 'Uploading image to Firebase Storage...';
+          document.getElementById('upload-error').style.display = 'block';
+          document.getElementById('upload-error').style.color = '#666';
+          
+          imageUrl = await uploadImageToFirebase(imageFile);
+          
+          document.getElementById('upload-error').style.display = 'none';
+        }
+
         const user = firebase.auth().currentUser;
         if (!user) {
           document.getElementById('upload-error').textContent = 'Please login first.';
           document.getElementById('upload-error').style.display = 'block';
+          document.getElementById('upload-error').style.color = 'red';
           return;
         }
         const token = await user.getIdToken();
 
+        // Send product data with Firebase Storage URL
+        const productData = {
+          name,
+          description,
+          price,
+          type,
+          subcategory,
+          stock,
+          options,
+          image: imageUrl || ''
+        };
+
         const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products', {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
           },
-          body: form
+          body: JSON.stringify(productData)
         });
 
         const data = await res.json();
@@ -225,10 +265,12 @@
         } else {
           document.getElementById('upload-error').textContent = data.error || 'Upload failed.';
           document.getElementById('upload-error').style.display = 'block';
+          document.getElementById('upload-error').style.color = 'red';
         }
       } catch (err) {
         document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
         document.getElementById('upload-error').style.display = 'block';
+        document.getElementById('upload-error').style.color = 'red';
       }
     });
 
@@ -539,36 +581,49 @@
       document.getElementById('edit-success').style.display = 'none';
       
       const productId = document.getElementById('editProductId').value;
-      const form = new FormData();
-      form.append('name', document.getElementById('editName').value.trim());
-      form.append('description', document.getElementById('editDescription').value.trim());
-      form.append('price', parseFloat(document.getElementById('editPrice').value));
-      form.append('type', document.getElementById('editType').value);
-      form.append('subcategory', document.getElementById('editSubcategory').value.trim());
-      form.append('stock', parseInt(document.getElementById('editStock').value, 10));
-      form.append('options', document.getElementById('editOptions').value);
-      
-      if (document.getElementById('editImageFile').files[0]) {
-        form.append('image', document.getElementById('editImageFile').files[0]);
-      } else if (document.getElementById('editImage').value) {
-        form.append('image', document.getElementById('editImage').value);
-      }
-      
+      let imageUrl = document.getElementById('editImage').value;
+
       try {
+        // If user selected a new file, upload to Firebase Storage first
+        const imageFile = document.getElementById('editImageFile').files[0];
+        if (imageFile) {
+          document.getElementById('edit-error').textContent = 'Uploading image to Firebase Storage...';
+          document.getElementById('edit-error').style.display = 'block';
+          document.getElementById('edit-error').style.color = '#666';
+          
+          imageUrl = await uploadImageToFirebase(imageFile);
+          
+          document.getElementById('edit-error').style.display = 'none';
+        }
+
         const user = firebase.auth().currentUser;
         if (!user) {
           document.getElementById('edit-error').textContent = 'Please login first.';
           document.getElementById('edit-error').style.display = 'block';
+          document.getElementById('edit-error').style.color = 'red';
           return;
         }
         const token = await user.getIdToken();
+
+        // Send product data with Firebase Storage URL
+        const productData = {
+          name: document.getElementById('editName').value.trim(),
+          description: document.getElementById('editDescription').value.trim(),
+          price: parseFloat(document.getElementById('editPrice').value),
+          type: document.getElementById('editType').value,
+          subcategory: document.getElementById('editSubcategory').value.trim(),
+          stock: parseInt(document.getElementById('editStock').value, 10),
+          options: document.getElementById('editOptions').value,
+          image: imageUrl || ''
+        };
         
         const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products/' + productId, {
           method: 'PUT',
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
           },
-          body: form
+          body: JSON.stringify(productData)
         });
         
         const data = await res.json();
@@ -584,10 +639,12 @@
         } else {
           document.getElementById('edit-error').textContent = data.error || 'Update failed.';
           document.getElementById('edit-error').style.display = 'block';
+          document.getElementById('edit-error').style.color = 'red';
         }
       } catch (err) {
         document.getElementById('edit-error').textContent = 'Update error: ' + err.message;
         document.getElementById('edit-error').style.display = 'block';
+        document.getElementById('edit-error').style.color = 'red';
       }
     });
     
