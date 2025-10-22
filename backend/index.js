@@ -41,6 +41,9 @@ app.use('/api/messages', require('./routes/messages'));
 console.log('Loading router: /api/payments');
 app.use('/api/payments', require('./routes/payments'));
 
+console.log('Loading router: /api/settings');
+app.use('/api/settings', require('./routes/settings'));
+
 // --- Optional: Add gallery/socials routes if you have them ---
 // app.use('/api/gallery', require('./routes/gallery'));
 // app.use('/api/socials', require('./routes/socials'));
