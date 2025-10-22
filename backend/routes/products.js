@@ -1,171 +1,149 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const Product = require('../models/Product');
-const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // NEW
-const Papa = require('papaparse');
+const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // admin-only middleware
 
-// Multer setup for image upload
+// Ensure upload directory exists and is writable
+const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'admin', 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+// Multer storage config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/admin/uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const safeName = file.originalname.replace(/\s+/g, '_');
+    cb(null, Date.now() + '-' + safeName);
+  }
 });
 const upload = multer({ storage });
 
-router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => {
-  try {
-    const { name, description, price, type, subcategory, stock, options } = req.body;
-    const image = req.file
-      ? `/admin/uploads/${req.file.filename}`
-      : req.body.image || '';
-    const parsedOptions = options ? options.split(',').map(s => s.trim()) : [];
-
-    const product = new Product({
-      name,
-      description,
-      price,
-      image,
-      type,
-      subcategory,
-      stock: parseInt(stock, 10) || 1,
-      options: parsedOptions,
-      featured: false
-    });
-
-    await product.save();
-    res.json({ message: 'Product uploaded successfully!', product });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Upload failed.' });
-  }
-});
-
-// GET /api/products - fetch all products
+// GET /api/products - list all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find({});
+    const products = await Product.find().sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch products.' });
+    console.error('GET /api/products error', err);
+    res.status(500).json({ error: 'Failed to load products' });
   }
 });
 
-// DELETE /api/products/:id - admin only!
-router.delete('/:id', firebaseAdminAuth, async (req, res) => {
+// GET /api/products/:id - get single product
+router.get('/:id', async (req, res) => {
   try {
-    // Validate MongoDB ObjectId format
-    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ error: 'Invalid product ID format' });
+    const id = req.params.id;
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    console.error('GET /api/products/:id error', err);
+    res.status(500).json({ error: 'Failed to load product' });
+  }
+});
+
+// POST /api/products - create product (admin only)
+// Accepts multipart/form-data (image file optional) or JSON
+router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => {
+  try {
+    const body = req.body || {};
+    const productData = {
+      name: body.name,
+      description: body.description,
+      price: body.price ? parseFloat(body.price) : 0,
+      type: body.type || 'decor',
+      subcategory: body.subcategory || '',
+      stock: body.stock ? parseInt(body.stock, 10) : 1,
+      options: body.options
+        ? (Array.isArray(body.options) ? body.options : String(body.options).split(',').map(s => s.trim()).filter(Boolean))
+        : [],
+      featured: body.featured === 'true' || body.featured === true
+    };
+
+    if (req.file) {
+      // Store relative path used by frontend
+      productData.image = `/admin/uploads/${req.file.filename}`;
+    } else if (body.image) {
+      productData.image = body.image;
+    } else {
+      productData.image = '';
     }
 
-    const deleted = await Product.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Product not found' });
-    res.json({ message: 'Product deleted' });
+    const product = new Product(productData);
+    await product.save();
+    res.status(201).json(product);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('POST /api/products error', err);
+    res.status(500).json({ error: err.message || 'Failed to create product' });
   }
 });
 
-// PUT /api/products/:id - update product - admin only!
+// PUT /api/products/:id - update product (admin only)
+// Accepts multipart/form-data (image file optional) or JSON body
 router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) => {
   try {
-    // Validate MongoDB ObjectId format
-    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ error: 'Invalid product ID format' });
+    const id = req.params.id;
+    const body = req.body || {};
+
+    // Build updates from either JSON or form fields
+    const updates = {};
+    if (typeof body.name !== 'undefined') updates.name = body.name;
+    if (typeof body.description !== 'undefined') updates.description = body.description;
+    if (typeof body.price !== 'undefined' && body.price !== '') updates.price = parseFloat(body.price);
+    if (typeof body.type !== 'undefined') updates.type = body.type;
+    if (typeof body.subcategory !== 'undefined') updates.subcategory = body.subcategory;
+    if (typeof body.stock !== 'undefined' && body.stock !== '') updates.stock = parseInt(body.stock, 10);
+    if (typeof body.options !== 'undefined') {
+      updates.options = Array.isArray(body.options)
+        ? body.options
+        : String(body.options).split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (typeof body.featured !== 'undefined') {
+      updates.featured = (body.featured === 'true' || body.featured === true);
     }
 
-    const { name, description, price, type, subcategory, stock, options } = req.body;
-    
-    // Validate required fields
-    if (!name || !description || !price || !type) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const updateData = {
-      name,
-      description,
-      price: parseFloat(price),
-      type,
-      subcategory: subcategory || '',
-      stock: parseInt(stock, 10) || 1,
-      options: options ? (typeof options === 'string' ? options.split(',').map(s => s.trim()) : options) : []
-    };
-
-    // Update image if a new one is provided
+    // If an image file was uploaded via multipart/form-data, set image path
     if (req.file) {
-      updateData.image = `/admin/uploads/${req.file.filename}`;
-    } else if (req.body.image) {
-      updateData.image = req.body.image;
+      updates.image = `/admin/uploads/${req.file.filename}`;
+    } else if (body.image) {
+      // allow explicit image URL in JSON body
+      updates.image = body.image;
     }
 
-    const updated = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!updated) return res.status(404).json({ error: 'Product not found' });
-    res.json({ message: 'Product updated successfully!', product: updated });
+    // Update document
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Update failed.' });
+    console.error('PUT /api/products/:id error', err);
+    res.status(500).json({ error: err.message || 'Failed to update product' });
   }
 });
 
-// POST /api/products/batch - batch upload via CSV - admin only!
-router.post('/batch', firebaseAdminAuth, async (req, res) => {
+// DELETE /api/products/:id - delete product (admin only)
+router.delete('/:id', firebaseAdminAuth, async (req, res) => {
   try {
-    const { products } = req.body;
-    
-    if (!products || !Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({ error: 'Invalid CSV data. Products array is required.' });
-    }
-
-    // Limit batch size to prevent abuse
-    if (products.length > 100) {
-      return res.status(400).json({ error: 'Batch size limited to 100 products per request.' });
-    }
-
-    const results = {
-      success: [],
-      errors: []
-    };
-
-    for (let i = 0; i < products.length; i++) {
-      const item = products[i];
+    const id = req.params.id;
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    // Optionally: remove uploaded file from disk if present
+    if (product.image && product.image.startsWith('/admin/uploads/')) {
       try {
-        const name = item.name || item.TITLE;
-        const description = item.description || item.DESCRIPTION;
-        const price = parseFloat(item.price || item.PRICE);
-
-        // Validate required fields
-        if (!name || !description || isNaN(price)) {
-          results.errors.push({ row: i + 1, error: 'Missing required fields: name, description, or price', data: item });
-          continue;
-        }
-
-        // Map CSV fields to product schema
-        const product = new Product({
-          name,
-          description,
-          price,
-          image: item.image || item.IMAGE1 || '',
-          type: item.type || 'decor',
-          subcategory: item.subcategory || '',
-          stock: parseInt(item.stock || item.QUANTITY || 1, 10),
-          options: item.options ? (typeof item.options === 'string' ? item.options.split(',').map(s => s.trim()) : item.options) : [],
-          featured: false
-        });
-
-        await product.save();
-        results.success.push({ row: i + 1, name: product.name, id: product._id });
-      } catch (err) {
-        results.errors.push({ row: i + 1, error: err.message, data: item });
+        const fname = product.image.replace('/admin/uploads/', '');
+        const full = path.join(UPLOAD_DIR, fname);
+        if (fs.existsSync(full)) fs.unlinkSync(full);
+      } catch (e) {
+        console.warn('Failed to remove product image file:', e);
       }
     }
-
-    res.json({
-      message: `Batch upload completed. ${results.success.length} products uploaded, ${results.errors.length} failed.`,
-      results
-    });
+    res.json({ message: 'Product deleted' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Batch upload failed.' });
+    console.error('DELETE /api/products/:id error', err);
+    res.status(500).json({ error: err.message || 'Failed to delete product' });
   }
 });
 
