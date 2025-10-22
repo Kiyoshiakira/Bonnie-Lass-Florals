@@ -27,10 +27,29 @@
    - Seasonal autumn feel with evergreen foundation
    ============================================================================ */
 
+/* ============================================================================
+   CSS VARIABLES - Themeable color palette
+   ============================================================================
+   These variables can be overridden by the theme loader to apply custom colors
+   site-wide. Defaults match the original design system above.
+   ============================================================================ */
+:root {
+  /* Primary theme colors */
+  --floral-primary: #1b4332;      /* Pine green - used for headers, dark elements */
+  --floral-primary-2: #2d6a4f;    /* Emerald green - used for secondary headers, gradients */
+  --floral-accent: #ff8c42;       /* Fall orange - used for accents, hover states */
+  --floral-green: #52b788;        /* Sage green - used for buttons, borders */
+  --floral-cream: #f1faee;        /* Light cream - used for backgrounds */
+  
+  /* Additional theme properties */
+  --floral-radius: 12px;          /* Standard border radius */
+  --floral-shadow: 0 4px 12px rgba(27, 67, 50, 0.35); /* Standard box shadow */
+}
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f1faee url('img/fall-background.svg') center/cover fixed; /* Light cream with fall leaves pattern */
+  background: var(--floral-cream, #f1faee) url('img/fall-background.svg') center/cover fixed; /* Light cream with fall leaves pattern */
   color: #081c15; /* Dark text for contrast */
 }
 
@@ -61,11 +80,11 @@ header {
   align-items: center;
   justify-content: center;
   /* Rich green gradient: pine to emerald with subtle fall accent */
-  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+  background: linear-gradient(135deg, var(--floral-primary, #1b4332) 0%, var(--floral-primary-2, #2d6a4f) 50%, #40916c 100%);
   color: #fff;
   padding: 28px 0 14px 0;
   position: relative;
-  box-shadow: 0 4px 12px rgba(27, 67, 50, 0.35);
+  box-shadow: var(--floral-shadow, 0 4px 12px rgba(27, 67, 50, 0.35));
 }
 
 header .logo {
@@ -107,7 +126,7 @@ nav a:hover {
    ============================================================================ */
 .cta-btn {
   /* Sage green gradient for leaf-like appearance */
-  background: linear-gradient(135deg, #52b788 0%, #95d5b2 100%);
+  background: linear-gradient(135deg, var(--floral-green, #52b788) 0%, #95d5b2 100%);
   color: #081c15; /* Dark text on light green */
   border: none;
   padding: 14px 36px;
@@ -254,14 +273,14 @@ section h1 {
    ============================================================================ */
 h1, h2, h3 {
   font-family: 'Segoe UI', Arial, sans-serif;
-  color: #1b4332; /* Pine green for headers */
+  color: var(--floral-primary, #1b4332); /* Pine green for headers */
   font-weight: bold;
 }
 
 h1 {
   font-size: 2.8rem;
   margin-bottom: 18px;
-  background: linear-gradient(135deg, #2d6a4f, #1b4332);
+  background: linear-gradient(135deg, var(--floral-primary-2, #2d6a4f), var(--floral-primary, #1b4332));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -271,7 +290,7 @@ h2 {
   font-size: 2.1rem;
   margin-top: 32px;
   margin-bottom: 12px;
-  color: #2d6a4f; /* Emerald green */
+  color: var(--floral-primary-2, #2d6a4f); /* Emerald green */
   border-bottom: 3px solid #95d5b2; /* Light sage underline */
   padding-bottom: 8px;
   display: inline-block;
@@ -281,7 +300,7 @@ h3 {
   font-size: 1.35rem;
   margin-top: 22px;
   margin-bottom: 8px;
-  color: #2d6a4f; /* Emerald green */
+  color: var(--floral-primary-2, #2d6a4f); /* Emerald green */
 }
 
 p {
@@ -303,22 +322,22 @@ p {
 .feature-card {
   flex: 1 1 270px;
   /* Different fall colors for variety - like different leaves */
-  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  background: linear-gradient(135deg, var(--floral-primary-2, #2d6a4f) 0%, #40916c 100%);
   color: #fff; /* White text on dark green */
   border-radius: 24px;
   padding: 28px 22px;
   box-shadow: 0 6px 20px rgba(45, 106, 79, 0.3);
   transition: all 0.3s ease;
   min-width: 220px;
-  border: 3px solid #52b788; /* Sage border for leaf effect */
+  border: 3px solid var(--floral-green, #52b788); /* Sage border for leaf effect */
 }
 
 .feature-card:nth-child(2) {
-  background: linear-gradient(135deg, #ff8c42 0%, #d4692d 100%); /* Fall orange */
+  background: linear-gradient(135deg, var(--floral-accent, #ff8c42) 0%, #d4692d 100%); /* Fall orange */
 }
 
 .feature-card:nth-child(3) {
-  background: linear-gradient(135deg, #52b788 0%, #95d5b2 100%); /* Light sage */
+  background: linear-gradient(135deg, var(--floral-green, #52b788) 0%, #95d5b2 100%); /* Light sage */
   color: #081c15; /* Dark text on light green */
 }
 

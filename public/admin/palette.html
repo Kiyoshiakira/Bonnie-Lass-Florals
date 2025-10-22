@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Palette Editor | Bonnie Lass Florals Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../auth.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
+      authDomain: "bonnie-lass-florals.firebaseapp.com",
+      projectId: "bonnie-lass-florals",
+      storageBucket: "bonnie-lass-florals.firebasestorage.app",
+      messagingSenderId: "1009091302977",
+      appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
+      measurementId: "G-DQRB98D0WY"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <style>
+    .palette-editor {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .color-role {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .color-role label {
+      min-width: 100px;
+      font-weight: 600;
+    }
+    .color-role input[type="color"] {
+      width: 60px;
+      height: 40px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .color-role input[type="text"] {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+    .color-swatch {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+    }
+    .import-section {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: #f0f9ff;
+      border-radius: 8px;
+    }
+    .import-section textarea {
+      width: 100%;
+      height: 100px;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #2d6a4f;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #1b4332;
+    }
+    .btn-secondary {
+      background: #52b788;
+      color: #fff;
+    }
+    .btn-secondary:hover {
+      background: #40916c;
+    }
+    .btn-warning {
+      background: #ff8c42;
+      color: #fff;
+    }
+    .btn-warning:hover {
+      background: #d4692d;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #fff;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    .status-message {
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 6px;
+      display: none;
+    }
+    .status-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    .status-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .presets-section {
+      margin-top: 3rem;
+    }
+    .preset-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .preset-colors {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .preset-color {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+    .preset-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .preset-actions button {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="../img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
+    </div>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../shop.html">Shop</a>
+      <a href="../gallery.html">Gallery</a>
+      <a href="../contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <div class="palette-editor">
+    <div style="font-size:0.95rem;color:#666;margin-bottom:0.75rem;">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb-separator">›</span>
+      <a href="../profile.html">Profile</a>
+      <span class="breadcrumb-separator">›</span>
+      <span class="breadcrumb-current">Palette Editor</span>
+    </div>
+
+    <h1>Site Theme Palette Editor</h1>
+    <p>Customize the site-wide color palette. Preview changes locally or save to apply site-wide.</p>
+
+    <div id="notAdminMsg" style="display:none; color:#dc2626; padding:1rem; background:#fee2e2; border-radius:6px; margin-bottom:1rem;">
+      You must be logged in as an admin to use this feature.
+    </div>
+
+    <!-- Color Roles -->
+    <div id="colorRoles">
+      <div class="color-role">
+        <label>Primary</label>
+        <input type="color" id="colorPrimary" value="#1b4332">
+        <input type="text" id="hexPrimary" value="#1b4332" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#1b4332">
+        <div class="color-swatch" id="swatchPrimary"></div>
+      </div>
+
+      <div class="color-role">
+        <label>Primary 2</label>
+        <input type="color" id="colorPrimary2" value="#2d6a4f">
+        <input type="text" id="hexPrimary2" value="#2d6a4f" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#2d6a4f">
+        <div class="color-swatch" id="swatchPrimary2"></div>
+      </div>
+
+      <div class="color-role">
+        <label>Accent</label>
+        <input type="color" id="colorAccent" value="#ff8c42">
+        <input type="text" id="hexAccent" value="#ff8c42" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#ff8c42">
+        <div class="color-swatch" id="swatchAccent"></div>
+      </div>
+
+      <div class="color-role">
+        <label>Green</label>
+        <input type="color" id="colorGreen" value="#52b788">
+        <input type="text" id="hexGreen" value="#52b788" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#52b788">
+        <div class="color-swatch" id="swatchGreen"></div>
+      </div>
+
+      <div class="color-role">
+        <label>Cream</label>
+        <input type="color" id="colorCream" value="#f1faee">
+        <input type="text" id="hexCream" value="#f1faee" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#f1faee">
+        <div class="color-swatch" id="swatchCream"></div>
+      </div>
+    </div>
+
+    <!-- Import Section -->
+    <div class="import-section">
+      <h3>Import Palette</h3>
+      <p>Paste comma or newline-separated hex colors (e.g., from color-hex.com). First 5 colors will be mapped to the roles above.</p>
+      <textarea id="importInput" placeholder="Example:
+#1b4332
+#2d6a4f
+#ff8c42
+#52b788
+#f1faee"></textarea>
+      <button class="btn btn-secondary" id="importBtn">Import Colors</button>
+    </div>
+
+    <!-- Actions -->
+    <div class="button-group">
+      <button class="btn btn-secondary" id="previewBtn">Preview Locally</button>
+      <button class="btn btn-primary" id="saveThemeBtn">Save Site Theme</button>
+      <button class="btn btn-warning" id="savePresetBtn">Save as Preset</button>
+      <button class="btn btn-secondary" id="resetBtn">Reset to Defaults</button>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusMessage" class="status-message"></div>
+
+    <!-- Presets Section -->
+    <div class="presets-section">
+      <h2>Saved Presets</h2>
+      <div id="presetsList"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : 'https://bonnielassflorals.com';
+
+    const roles = ['primary', 'primary2', 'accent', 'green', 'cream'];
+    const defaultColors = {
+      primary: '#1b4332',
+      primary2: '#2d6a4f',
+      accent: '#ff8c42',
+      green: '#52b788',
+      cream: '#f1faee'
+    };
+
+    // Initialize color inputs
+    function initColorInputs() {
+      roles.forEach(role => {
+        const colorInput = document.getElementById(`color${capitalize(role)}`);
+        const hexInput = document.getElementById(`hex${capitalize(role)}`);
+        const swatch = document.getElementById(`swatch${capitalize(role)}`);
+
+        // Sync color picker to hex input
+        colorInput.addEventListener('input', (e) => {
+          hexInput.value = e.target.value;
+          swatch.style.backgroundColor = e.target.value;
+        });
+
+        // Sync hex input to color picker
+        hexInput.addEventListener('input', (e) => {
+          const value = e.target.value;
+          if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+            colorInput.value = value;
+            swatch.style.backgroundColor = value;
+          }
+        });
+
+        // Initialize swatch
+        swatch.style.backgroundColor = colorInput.value;
+      });
+    }
+
+    // Get current palette from inputs
+    function getCurrentPalette() {
+      const palette = {};
+      roles.forEach(role => {
+        const hexInput = document.getElementById(`hex${capitalize(role)}`);
+        palette[role] = hexInput.value;
+      });
+      return palette;
+    }
+
+    // Set palette in inputs
+    function setPalette(palette) {
+      roles.forEach(role => {
+        if (palette[role]) {
+          const colorInput = document.getElementById(`color${capitalize(role)}`);
+          const hexInput = document.getElementById(`hex${capitalize(role)}`);
+          const swatch = document.getElementById(`swatch${capitalize(role)}`);
+          
+          colorInput.value = palette[role];
+          hexInput.value = palette[role];
+          swatch.style.backgroundColor = palette[role];
+        }
+      });
+    }
+
+    // Apply theme to current page
+    function applyThemeLocally(theme) {
+      const root = document.documentElement;
+      if (theme.primary) root.style.setProperty('--floral-primary', theme.primary);
+      if (theme.primary2) root.style.setProperty('--floral-primary-2', theme.primary2);
+      if (theme.accent) root.style.setProperty('--floral-accent', theme.accent);
+      if (theme.green) root.style.setProperty('--floral-green', theme.green);
+      if (theme.cream) root.style.setProperty('--floral-cream', theme.cream);
+    }
+
+    // Validate hex color
+    function isValidHex(color) {
+      return /^#[0-9A-Fa-f]{6}$/.test(color);
+    }
+
+    // Validate palette
+    function validatePalette(palette) {
+      for (const role of roles) {
+        if (!palette[role] || !isValidHex(palette[role])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Show status message
+    function showStatus(message, isError = false) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = 'status-message ' + (isError ? 'status-error' : 'status-success');
+      statusEl.style.display = 'block';
+      setTimeout(() => {
+        statusEl.style.display = 'none';
+      }, 5000);
+    }
+
+    // Capitalize first letter
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Preview button
+    document.getElementById('previewBtn').addEventListener('click', () => {
+      const palette = getCurrentPalette();
+      if (!validatePalette(palette)) {
+        showStatus('Invalid palette. All colors must be valid hex codes.', true);
+        return;
+      }
+      applyThemeLocally(palette);
+      showStatus('Theme previewed locally! Changes are not saved yet.');
+    });
+
+    // Save theme button
+    document.getElementById('saveThemeBtn').addEventListener('click', async () => {
+      const palette = getCurrentPalette();
+      if (!validatePalette(palette)) {
+        showStatus('Invalid palette. All colors must be valid hex codes.', true);
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(API_BASE + '/api/settings/theme', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ theme: palette })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showStatus('Theme saved successfully! Changes will apply site-wide.');
+          applyThemeLocally(palette);
+        } else {
+          showStatus(data.error || 'Failed to save theme.', true);
+        }
+      } catch (err) {
+        showStatus('Error saving theme: ' + err.message, true);
+      }
+    });
+
+    // Save preset button
+    document.getElementById('savePresetBtn').addEventListener('click', async () => {
+      const palette = getCurrentPalette();
+      if (!validatePalette(palette)) {
+        showStatus('Invalid palette. All colors must be valid hex codes.', true);
+        return;
+      }
+
+      const name = prompt('Enter a name for this preset:');
+      if (!name || !name.trim()) {
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(API_BASE + '/api/settings/presets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ 
+            preset: { 
+              name: name.trim(), 
+              colors: palette 
+            } 
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showStatus('Preset saved successfully!');
+          loadPresets();
+        } else {
+          showStatus(data.error || 'Failed to save preset.', true);
+        }
+      } catch (err) {
+        showStatus('Error saving preset: ' + err.message, true);
+      }
+    });
+
+    // Reset button
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      setPalette(defaultColors);
+      showStatus('Reset to default colors.');
+    });
+
+    // Import button
+    document.getElementById('importBtn').addEventListener('click', () => {
+      const input = document.getElementById('importInput').value;
+      const colors = input
+        .split(/[\n,]/)
+        .map(s => s.trim())
+        .filter(s => /^#[0-9A-Fa-f]{6}$/.test(s))
+        .slice(0, 5);
+
+      if (colors.length === 0) {
+        showStatus('No valid hex colors found in input.', true);
+        return;
+      }
+
+      const palette = {};
+      roles.forEach((role, index) => {
+        palette[role] = colors[index] || defaultColors[role];
+      });
+
+      setPalette(palette);
+      showStatus(`Imported ${colors.length} colors.`);
+    });
+
+    // Load presets
+    async function loadPresets() {
+      try {
+        const res = await fetch(API_BASE + '/api/settings/presets');
+        const data = await res.json();
+        
+        const presetsList = document.getElementById('presetsList');
+        if (!data.presets || data.presets.length === 0) {
+          presetsList.innerHTML = '<p style="color:#666;">No presets saved yet.</p>';
+          return;
+        }
+
+        presetsList.innerHTML = data.presets.map(preset => `
+          <div class="preset-item">
+            <div>
+              <strong>${preset.name}</strong>
+              <div class="preset-colors">
+                ${roles.map(role => `<div class="preset-color" style="background-color:${preset.colors[role]};"></div>`).join('')}
+              </div>
+            </div>
+            <div class="preset-actions">
+              <button class="btn btn-secondary" onclick="applyPreset('${preset._id}')">Preview</button>
+              <button class="btn btn-primary" onclick="applyAndSavePreset('${preset._id}')">Apply & Save</button>
+              <button class="btn btn-danger" onclick="deletePreset('${preset._id}')">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading presets:', err);
+      }
+    }
+
+    // Apply preset (preview only)
+    window.applyPreset = function(presetId) {
+      fetch(API_BASE + '/api/settings/presets')
+        .then(res => res.json())
+        .then(data => {
+          const preset = data.presets.find(p => p._id === presetId);
+          if (preset) {
+            setPalette(preset.colors);
+            applyThemeLocally(preset.colors);
+            showStatus('Preset applied locally! Click "Save Site Theme" to apply site-wide.');
+          }
+        });
+    };
+
+    // Apply and save preset
+    window.applyAndSavePreset = async function(presetId) {
+      try {
+        const res = await fetch(API_BASE + '/api/settings/presets');
+        const data = await res.json();
+        const preset = data.presets.find(p => p._id === presetId);
+        
+        if (!preset) {
+          showStatus('Preset not found.', true);
+          return;
+        }
+
+        setPalette(preset.colors);
+        
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const saveRes = await fetch(API_BASE + '/api/settings/theme', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ theme: preset.colors })
+        });
+
+        const saveData = await saveRes.json();
+        if (saveRes.ok) {
+          applyThemeLocally(preset.colors);
+          showStatus('Preset applied and saved site-wide!');
+        } else {
+          showStatus(saveData.error || 'Failed to save theme.', true);
+        }
+      } catch (err) {
+        showStatus('Error: ' + err.message, true);
+      }
+    };
+
+    // Delete preset
+    window.deletePreset = async function(presetId) {
+      if (!confirm('Are you sure you want to delete this preset?')) {
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(API_BASE + '/api/settings/presets/' + presetId, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showStatus('Preset deleted successfully!');
+          loadPresets();
+        } else {
+          showStatus(data.error || 'Failed to delete preset.', true);
+        }
+      } catch (err) {
+        showStatus('Error: ' + err.message, true);
+      }
+    };
+
+    // Check if user is admin
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        document.getElementById('notAdminMsg').style.display = 'block';
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+        // Check if user has admin access by trying to fetch presets
+        // (This is a simple check; in production you might want a dedicated admin check endpoint)
+        const adminEmails = ['shaunessy24@gmail.com', 'bonnielassflorals@gmail.com'];
+        if (!adminEmails.includes(user.email.toLowerCase())) {
+          document.getElementById('notAdminMsg').style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error checking admin status:', err);
+      }
+    });
+
+    // Initialize
+    initColorInputs();
+    loadPresets();
+
+    // Load current theme on page load
+    fetch(API_BASE + '/api/settings/theme')
+      .then(res => res.json())
+      .then(data => {
+        if (data.theme) {
+          setPalette(data.theme);
+          applyThemeLocally(data.theme);
+        }
+      })
+      .catch(err => console.error('Error loading current theme:', err));
+  </script>
+</body>
+</html>
