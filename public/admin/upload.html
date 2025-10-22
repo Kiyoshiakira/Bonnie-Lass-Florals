@@ -88,8 +88,67 @@
 
     <!-- Manage Products -->
     <h2 style="margin-top:2rem;">Manage Products</h2>
-    <button id="loadProductsBtn" style="background:#efefef;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid #ddd;cursor:pointer;">Load All Products</button>
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;">
+      <button id="loadProductsBtn" style="background:#efefef;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid #ddd;cursor:pointer;">Load All Products</button>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <span style="font-size:0.9rem;color:#666;">View as:</span>
+        <button id="viewToggleBtn" data-view="line" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;cursor:pointer;">
+          <span id="viewToggleText">Panels</span>
+        </button>
+      </div>
+    </div>
     <div id="products-list" style="margin-top:1rem;"></div>
+    
+    <!-- Edit Product Modal -->
+    <div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;">
+      <div style="background:#fff;max-width:600px;margin:2rem auto;padding:2rem;border-radius:8px;position:relative;">
+        <button id="closeEditModal" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;">&times;</button>
+        <h2>Edit Product</h2>
+        <form id="editForm" enctype="multipart/form-data">
+          <input type="hidden" id="editProductId">
+          
+          <label for="editName">Product Name</label>
+          <input type="text" id="editName" name="name" required>
+
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" name="description" required></textarea>
+
+          <label for="editPrice">Price</label>
+          <input type="number" id="editPrice" name="price" step="0.01" required>
+
+          <label for="editType">Type</label>
+          <select id="editType" name="type" required>
+            <option value="decor">Decor</option>
+            <option value="food">Cottage Food</option>
+          </select>
+
+          <label for="editSubcategory">Subcategory</label>
+          <input type="text" id="editSubcategory" name="subcategory">
+
+          <label for="editStock">Stock</label>
+          <input type="number" id="editStock" name="stock" min="1" required>
+
+          <label for="editOptions">Options (comma-separated)</label>
+          <input type="text" id="editOptions" name="options">
+
+          <label>Current Image</label>
+          <div id="currentImagePreview" style="margin-bottom:1rem;"></div>
+
+          <label for="editImage">Image URL</label>
+          <input type="text" id="editImage" name="image">
+
+          <label for="editImageFile">Or upload new image file</label>
+          <input type="file" id="editImageFile" name="imageFile" accept="image/*">
+
+          <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+            <button type="submit" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Save Changes</button>
+            <button type="button" id="cancelEditBtn" style="background:#ccc;color:#333;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Cancel</button>
+          </div>
+        </form>
+        <div id="edit-success" style="display:none;margin-top:1rem;color:green;"></div>
+        <div id="edit-error" style="display:none;margin-top:1rem;color:red;"></div>
+      </div>
+    </div>
   </main>
 
   <script src="../mobile-nav.js"></script>
@@ -323,6 +382,19 @@
     });
 
     // Load Products functionality
+    let currentView = 'line'; // 'line' or 'panel'
+    
+    document.getElementById('viewToggleBtn').addEventListener('click', function() {
+      currentView = currentView === 'line' ? 'panel' : 'line';
+      this.dataset.view = currentView;
+      document.getElementById('viewToggleText').textContent = currentView === 'line' ? 'Panels' : 'Lines';
+      
+      // Reload products with new view
+      if (document.getElementById('products-list').innerHTML !== '') {
+        document.getElementById('loadProductsBtn').click();
+      }
+    });
+    
     document.getElementById('loadProductsBtn').addEventListener('click', async function() {
       const list = document.getElementById('products-list');
       list.innerHTML = '<p>Loading products...</p>';
@@ -330,27 +402,11 @@
         const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
         const products = await res.json();
         if (res.ok && products.length > 0) {
-          let html = '<table style="width:100%; border-collapse:collapse; margin-top:1rem;">';
-          html += '<thead><tr style="background:#f0f0f0;">';
-          html += '<th style="padding:0.5rem; text-align:left;">Name</th>';
-          html += '<th style="padding:0.5rem; text-align:left;">Price</th>';
-          html += '<th style="padding:0.5rem; text-align:left;">Stock</th>';
-          html += '<th style="padding:0.5rem; text-align:left;">Type</th>';
-          html += '<th style="padding:0.5rem; text-align:left;">Actions</th>';
-          html += '</tr></thead><tbody>';
-          products.forEach(p => {
-            html += `<tr>`;
-            html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.name}</td>`;
-            html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.price}</td>`;
-            html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.stock}</td>`;
-            html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.type}</td>`;
-            html += `<td style="padding:0.5rem;border-top:1px solid #eee;">`;
-            html += `<button onclick="window.editProduct('${p._id}')" style="margin-right:6px;">Edit</button>`;
-            html += `<button onclick="window.deleteProduct('${p._id}')" style="background:#f87171;color:#fff;">Delete</button>`;
-            html += `</td></tr>`;
-          });
-          html += '</tbody></table>';
-          list.innerHTML = html;
+          if (currentView === 'line') {
+            renderLineView(products);
+          } else {
+            renderPanelView(products);
+          }
         } else {
           list.innerHTML = '<p>No products found.</p>';
         }
@@ -358,11 +414,167 @@
         list.innerHTML = `<p style="color:red;">Error loading products: ${err.message}</p>`;
       }
     });
+    
+    function renderLineView(products) {
+      const list = document.getElementById('products-list');
+      let html = '<table style="width:100%; border-collapse:collapse; margin-top:1rem;">';
+      html += '<thead><tr style="background:#f0f0f0;">';
+      html += '<th style="padding:0.5rem; text-align:left;">Name</th>';
+      html += '<th style="padding:0.5rem; text-align:left;">Price</th>';
+      html += '<th style="padding:0.5rem; text-align:left;">Stock</th>';
+      html += '<th style="padding:0.5rem; text-align:left;">Type</th>';
+      html += '<th style="padding:0.5rem; text-align:left;">Actions</th>';
+      html += '</tr></thead><tbody>';
+      products.forEach(p => {
+        html += `<tr>`;
+        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.name}</td>`;
+        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">$${p.price}</td>`;
+        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.stock}</td>`;
+        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.type}</td>`;
+        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">`;
+        html += `<button onclick="window.editProduct('${p._id}')" style="margin-right:6px;padding:0.4rem 0.6rem;background:#6e33b7;color:#fff;border:none;border-radius:4px;cursor:pointer;">Edit</button>`;
+        html += `<button onclick="window.deleteProduct('${p._id}')" style="padding:0.4rem 0.6rem;background:#f87171;color:#fff;border:none;border-radius:4px;cursor:pointer;">Delete</button>`;
+        html += `</td></tr>`;
+      });
+      html += '</tbody></table>';
+      list.innerHTML = html;
+    }
+    
+    function renderPanelView(products) {
+      const list = document.getElementById('products-list');
+      let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-top:1rem;">';
+      products.forEach(p => {
+        const imageUrl = p.image || '';
+        html += `<div style="border:1px solid #ddd;border-radius:8px;padding:1rem;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);">`;
+        if (imageUrl) {
+          html += `<img src="${imageUrl}" alt="${p.name}" style="width:100%;height:200px;object-fit:cover;border-radius:4px;margin-bottom:0.75rem;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
+          html += `<div style="display:none;width:100%;height:200px;background:#f0f0f0;border-radius:4px;margin-bottom:0.75rem;align-items:center;justify-content:center;color:#999;">No Image</div>`;
+        } else {
+          html += `<div style="width:100%;height:200px;background:#f0f0f0;border-radius:4px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;color:#999;">No Image</div>`;
+        }
+        html += `<h3 style="margin:0 0 0.5rem 0;font-size:1.1rem;">${p.name}</h3>`;
+        html += `<p style="margin:0 0 0.5rem 0;color:#666;font-size:0.9rem;">${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}</p>`;
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">`;
+        html += `<span style="font-weight:bold;font-size:1.1rem;color:#6e33b7;">$${p.price}</span>`;
+        html += `<span style="font-size:0.9rem;color:#666;">Stock: ${p.stock}</span>`;
+        html += `</div>`;
+        html += `<div style="display:flex;gap:0.5rem;">`;
+        html += `<button onclick="window.editProduct('${p._id}')" style="flex:1;padding:0.5rem;background:#6e33b7;color:#fff;border:none;border-radius:4px;cursor:pointer;">Edit</button>`;
+        html += `<button onclick="window.deleteProduct('${p._id}')" style="flex:1;padding:0.5rem;background:#f87171;color:#fff;border:none;border-radius:4px;cursor:pointer;">Delete</button>`;
+        html += `</div></div>`;
+      });
+      html += '</div>';
+      list.innerHTML = html;
+    }
 
-    // Placeholder edit/delete functions (implementation elsewhere)
-    window.editProduct = function(id) {
-      alert('Edit not implemented in this snippet. Open product in editor for id: ' + id);
+    // Edit Product functionality
+    window.editProduct = async function(id) {
+      try {
+        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
+        const products = await res.json();
+        const product = products.find(p => p._id === id);
+        
+        if (!product) {
+          alert('Product not found');
+          return;
+        }
+        
+        // Populate edit form
+        document.getElementById('editProductId').value = product._id;
+        document.getElementById('editName').value = product.name;
+        document.getElementById('editDescription').value = product.description;
+        document.getElementById('editPrice').value = product.price;
+        document.getElementById('editType').value = product.type;
+        document.getElementById('editSubcategory').value = product.subcategory || '';
+        document.getElementById('editStock').value = product.stock;
+        document.getElementById('editOptions').value = product.options ? product.options.join(', ') : '';
+        document.getElementById('editImage').value = product.image || '';
+        
+        // Show current image
+        const preview = document.getElementById('currentImagePreview');
+        if (product.image) {
+          preview.innerHTML = `<img src="${product.image}" alt="${product.name}" style="max-width:200px;max-height:200px;border-radius:4px;" onerror="this.style.display='none'">`;
+        } else {
+          preview.innerHTML = '<p style="color:#666;font-size:0.9rem;">No image</p>';
+        }
+        
+        // Show modal
+        document.getElementById('editModal').style.display = 'block';
+        document.getElementById('edit-success').style.display = 'none';
+        document.getElementById('edit-error').style.display = 'none';
+      } catch (err) {
+        alert('Error loading product: ' + err.message);
+      }
     };
+    
+    // Close edit modal handlers
+    document.getElementById('closeEditModal').addEventListener('click', function() {
+      document.getElementById('editModal').style.display = 'none';
+    });
+    
+    document.getElementById('cancelEditBtn').addEventListener('click', function() {
+      document.getElementById('editModal').style.display = 'none';
+    });
+    
+    // Submit edit form
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      document.getElementById('edit-error').style.display = 'none';
+      document.getElementById('edit-success').style.display = 'none';
+      
+      const productId = document.getElementById('editProductId').value;
+      const form = new FormData();
+      form.append('name', document.getElementById('editName').value.trim());
+      form.append('description', document.getElementById('editDescription').value.trim());
+      form.append('price', parseFloat(document.getElementById('editPrice').value));
+      form.append('type', document.getElementById('editType').value);
+      form.append('subcategory', document.getElementById('editSubcategory').value.trim());
+      form.append('stock', parseInt(document.getElementById('editStock').value, 10));
+      form.append('options', document.getElementById('editOptions').value);
+      
+      if (document.getElementById('editImageFile').files[0]) {
+        form.append('image', document.getElementById('editImageFile').files[0]);
+      } else if (document.getElementById('editImage').value) {
+        form.append('image', document.getElementById('editImage').value);
+      }
+      
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          document.getElementById('edit-error').textContent = 'Please login first.';
+          document.getElementById('edit-error').style.display = 'block';
+          return;
+        }
+        const token = await user.getIdToken();
+        
+        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products/' + productId, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          },
+          body: form
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('edit-success').textContent = 'Product updated successfully!';
+          document.getElementById('edit-success').style.display = 'block';
+          
+          // Refresh products list
+          setTimeout(() => {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('loadProductsBtn').click();
+          }, 1500);
+        } else {
+          document.getElementById('edit-error').textContent = data.error || 'Update failed.';
+          document.getElementById('edit-error').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('edit-error').textContent = 'Update error: ' + err.message;
+        document.getElementById('edit-error').style.display = 'block';
+      }
+    });
+    
     window.deleteProduct = async function(id) {
       if (!confirm('Delete product? This action cannot be undone.')) return;
       try {
