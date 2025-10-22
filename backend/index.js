@@ -6,8 +6,28 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- CORS setup ---
+// Parse allowed origins from environment variable or use default list
+const allowedOrigins = process.env.FRONTEND_ORIGINS 
+  ? process.env.FRONTEND_ORIGINS.split(',').map(origin => origin.trim())
+  : [
+      'https://bonnielassflorals.com',
+      'https://bonnie-lass-florals.onrender.com',
+      'https://bonnie-lass-florals.web.app',
+      'https://bonnie-lass-florals.firebaseapp.com'
+    ];
+
 app.use(cors({
-  origin: 'https://bonnielassflorals.com',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn('CORS blocked origin:', origin);
+      callback(null, false);
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

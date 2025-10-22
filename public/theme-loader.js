@@ -1,10 +1,10 @@
 // Theme Loader - Fetches and applies saved site theme
 // This script should be included early in the HTML head to minimize FOUC (Flash of Unstyled Content)
 (function() {
-  // Determine API base URL (use environment or default to production)
+  // Determine API base URL (use environment or default to production backend)
   const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
-    : 'https://bonnielassflorals.com';
+    : 'https://bonnie-lass-florals.onrender.com';
 
   // Fetch and apply theme
   fetch(API_BASE + '/api/settings/theme')
