@@ -822,8 +822,8 @@ footer a:hover {
   border-radius: 20px;
   box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
   padding: 1.4em 1.6em 1.6em 1.6em;
-  max-width: 340px;
-  flex: 0 1 340px;
+  max-width: 280px;
+  flex: 0 1 280px;
   text-align: left;
   transition: all 0.3s ease;
   position: relative;
@@ -848,7 +848,7 @@ footer a:hover {
 
 .product-img {
   width: 100%;
-  max-width: 270px;
+  max-width: 230px;
   height: auto;
   border-radius: 12px;
   margin-bottom: 1em;
