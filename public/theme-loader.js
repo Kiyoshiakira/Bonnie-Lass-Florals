@@ -2,13 +2,24 @@
 // This script should be included early in the HTML head to minimize FOUC (Flash of Unstyled Content)
 (function() {
   // Determine API base URL (use environment or default to production backend)
-  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  const hostname = window.location.hostname;
+  const API_BASE = (hostname === 'localhost' || hostname === '127.0.0.1')
     ? 'http://localhost:5000'
     : 'https://bonnie-lass-florals.onrender.com';
 
   // Fetch and apply theme
   fetch(API_BASE + '/api/settings/theme')
-    .then(response => response.json())
+    .then(response => {
+      // Check if response is OK and is JSON
+      const contentType = response.headers.get('content-type');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not JSON');
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.theme) {
         applyTheme(data.theme);
