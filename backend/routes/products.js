@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, type, subcategory, stock, options } = req.body;
     const image = req.file
