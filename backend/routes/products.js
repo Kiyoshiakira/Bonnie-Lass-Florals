@@ -53,6 +53,11 @@ router.get('/', async (req, res) => {
 // DELETE /api/products/:id - admin only!
 router.delete('/:id', firebaseAdminAuth, async (req, res) => {
   try {
+    // Validate MongoDB ObjectId format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: 'Invalid product ID format' });
+    }
+
     const deleted = await Product.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Product not found' });
     res.json({ message: 'Product deleted' });
@@ -64,13 +69,24 @@ router.delete('/:id', firebaseAdminAuth, async (req, res) => {
 // PUT /api/products/:id - update product - admin only!
 router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) => {
   try {
+    // Validate MongoDB ObjectId format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: 'Invalid product ID format' });
+    }
+
     const { name, description, price, type, subcategory, stock, options } = req.body;
+    
+    // Validate required fields
+    if (!name || !description || !price || !type) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
     const updateData = {
       name,
       description,
-      price,
+      price: parseFloat(price),
       type,
-      subcategory,
+      subcategory: subcategory || '',
       stock: parseInt(stock, 10) || 1,
       options: options ? (typeof options === 'string' ? options.split(',').map(s => s.trim()) : options) : []
     };
@@ -100,6 +116,11 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid CSV data. Products array is required.' });
     }
 
+    // Limit batch size to prevent abuse
+    if (products.length > 100) {
+      return res.status(400).json({ error: 'Batch size limited to 100 products per request.' });
+    }
+
     const results = {
       success: [],
       errors: []
@@ -108,11 +129,21 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
     for (let i = 0; i < products.length; i++) {
       const item = products[i];
       try {
+        const name = item.name || item.TITLE;
+        const description = item.description || item.DESCRIPTION;
+        const price = parseFloat(item.price || item.PRICE);
+
+        // Validate required fields
+        if (!name || !description || isNaN(price)) {
+          results.errors.push({ row: i + 1, error: 'Missing required fields: name, description, or price', data: item });
+          continue;
+        }
+
         // Map CSV fields to product schema
         const product = new Product({
-          name: item.name || item.TITLE,
-          description: item.description || item.DESCRIPTION,
-          price: parseFloat(item.price || item.PRICE),
+          name,
+          description,
+          price,
           image: item.image || item.IMAGE1 || '',
           type: item.type || 'decor',
           subcategory: item.subcategory || '',
