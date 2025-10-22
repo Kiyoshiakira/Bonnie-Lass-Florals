@@ -272,7 +272,7 @@
   <script>
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:5000'
-      : 'https://bonnielassflorals.com';
+      : 'https://bonnie-lass-florals.onrender.com';
 
     const roles = ['primary', 'primary2', 'accent', 'green', 'cream'];
     const defaultColors = {
@@ -371,6 +371,31 @@
       }, 5000);
     }
 
+    // Helper function to safely parse JSON response with graceful error handling
+    async function parseJsonResponse(response, endpoint) {
+      const contentType = response.headers.get('content-type');
+      const responseText = await response.text();
+      
+      // Log for debugging
+      console.log(`Response from ${endpoint}:`, {
+        status: response.status,
+        contentType: contentType,
+        body: responseText.substring(0, 200) // Log first 200 chars
+      });
+
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error(`Non-JSON response from ${endpoint}:`, responseText);
+        throw new Error(`Server returned HTML instead of JSON. Response: ${responseText.substring(0, 100)}...`);
+      }
+
+      try {
+        return JSON.parse(responseText);
+      } catch (err) {
+        console.error(`JSON parse error from ${endpoint}:`, responseText);
+        throw new Error(`Failed to parse JSON response: ${responseText.substring(0, 100)}...`);
+      }
+    }
+
     // Capitalize first letter
     function capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
@@ -412,7 +437,7 @@
           body: JSON.stringify({ theme: palette })
         });
 
-        const data = await res.json();
+        const data = await parseJsonResponse(res, '/api/settings/theme POST');
         if (res.ok) {
           showStatus('Theme saved successfully! Changes will apply site-wide.');
           applyThemeLocally(palette);
@@ -421,6 +446,7 @@
         }
       } catch (err) {
         showStatus('Error saving theme: ' + err.message, true);
+        console.error('Save theme error:', err);
       }
     });
 
@@ -459,7 +485,7 @@
           })
         });
 
-        const data = await res.json();
+        const data = await parseJsonResponse(res, '/api/settings/presets POST');
         if (res.ok) {
           showStatus('Preset saved successfully!');
           loadPresets();
@@ -468,6 +494,7 @@
         }
       } catch (err) {
         showStatus('Error saving preset: ' + err.message, true);
+        console.error('Save preset error:', err);
       }
     });
 
@@ -504,7 +531,7 @@
     async function loadPresets() {
       try {
         const res = await fetch(API_BASE + '/api/settings/presets');
-        const data = await res.json();
+        const data = await parseJsonResponse(res, '/api/settings/presets GET');
         
         const presetsList = document.getElementById('presetsList');
         if (!data.presets || data.presets.length === 0) {
@@ -529,28 +556,32 @@
         `).join('');
       } catch (err) {
         console.error('Error loading presets:', err);
+        showStatus('Error loading presets: ' + err.message, true);
       }
     }
 
     // Apply preset (preview only)
-    window.applyPreset = function(presetId) {
-      fetch(API_BASE + '/api/settings/presets')
-        .then(res => res.json())
-        .then(data => {
-          const preset = data.presets.find(p => p._id === presetId);
-          if (preset) {
-            setPalette(preset.colors);
-            applyThemeLocally(preset.colors);
-            showStatus('Preset applied locally! Click "Save Site Theme" to apply site-wide.');
-          }
-        });
+    window.applyPreset = async function(presetId) {
+      try {
+        const res = await fetch(API_BASE + '/api/settings/presets');
+        const data = await parseJsonResponse(res, '/api/settings/presets GET');
+        const preset = data.presets.find(p => p._id === presetId);
+        if (preset) {
+          setPalette(preset.colors);
+          applyThemeLocally(preset.colors);
+          showStatus('Preset applied locally! Click "Save Site Theme" to apply site-wide.');
+        }
+      } catch (err) {
+        console.error('Error applying preset:', err);
+        showStatus('Error applying preset: ' + err.message, true);
+      }
     };
 
     // Apply and save preset
     window.applyAndSavePreset = async function(presetId) {
       try {
         const res = await fetch(API_BASE + '/api/settings/presets');
-        const data = await res.json();
+        const data = await parseJsonResponse(res, '/api/settings/presets GET');
         const preset = data.presets.find(p => p._id === presetId);
         
         if (!preset) {
@@ -576,7 +607,7 @@
           body: JSON.stringify({ theme: preset.colors })
         });
 
-        const saveData = await saveRes.json();
+        const saveData = await parseJsonResponse(saveRes, '/api/settings/theme POST');
         if (saveRes.ok) {
           applyThemeLocally(preset.colors);
           showStatus('Preset applied and saved site-wide!');
@@ -584,6 +615,7 @@
           showStatus(saveData.error || 'Failed to save theme.', true);
         }
       } catch (err) {
+        console.error('Error applying and saving preset:', err);
         showStatus('Error: ' + err.message, true);
       }
     };
@@ -609,7 +641,7 @@
           }
         });
 
-        const data = await res.json();
+        const data = await parseJsonResponse(res, '/api/settings/presets DELETE');
         if (res.ok) {
           showStatus('Preset deleted successfully!');
           loadPresets();
@@ -617,6 +649,7 @@
           showStatus(data.error || 'Failed to delete preset.', true);
         }
       } catch (err) {
+        console.error('Error deleting preset:', err);
         showStatus('Error: ' + err.message, true);
       }
     };
@@ -646,15 +679,19 @@
     loadPresets();
 
     // Load current theme on page load
-    fetch(API_BASE + '/api/settings/theme')
-      .then(res => res.json())
-      .then(data => {
+    (async function() {
+      try {
+        const res = await fetch(API_BASE + '/api/settings/theme');
+        const data = await parseJsonResponse(res, '/api/settings/theme GET');
         if (data.theme) {
           setPalette(data.theme);
           applyThemeLocally(data.theme);
         }
-      })
-      .catch(err => console.error('Error loading current theme:', err));
+      } catch (err) {
+        console.error('Error loading current theme:', err);
+        // Don't show error to user on initial load - just use defaults
+      }
+    })();
   </script>
 </body>
 </html>
