@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const Product = require('../models/Product');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // NEW
+const Papa = require('papaparse');
 
 // Multer setup for image upload
 const storage = multer.diskStorage({
@@ -57,6 +58,83 @@ router.delete('/:id', firebaseAdminAuth, async (req, res) => {
     res.json({ message: 'Product deleted' });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// PUT /api/products/:id - update product - admin only!
+router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, type, subcategory, stock, options } = req.body;
+    const updateData = {
+      name,
+      description,
+      price,
+      type,
+      subcategory,
+      stock: parseInt(stock, 10) || 1,
+      options: options ? (typeof options === 'string' ? options.split(',').map(s => s.trim()) : options) : []
+    };
+
+    // Update image if a new one is provided
+    if (req.file) {
+      updateData.image = `/admin/uploads/${req.file.filename}`;
+    } else if (req.body.image) {
+      updateData.image = req.body.image;
+    }
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!updated) return res.status(404).json({ error: 'Product not found' });
+    res.json({ message: 'Product updated successfully!', product: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Update failed.' });
+  }
+});
+
+// POST /api/products/batch - batch upload via CSV - admin only!
+router.post('/batch', firebaseAdminAuth, async (req, res) => {
+  try {
+    const { products } = req.body;
+    
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ error: 'Invalid CSV data. Products array is required.' });
+    }
+
+    const results = {
+      success: [],
+      errors: []
+    };
+
+    for (let i = 0; i < products.length; i++) {
+      const item = products[i];
+      try {
+        // Map CSV fields to product schema
+        const product = new Product({
+          name: item.name || item.TITLE,
+          description: item.description || item.DESCRIPTION,
+          price: parseFloat(item.price || item.PRICE),
+          image: item.image || item.IMAGE1 || '',
+          type: item.type || 'decor',
+          subcategory: item.subcategory || '',
+          stock: parseInt(item.stock || item.QUANTITY || 1, 10),
+          options: item.options ? (typeof item.options === 'string' ? item.options.split(',').map(s => s.trim()) : item.options) : [],
+          featured: false
+        });
+
+        await product.save();
+        results.success.push({ row: i + 1, name: product.name, id: product._id });
+      } catch (err) {
+        results.errors.push({ row: i + 1, error: err.message, data: item });
+      }
+    }
+
+    res.json({
+      message: `Batch upload completed. ${results.success.length} products uploaded, ${results.errors.length} failed.`,
+      results
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Batch upload failed.' });
   }
 });
 

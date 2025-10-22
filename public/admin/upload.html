@@ -78,6 +78,18 @@
       <span class="breadcrumb-current">Upload Product</span>
     </div>
     <h1>Upload New Product</h1>
+    
+    <!-- CSV Batch Upload Section -->
+    <div style="background:#f0f0f0; padding:1.5rem; border-radius:0.5rem; margin-bottom:2rem;">
+      <h2 style="margin-top:0;">Batch Upload via CSV</h2>
+      <p>Upload multiple products at once using a CSV file. The CSV should include columns: name, description, price, type, subcategory, stock, options (optional), image (URL)</p>
+      <input type="file" id="csvFile" accept=".csv" style="margin-bottom:1rem;">
+      <button type="button" id="uploadCsvBtn" style="background:#10b981;">Upload CSV</button>
+      <div id="csv-result" style="margin-top:1rem;"></div>
+    </div>
+
+    <!-- Single Product Upload Form -->
+    <h2>Single Product Upload</h2>
     <form id="uploadForm">
       <label for="name">Product Name</label>
       <input type="text" id="name" name="name" required>
@@ -113,6 +125,60 @@
       <button type="button" id="uploadAnotherBtn" style="margin-left:1em; display:none;">Upload Another</button>
     </div>
     <div id="upload-error" style="color:red;display:none;margin-top:1rem;"></div>
+
+    <!-- Product Management Section -->
+    <div style="margin-top:3rem; border-top:2px solid #d946ef; padding-top:2rem;">
+      <h2>Manage Products</h2>
+      <button type="button" id="loadProductsBtn" style="background:#3b82f6;">Load All Products</button>
+      <div id="products-list" style="margin-top:1.5rem;"></div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+      <div style="background:white; width:90%; max-width:600px; margin:2rem auto; padding:2rem; border-radius:0.5rem; max-height:90vh; overflow-y:auto;">
+        <h2>Edit Product</h2>
+        <form id="editForm">
+          <input type="hidden" id="edit-id">
+          
+          <label for="edit-name">Product Name</label>
+          <input type="text" id="edit-name" required>
+
+          <label for="edit-description">Description</label>
+          <textarea id="edit-description" required></textarea>
+
+          <label for="edit-price">Price</label>
+          <input type="number" id="edit-price" step="0.01" required>
+
+          <label for="edit-type">Type</label>
+          <select id="edit-type" required>
+            <option value="decor">Decor</option>
+            <option value="food">Cottage Food</option>
+          </select>
+
+          <label for="edit-subcategory">Subcategory</label>
+          <input type="text" id="edit-subcategory">
+
+          <label for="edit-stock">Stock</label>
+          <input type="number" id="edit-stock" min="1" required>
+
+          <label for="edit-options">Options (comma separated)</label>
+          <input type="text" id="edit-options" placeholder="e.g. Small,Medium,Large">
+
+          <label for="edit-image-url">Image URL (current)</label>
+          <input type="text" id="edit-image-url" readonly style="background:#f0f0f0;">
+
+          <label for="edit-image">New Product Image (optional)</label>
+          <input type="file" id="edit-image" accept="image/*">
+
+          <div style="margin-top:1.5rem;">
+            <button type="submit" style="background:#10b981;">Save Changes</button>
+            <button type="button" id="cancelEditBtn" style="background:#6b7280; margin-left:0.5rem;">Cancel</button>
+          </div>
+        </form>
+        <div id="edit-success" style="color:green;display:none;margin-top:1rem;"></div>
+        <div id="edit-error" style="color:red;display:none;margin-top:1rem;"></div>
+      </div>
+    </div>
   </section>
   <script>
     // Cart count
@@ -224,6 +290,285 @@
       clearUploadDraft();
       this.style.display = 'none';
       document.getElementById('upload-success').style.display = 'none';
+    });
+
+    // CSV Batch Upload functionality
+    document.getElementById('uploadCsvBtn').addEventListener('click', async function() {
+      const fileInput = document.getElementById('csvFile');
+      const csvFile = fileInput.files[0];
+      
+      if (!csvFile) {
+        document.getElementById('csv-result').innerHTML = '<p style="color:red;">Please select a CSV file.</p>';
+        return;
+      }
+
+      document.getElementById('csv-result').innerHTML = '<p>Processing CSV...</p>';
+
+      try {
+        const text = await csvFile.text();
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          document.getElementById('csv-result').innerHTML = '<p style="color:red;">CSV file is empty or invalid.</p>';
+          return;
+        }
+
+        // Parse CSV manually
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const products = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',');
+          const product = {};
+          
+          headers.forEach((header, index) => {
+            if (values[index]) {
+              product[header] = values[index].trim();
+            }
+          });
+
+          if (product.name || product.title) {
+            products.push({
+              name: product.name || product.title,
+              description: product.description || '',
+              price: product.price || '0',
+              type: product.type || 'decor',
+              subcategory: product.subcategory || '',
+              stock: product.stock || product.quantity || '1',
+              options: product.options || '',
+              image: product.image || product.image1 || ''
+            });
+          }
+        }
+
+        if (products.length === 0) {
+          document.getElementById('csv-result').innerHTML = '<p style="color:red;">No valid products found in CSV.</p>';
+          return;
+        }
+
+        // Get Firebase token
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          document.getElementById('csv-result').innerHTML = '<p style="color:red;">Please login first.</p>';
+          return;
+        }
+
+        const token = await user.getIdToken();
+
+        // Send batch upload request
+        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products/batch', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ products })
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          let html = `<p style="color:green;">${data.message}</p>`;
+          if (data.results.success.length > 0) {
+            html += `<p><strong>Uploaded ${data.results.success.length} products:</strong></p><ul>`;
+            data.results.success.forEach(item => {
+              html += `<li>${item.name} (ID: ${item.id})</li>`;
+            });
+            html += '</ul>';
+          }
+          if (data.results.errors.length > 0) {
+            html += `<p style="color:red;"><strong>Failed ${data.results.errors.length} products:</strong></p><ul>`;
+            data.results.errors.forEach(item => {
+              html += `<li>Row ${item.row}: ${item.error}</li>`;
+            });
+            html += '</ul>';
+          }
+          document.getElementById('csv-result').innerHTML = html;
+          fileInput.value = '';
+        } else {
+          document.getElementById('csv-result').innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+        }
+      } catch (err) {
+        document.getElementById('csv-result').innerHTML = `<p style="color:red;">Upload error: ${err.message}</p>`;
+      }
+    });
+
+    // Load Products functionality
+    document.getElementById('loadProductsBtn').addEventListener('click', async function() {
+      document.getElementById('products-list').innerHTML = '<p>Loading products...</p>';
+      
+      try {
+        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
+        const products = await res.json();
+        
+        if (res.ok && products.length > 0) {
+          let html = '<table style="width:100%; border-collapse:collapse; margin-top:1rem;">';
+          html += '<thead><tr style="background:#f0f0f0;">';
+          html += '<th style="padding:0.5rem; text-align:left;">Name</th>';
+          html += '<th style="padding:0.5rem; text-align:left;">Price</th>';
+          html += '<th style="padding:0.5rem; text-align:left;">Stock</th>';
+          html += '<th style="padding:0.5rem; text-align:left;">Type</th>';
+          html += '<th style="padding:0.5rem; text-align:left;">Actions</th>';
+          html += '</tr></thead><tbody>';
+          
+          products.forEach(product => {
+            html += '<tr style="border-bottom:1px solid #e5e7eb;">';
+            html += `<td style="padding:0.5rem;">${product.name}</td>`;
+            html += `<td style="padding:0.5rem;">$${product.price}</td>`;
+            html += `<td style="padding:0.5rem;">${product.stock}</td>`;
+            html += `<td style="padding:0.5rem;">${product.type}</td>`;
+            html += `<td style="padding:0.5rem;">`;
+            html += `<button onclick="editProduct('${product._id}')" style="background:#3b82f6; padding:0.25rem 0.75rem; margin-right:0.5rem;">Edit</button>`;
+            html += `<button onclick="deleteProduct('${product._id}')" style="background:#ef4444; padding:0.25rem 0.75rem;">Delete</button>`;
+            html += `</td>`;
+            html += '</tr>';
+          });
+          
+          html += '</tbody></table>';
+          document.getElementById('products-list').innerHTML = html;
+          
+          // Store products globally for edit functionality
+          window.productsData = products;
+        } else {
+          document.getElementById('products-list').innerHTML = '<p>No products found.</p>';
+        }
+      } catch (err) {
+        document.getElementById('products-list').innerHTML = `<p style="color:red;">Error loading products: ${err.message}</p>`;
+      }
+    });
+
+    // Edit Product functionality
+    window.editProduct = async function(productId) {
+      const product = window.productsData.find(p => p._id === productId);
+      if (!product) {
+        alert('Product not found');
+        return;
+      }
+
+      // Populate edit form
+      document.getElementById('edit-id').value = product._id;
+      document.getElementById('edit-name').value = product.name;
+      document.getElementById('edit-description').value = product.description;
+      document.getElementById('edit-price').value = product.price;
+      document.getElementById('edit-type').value = product.type;
+      document.getElementById('edit-subcategory').value = product.subcategory || '';
+      document.getElementById('edit-stock').value = product.stock;
+      document.getElementById('edit-options').value = Array.isArray(product.options) ? product.options.join(', ') : '';
+      document.getElementById('edit-image-url').value = product.image || '';
+      
+      // Show modal
+      document.getElementById('editModal').style.display = 'block';
+      document.getElementById('edit-success').style.display = 'none';
+      document.getElementById('edit-error').style.display = 'none';
+    };
+
+    // Delete Product functionality
+    window.deleteProduct = async function(productId) {
+      if (!confirm('Are you sure you want to delete this product?')) {
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert('Please login first.');
+          return;
+        }
+
+        const token = await user.getIdToken();
+        const res = await fetch(`https://bonnie-lass-florals.onrender.com/api/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert('Product deleted successfully!');
+          document.getElementById('loadProductsBtn').click();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) {
+        alert('Delete error: ' + err.message);
+      }
+    };
+
+    // Cancel Edit
+    document.getElementById('cancelEditBtn').addEventListener('click', function() {
+      document.getElementById('editModal').style.display = 'none';
+      document.getElementById('editForm').reset();
+    });
+
+    // Submit Edit Form
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      document.getElementById('edit-success').style.display = 'none';
+      document.getElementById('edit-error').style.display = 'none';
+
+      const productId = document.getElementById('edit-id').value;
+      const imageFile = document.getElementById('edit-image').files[0];
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          document.getElementById('edit-error').textContent = 'Please login first.';
+          document.getElementById('edit-error').style.display = 'block';
+          return;
+        }
+
+        const token = await user.getIdToken();
+        let imageUrl = document.getElementById('edit-image-url').value;
+
+        // Upload new image if provided
+        if (imageFile) {
+          const storageRef = firebase.storage().ref('product-images/' + Date.now() + '_' + imageFile.name);
+          await storageRef.put(imageFile);
+          imageUrl = await storageRef.getDownloadURL();
+        }
+
+        // Prepare update data
+        const updateData = {
+          name: document.getElementById('edit-name').value,
+          description: document.getElementById('edit-description').value,
+          price: document.getElementById('edit-price').value,
+          type: document.getElementById('edit-type').value,
+          subcategory: document.getElementById('edit-subcategory').value,
+          stock: document.getElementById('edit-stock').value,
+          options: document.getElementById('edit-options').value,
+          image: imageUrl
+        };
+
+        // Send update request
+        const res = await fetch(`https://bonnie-lass-florals.onrender.com/api/products/${productId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(updateData)
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          document.getElementById('edit-success').textContent = 'Product updated successfully!';
+          document.getElementById('edit-success').style.display = 'block';
+          document.getElementById('editForm').reset();
+          setTimeout(() => {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('loadProductsBtn').click();
+          }, 1500);
+        } else {
+          document.getElementById('edit-error').textContent = data.error || 'Update failed.';
+          document.getElementById('edit-error').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('edit-error').textContent = 'Update error: ' + err.message;
+        document.getElementById('edit-error').style.display = 'block';
+      }
     });
   </script>
   <script src="../mobile-nav.js"></script>
