@@ -22,6 +22,7 @@
     const uploadProductLink = document.getElementById('uploadProductLink'); // for admin upload link
     const adminOrdersLink = document.getElementById('adminOrdersLink'); // for admin all orders link
     const paletteLink = document.getElementById('paletteLink'); // for admin palette link
+    const messagesLink = document.getElementById('messagesLink'); // for admin messages link
 
     let isSignup = false;
 
@@ -149,6 +150,9 @@
       if (paletteLink) {
         paletteLink.style.display = role === "Admin" ? "" : "none";
       }
+      if (messagesLink) {
+        messagesLink.style.display = role === "Admin" ? "" : "none";
+      }
 
       if (loginBtn) loginBtn.style.display = "none";
       if (profileCircleContainer) profileCircleContainer.style.display = "flex";
@@ -169,6 +173,7 @@
       if (uploadProductLink) uploadProductLink.style.display = "none";
       if (adminOrdersLink) adminOrdersLink.style.display = "none";
       if (paletteLink) paletteLink.style.display = "none";
+      if (messagesLink) messagesLink.style.display = "none";
       
       // Clear localStorage
       localStorage.removeItem('userRole');
