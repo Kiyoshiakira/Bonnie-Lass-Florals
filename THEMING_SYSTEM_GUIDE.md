@@ -24,13 +24,18 @@ The theming system allows administrators to:
    - `GET /api/settings/presets` - Public endpoint to fetch presets
    - `POST /api/settings/presets` - Admin-only endpoint to add preset
    - `DELETE /api/settings/presets/:id` - Admin-only endpoint to delete preset
+   - `GET /api/settings/background` - Public endpoint to fetch background image URL (NEW)
+   - `POST /api/settings/background` - Admin-only endpoint to save background image URL (NEW)
+   - `DELETE /api/settings/background` - Admin-only endpoint to remove background image (NEW)
 
 ### Frontend Components
 
 1. **Theme Loader** (`public/theme-loader.js`)
    - Lightweight script loaded early in HTML head
    - Fetches saved theme from API
+   - Fetches saved background image from API (NEW)
    - Applies CSS variables to `document.documentElement`
+   - Applies background image to `document.body` (NEW)
    - Minimizes FOUC (Flash of Unstyled Content)
 
 2. **Palette Editor** (`public/admin/palette.html`)
@@ -42,6 +47,9 @@ The theming system allows administrators to:
      - Save theme to apply site-wide
      - Save presets for quick switching
      - View, preview, apply, and delete saved presets
+     - **Upload custom background images** (NEW)
+     - **Enter background image URLs** (NEW)
+     - **Preview and save background images site-wide** (NEW)
 
 3. **CSS Variables** (`public/styles.css`)
    - Themeable CSS custom properties:
@@ -93,6 +101,13 @@ The theming system allows administrators to:
      - **Preview**: Load preset colors into editor (doesn't save)
      - **Apply & Save**: Load and immediately save as site theme
      - **Delete**: Remove preset from database
+
+7. **Manage Background Images** (NEW)
+   - Upload a custom background image (max 5MB)
+   - Or enter a direct URL to an image
+   - Preview the background locally before saving
+   - Save to apply the background site-wide
+   - Remove background to restore default fall-background.svg
 
 ### For Visitors
 
@@ -191,6 +206,27 @@ Cream: #fffacd (Lemon chiffon)
 }
 ```
 
+**GET /api/settings/background** (NEW)
+```json
+{
+  "backgroundUrl": "https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.appspot.com/o/backgrounds%2F1234567890-image.jpg?alt=media"
+}
+```
+
+**POST /api/settings/background** (NEW)
+```json
+{
+  "backgroundUrl": "https://example.com/custom-background.jpg"
+}
+```
+Response:
+```json
+{
+  "message": "Background image saved successfully!",
+  "backgroundUrl": "https://example.com/custom-background.jpg"
+}
+```
+
 ## Troubleshooting
 
 ### Theme not applying
@@ -208,6 +244,13 @@ Cream: #fffacd (Lemon chiffon)
 - Check CSS variable names match in styles.css
 - Clear browser cache and reload
 
+### Background image not loading (NEW)
+- Verify the image URL is accessible and valid
+- Check Firebase Storage permissions if using uploaded images
+- Verify `/api/settings/background` returns valid JSON with backgroundUrl
+- Check browser console for CORS or loading errors
+- Ensure image file size is under 5MB for uploads
+
 ## Future Enhancements
 
 Potential improvements for future versions:
@@ -219,3 +262,6 @@ Potential improvements for future versions:
 - Theme preview on other pages before saving
 - Export/import theme JSON files
 - Theme versioning and rollback
+- Background image filters and effects (NEW)
+- Background image positioning options (NEW)
+- Multiple background images for different pages (NEW)
