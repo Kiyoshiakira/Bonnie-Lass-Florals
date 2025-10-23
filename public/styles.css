@@ -1451,8 +1451,10 @@ footer a:hover {
   #loginBtn {
     margin: 1rem 2rem;
     text-align: center;
-    display: block;
-    width: calc(100% - 4rem);
+    display: inline-block;
+    width: auto;
+    max-width: 150px;
+    padding: 0.5em 1.4em;
   }
   
   .features, .pricing-table {
