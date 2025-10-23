@@ -11,8 +11,9 @@ document.getElementById('contactForm').addEventListener('submit', async function
       showLoading('Sending message...');
     }
     
-    // UPDATED: Use full Render API URL
-    const res = await fetch('https://bonnie-lass-florals.onrender.com/api/contact', {
+    // Use API_BASE from window or default to Render URL
+    const API_BASE = window.API_BASE || 'https://bonnie-lass-florals.onrender.com';
+    const res = await fetch(`${API_BASE}/api/contact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, message })

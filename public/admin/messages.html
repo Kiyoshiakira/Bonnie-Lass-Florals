@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>All Orders | Bonnie Lass Florals Admin</title>
+  <title>Contact Messages | Bonnie Lass Florals Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="../auth.css">
@@ -13,7 +13,6 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
@@ -26,6 +25,116 @@
     };
     firebase.initializeApp(firebaseConfig);
   </script>
+  <style>
+    .messages-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .messages-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .unread-badge {
+      background: #d946ef;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    .refresh-btn {
+      background: #d946ef;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .refresh-btn:hover {
+      background: #c026d3;
+    }
+    .messages-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    .messages-table th {
+      background: #f3f4f6;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .messages-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .messages-table tr:last-child td {
+      border-bottom: none;
+    }
+    .messages-table tr.unread {
+      background: #fef3ff;
+      font-weight: 500;
+    }
+    .message-preview {
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .action-btn {
+      background: transparent;
+      border: 1px solid #d946ef;
+      color: #d946ef;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      margin-right: 0.5rem;
+    }
+    .action-btn:hover {
+      background: #d946ef;
+      color: white;
+    }
+    .action-btn.delete {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    .action-btn.delete:hover {
+      background: #ef4444;
+      color: white;
+    }
+    .no-messages {
+      text-align: center;
+      padding: 3rem;
+      color: #6b7280;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+    @media (max-width: 768px) {
+      .messages-table {
+        font-size: 0.875rem;
+      }
+      .messages-table th,
+      .messages-table td {
+        padding: 0.5rem;
+      }
+      .message-preview {
+        max-width: 200px;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -80,16 +189,27 @@
       <span class="breadcrumb-separator">›</span>
       <a href="../profile.html">Profile</a>
       <span class="breadcrumb-separator">›</span>
-      <span class="breadcrumb-current">All Orders (Admin)</span>
+      <span class="breadcrumb-current">Contact Messages (Admin)</span>
     </div>
-    <h1>All Orders (Admin)</h1>
-    <div id="adminOrders"></div>
-    <div id="notAdminMsg" style="display:none; color:#d946ef; text-align:center; margin-top:2em;">
-      <b>You must be an admin to view all orders.</b>
+    <div class="messages-container">
+      <div class="messages-header">
+        <h1>
+          Contact Messages
+          <span id="unreadBadge" class="unread-badge" style="display:none;">0</span>
+        </h1>
+        <button class="refresh-btn" onclick="refreshMessages()">🔄 Refresh</button>
+      </div>
+      <div id="messagesContent">
+        <div class="loading">Loading messages...</div>
+      </div>
+      <div id="notAdminMsg" style="display:none; color:#d946ef; text-align:center; margin-top:2em;">
+        <b>You must be an admin to view messages.</b>
+      </div>
     </div>
   </section>
   <script src="../mobile-nav.js"></script>
   <script src="../auth.js"></script>
+  <script src="messages.js"></script>
   <script>
     // Cart count for nav
     function updateCartCount() {
@@ -97,73 +217,6 @@
       document.querySelectorAll('.cart-btn span').forEach(el => el.textContent = cart.length);
     }
     updateCartCount();
-
-    const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
-
-    // Wait for Firebase auth to be ready
-    document.addEventListener('DOMContentLoaded', function() {
-      firebase.auth().onAuthStateChanged(async function(user) {
-        if (user && admins.includes(user.email.toLowerCase())) {
-          document.getElementById('notAdminMsg').style.display = 'none';
-          fetchAndShowOrders(await user.getIdToken());
-        } else {
-          document.getElementById('adminOrders').innerHTML = '';
-          document.getElementById('notAdminMsg').style.display = '';
-        }
-      });
-    });
-
-    async function fetchAndShowOrders(token) {
-      const container = document.getElementById('adminOrders');
-      container.innerHTML = "Loading orders...";
-      try {
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/orders', {
-          headers: { Authorization: 'Bearer ' + token }
-        });
-        if (!res.ok) {
-          container.innerHTML = "<div style='color:red'>Could not fetch orders (forbidden or error).</div>";
-          return;
-        }
-        const orders = await res.json();
-        if (!orders.length) {
-          container.innerHTML = "<div>No orders yet.</div>";
-          return;
-        }
-        container.innerHTML = orders.map(orderToHtml).join("");
-      } catch (err) {
-        container.innerHTML = "<div style='color:red'>Failed to load orders.</div>";
-      }
-    }
-
-    function orderToHtml(order) {
-      const date = new Date(order.createdAt).toLocaleString();
-      const total = order.total ? `$${Number(order.total).toFixed(2)}` : "";
-      const status = order.status || "Processing";
-      const txid = order.payment && order.payment.transactionId ? order.payment.transactionId : "N/A";
-      const items = (order.items || []).map(item =>
-        `<li>${item.quantity} × <span style="font-weight:bold">${item.product && item.product.name ? item.product.name : item.product || "Product"}</span></li>`
-      ).join("");
-      const shipping = order.shippingAddress ? `
-        <div>
-          <strong>Ship To:</strong><br>
-          ${order.shippingAddress.name}<br>
-          ${order.shippingAddress.street}<br>
-          ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zip}<br>
-          ${order.shippingAddress.country}
-        </div>` : "";
-      return `
-        <div class="order-card" style="margin:1.8em 0;padding:1.2em 0;border-bottom:1px solid #eee;">
-          <div><strong>Order ID:</strong> ${order._id}</div>
-          <div><strong>Date:</strong> ${date}</div>
-          <div><strong>Total:</strong> ${total}</div>
-          <div><strong>Status:</strong> ${status}</div>
-          <div><strong>Transaction ID:</strong> ${txid}</div>
-          ${shipping}
-          <div style="margin-top:0.5em;"><strong>Items:</strong></div>
-          <ul>${items}</ul>
-        </div>
-      `;
-    }
   </script>
 </body>
 </html>
