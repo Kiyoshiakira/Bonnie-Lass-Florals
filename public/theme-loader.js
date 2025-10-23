@@ -7,7 +7,31 @@
     ? 'http://localhost:5000'
     : 'https://bonnie-lass-florals.onrender.com';
 
-  // Fetch and apply theme
+  const THEME_STORAGE_KEY = 'bonnieLassTheme';
+  const BACKGROUND_STORAGE_KEY = 'bonnieLassBackground';
+
+  // STEP 1: Apply cached theme immediately (synchronous - no flash!)
+  try {
+    const cachedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (cachedTheme) {
+      const theme = JSON.parse(cachedTheme);
+      applyTheme(theme);
+    }
+  } catch (err) {
+    console.warn('Failed to load cached theme:', err);
+  }
+
+  // STEP 2: Apply cached background immediately (synchronous - no flash!)
+  try {
+    const cachedBackground = localStorage.getItem(BACKGROUND_STORAGE_KEY);
+    if (cachedBackground) {
+      applyBackground(cachedBackground);
+    }
+  } catch (err) {
+    console.warn('Failed to load cached background:', err);
+  }
+
+  // STEP 3: Fetch latest theme from server in background and update if changed
   fetch(API_BASE + '/api/settings/theme')
     .then(response => {
       // Check if response is OK and is JSON
@@ -22,15 +46,22 @@
     })
     .then(data => {
       if (data.theme) {
+        // Save to localStorage for next page load
+        try {
+          localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(data.theme));
+        } catch (err) {
+          console.warn('Failed to cache theme:', err);
+        }
+        // Apply the theme (will update if different from cached version)
         applyTheme(data.theme);
       }
     })
     .catch(err => {
-      // Silently fail - default CSS variables will be used
+      // Silently fail - cached or default CSS variables will be used
       console.warn('Theme loader failed:', err);
     });
 
-  // Fetch and apply background image
+  // STEP 4: Fetch latest background from server in background and update if changed
   fetch(API_BASE + '/api/settings/background')
     .then(response => {
       const contentType = response.headers.get('content-type');
@@ -44,11 +75,18 @@
     })
     .then(data => {
       if (data.backgroundUrl) {
+        // Save to localStorage for next page load
+        try {
+          localStorage.setItem(BACKGROUND_STORAGE_KEY, data.backgroundUrl);
+        } catch (err) {
+          console.warn('Failed to cache background:', err);
+        }
+        // Apply the background (will update if different from cached version)
         applyBackground(data.backgroundUrl);
       }
     })
     .catch(err => {
-      // Silently fail - default background will be used
+      // Silently fail - cached or default background will be used
       console.warn('Background loader failed:', err);
     });
 
