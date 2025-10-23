@@ -87,7 +87,6 @@
 
       <button type="submit">Send Message 💌</button>
     </form>
-    <div id="contact-success" style="display:none; color: green; margin-top: 1rem;">Thank you! Your message has been prepared in your email client.</div>
     <div style="margin-top:2rem;">
       <p>Or reach us on social:</p>
       <a href="https://instagram.com/bonnielassflorals" target="_blank">Instagram</a> |
@@ -101,20 +100,6 @@
       document.getElementById('cart-count').textContent = cart.length;
     }
     updateCartCount();
-
-    // Contact form mailto handler
-    document.getElementById('contactForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = encodeURIComponent(document.getElementById('name').value);
-      const email = encodeURIComponent(document.getElementById('email').value);
-      const message = encodeURIComponent(document.getElementById('message').value);
-      const mailto = `mailto:bonnielassflorals@gmail.com?subject=Contact%20from%20${name}&body=${message}%0A%0AFrom:%20${name}%20(${email})`;
-      window.location.href = mailto;
-      document.getElementById('contact-success').style.display = "block";
-      setTimeout(() => {
-        document.getElementById('contact-success').style.display = "none";
-      }, 5000);
-    });
   </script>
   <script src="ui-utils.js"></script>
   <script src="contact.js"></script>

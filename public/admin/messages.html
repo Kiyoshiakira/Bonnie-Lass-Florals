@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Messages | Bonnie Lass Florals Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../auth.css">
+  <!-- Theme Loader - Load early to minimize FOUC -->
+  <script src="../theme-loader.js"></script>
+  <!-- Admin Guard - Must be loaded before Firebase to prevent unauthorized access -->
+  <script src="../admin-guard.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
+      authDomain: "bonnie-lass-florals.firebaseapp.com",
+      projectId: "bonnie-lass-florals",
+      storageBucket: "bonnie-lass-florals.firebasestorage.app",
+      messagingSenderId: "1009091302977",
+      appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
+      measurementId: "G-DQRB98D0WY"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <style>
+    .messages-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .messages-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .unread-badge {
+      background: #d946ef;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    .refresh-btn {
+      background: #d946ef;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .refresh-btn:hover {
+      background: #c026d3;
+    }
+    .messages-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    .messages-table th {
+      background: #f3f4f6;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .messages-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .messages-table tr:last-child td {
+      border-bottom: none;
+    }
+    .messages-table tr.unread {
+      background: #fef3ff;
+      font-weight: 500;
+    }
+    .message-preview {
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .action-btn {
+      background: transparent;
+      border: 1px solid #d946ef;
+      color: #d946ef;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      margin-right: 0.5rem;
+    }
+    .action-btn:hover {
+      background: #d946ef;
+      color: white;
+    }
+    .action-btn.delete {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    .action-btn.delete:hover {
+      background: #ef4444;
+      color: white;
+    }
+    .no-messages {
+      text-align: center;
+      padding: 3rem;
+      color: #6b7280;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+    @media (max-width: 768px) {
+      .messages-table {
+        font-size: 0.875rem;
+      }
+      .messages-table th,
+      .messages-table td {
+        padding: 0.5rem;
+      }
+      .message-preview {
+        max-width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="../img/logo.png" alt="Bonnie Lass Florals Logo" style="height:60px;vertical-align:middle;margin-right:18px;">
+      Bonnie Lass Florals
+    </div>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../shop.html">Shop</a>
+      <a href="../gallery.html">Gallery</a>
+      <a href="../contact.html">Contact</a>
+      <a href="../cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="../img/default-avatar.png" alt="Profile" />
+        <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
+          <a href="../profile.html">Profile</a>
+          <a href="../orders.html">Orders</a>
+          <a id="adminOrdersLink" href="orders.html" style="display:none;">All Orders (Admin)</a>
+          <a id="uploadProductLink" href="upload.html" style="display:none;">Upload Product</a>
+          <a id="paletteLink" href="palette.html" style="display:none;">Palette Editor</a>
+          <a id="messagesLink" href="messages.html" style="display:none;">Messages</a>
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
+    </nav>
+  </header>
+  <div id="loginModal">
+    <div id="loginModalContent">
+      <h2 id="loginTitle">Login</h2>
+      <form id="authForm">
+        <div id="signupFields" class="hidden">
+          <input type="text" id="signupName" placeholder="Your Name" required>
+        </div>
+        <input type="email" id="emailField" placeholder="Email" required>
+        <input type="password" id="passwordField" placeholder="Password" required>
+        <button type="submit" id="loginEmailBtn">Login</button>
+        <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
+      </form>
+      <div style="margin:1em 0;">OR</div>
+      <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
+      <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
+      <div id="loginError" style="color:red;margin-top:1em;"></div>
+    </div>
+  </div>
+  <section>
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb-separator">›</span>
+      <a href="../profile.html">Profile</a>
+      <span class="breadcrumb-separator">›</span>
+      <span class="breadcrumb-current">Contact Messages (Admin)</span>
+    </div>
+    <div class="messages-container">
+      <div class="messages-header">
+        <h1>
+          Contact Messages
+          <span id="unreadBadge" class="unread-badge" style="display:none;">0</span>
+        </h1>
+        <button class="refresh-btn" onclick="refreshMessages()">🔄 Refresh</button>
+      </div>
+      <div id="messagesContent">
+        <div class="loading">Loading messages...</div>
+      </div>
+      <div id="notAdminMsg" style="display:none; color:#d946ef; text-align:center; margin-top:2em;">
+        <b>You must be an admin to view messages.</b>
+      </div>
+    </div>
+  </section>
+  <script src="../mobile-nav.js"></script>
+  <script src="../auth.js"></script>
+  <script src="messages.js"></script>
+  <script>
+    // Cart count for nav
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      document.querySelectorAll('.cart-btn span').forEach(el => el.textContent = cart.length);
+    }
+    updateCartCount();
+  </script>
+</body>
+</html>
