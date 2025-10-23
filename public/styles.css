@@ -804,6 +804,48 @@ footer a:hover {
   box-shadow: 0 6px 20px rgba(27, 67, 50, 0.4);
 }
 
+/* Contact page intro text - centered */
+.contact-intro {
+  text-align: center;
+  font-size: 1.15rem;
+  color: #2d2d2d;
+  margin-bottom: 2rem;
+}
+
+/* Contact social section - centered and styled */
+.contact-social {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f1faee; /* Light cream background */
+  border-radius: 16px;
+  border: 2px solid #95d5b2; /* Light sage border */
+}
+
+.contact-social p {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1b4332; /* Pine green */
+  margin-bottom: 0.8rem;
+}
+
+.contact-social a {
+  color: #2d6a4f; /* Emerald green */
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0.4rem 0.8rem;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.contact-social a:hover {
+  color: #ff8c42; /* Fall orange */
+  background: rgba(255, 140, 66, 0.1);
+  text-decoration: underline;
+}
+
+
 /* ============================================================================
    PRODUCT CARDS (SHOP) - Green and fall-themed product displays
    ============================================================================ */
