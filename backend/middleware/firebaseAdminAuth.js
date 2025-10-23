@@ -1,5 +1,6 @@
 // Firebase Admin SDK for verifying ID tokens
 const admin = require('firebase-admin');
+const { isAdminEmail } = require('../config/admins');
 
 // Initialize Firebase Admin SDK only once
 if (!admin.apps.length) {
@@ -9,12 +10,6 @@ if (!admin.apps.length) {
   });
 }
 
-// List of admin emails (lowercase!)
-const ADMIN_EMAILS = [
-  "shaunessy24@gmail.com",
-  "bonnielassflorals@gmail.com"
-];
-
 module.exports = async function firebaseAdminAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
   const match = authHeader.match(/^Bearer (.+)$/);
@@ -23,7 +18,7 @@ module.exports = async function firebaseAdminAuth(req, res, next) {
   }
   try {
     const decodedToken = await admin.auth().verifyIdToken(match[1]);
-    if (!decodedToken.email || !ADMIN_EMAILS.includes(decodedToken.email.toLowerCase())) {
+    if (!decodedToken.email || !isAdminEmail(decodedToken.email)) {
       return res.status(403).json({ error: 'Admins only.' });
     }
     req.user = decodedToken;

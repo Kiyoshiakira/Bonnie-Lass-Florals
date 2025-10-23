@@ -71,6 +71,9 @@ app.use('/api/payments', require('./routes/payments'));
 console.log('Loading router: /api/settings');
 app.use('/api/settings', require('./routes/settings'));
 
+console.log('Loading router: /api/admin');
+app.use('/api/admin', require('./routes/admin'));
+
 // --- Optional: Add gallery/socials routes if you have them ---
 // app.use('/api/gallery', require('./routes/gallery'));
 // app.use('/api/socials', require('./routes/socials'));
