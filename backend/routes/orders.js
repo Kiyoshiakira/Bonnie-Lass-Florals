@@ -2,16 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
+const { isAdminEmail } = require('../config/admins');
 
-// Utility to detect admin user (customize as needed)
+// Utility to detect admin user
 function isAdmin(req) {
-  // Example: treat certain emails as admin (set via session or JWT)
-  // Adjust logic for your authentication system
-  if (req.session && req.session.user && (
-      req.session.user.email === "shaunessy24@gmail.com" ||
-      req.session.user.email === "bonnielassflorals@gmail.com"
-    )) {
-    return true;
+  if (req.session && req.session.user && req.session.user.email) {
+    return isAdminEmail(req.session.user.email);
   }
   return false;
 }
