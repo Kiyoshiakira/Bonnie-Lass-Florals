@@ -514,6 +514,12 @@
 
         const data = await parseJsonResponse(res, '/api/settings/theme POST');
         if (res.ok) {
+          // Save to localStorage for instant application on next page load
+          try {
+            localStorage.setItem('bonnieLassTheme', JSON.stringify(palette));
+          } catch (err) {
+            console.warn('Failed to cache theme in localStorage:', err);
+          }
           showStatus('Theme saved successfully! Changes will apply site-wide.');
           applyThemeLocally(palette);
         } else {
@@ -713,6 +719,12 @@
 
         const data = await parseJsonResponse(res, '/api/settings/background POST');
         if (res.ok) {
+          // Save to localStorage for instant application on next page load
+          try {
+            localStorage.setItem('bonnieLassBackground', currentBackgroundImageUrl);
+          } catch (err) {
+            console.warn('Failed to cache background in localStorage:', err);
+          }
           showStatus('Background image saved successfully! Changes will apply site-wide.');
           document.body.style.background = `url('${currentBackgroundImageUrl}') center/cover fixed`;
         } else {
@@ -746,6 +758,12 @@
 
         const data = await parseJsonResponse(res, '/api/settings/background DELETE');
         if (res.ok) {
+          // Remove from localStorage
+          try {
+            localStorage.removeItem('bonnieLassBackground');
+          } catch (err) {
+            console.warn('Failed to remove background from localStorage:', err);
+          }
           showStatus('Background image removed successfully!');
           currentBackgroundImageUrl = null;
           document.getElementById('backgroundUrl').value = '';
@@ -847,6 +865,12 @@
 
         const saveData = await parseJsonResponse(saveRes, '/api/settings/theme POST');
         if (saveRes.ok) {
+          // Save to localStorage for instant application on next page load
+          try {
+            localStorage.setItem('bonnieLassTheme', JSON.stringify(preset.colors));
+          } catch (err) {
+            console.warn('Failed to cache theme in localStorage:', err);
+          }
           applyThemeLocally(preset.colors);
           showStatus('Preset applied and saved site-wide!');
         } else {
