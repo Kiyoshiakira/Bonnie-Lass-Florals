@@ -30,6 +30,28 @@
       console.warn('Theme loader failed:', err);
     });
 
+  // Fetch and apply background image
+  fetch(API_BASE + '/api/settings/background')
+    .then(response => {
+      const contentType = response.headers.get('content-type');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not JSON');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.backgroundUrl) {
+        applyBackground(data.backgroundUrl);
+      }
+    })
+    .catch(err => {
+      // Silently fail - default background will be used
+      console.warn('Background loader failed:', err);
+    });
+
   function applyTheme(theme) {
     const root = document.documentElement;
     if (theme.primary) root.style.setProperty('--floral-primary', theme.primary);
@@ -37,5 +59,16 @@
     if (theme.accent) root.style.setProperty('--floral-accent', theme.accent);
     if (theme.green) root.style.setProperty('--floral-green', theme.green);
     if (theme.cream) root.style.setProperty('--floral-cream', theme.cream);
+  }
+
+  function applyBackground(backgroundUrl) {
+    // Wait for DOM to be ready
+    if (document.body) {
+      document.body.style.background = `url('${backgroundUrl}') center/cover fixed`;
+    } else {
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.style.background = `url('${backgroundUrl}') center/cover fixed`;
+      });
+    }
   }
 })();

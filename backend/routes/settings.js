@@ -142,4 +142,63 @@ router.delete('/presets/:id', firebaseAdminAuth, async (req, res) => {
   }
 });
 
+// GET /api/settings/background - Public endpoint to retrieve background image URL
+router.get('/background', async (req, res) => {
+  try {
+    const setting = await Setting.findOne({ key: 'site_background' });
+    if (!setting) {
+      return res.json({ backgroundUrl: null });
+    }
+    res.json({ backgroundUrl: setting.value });
+  } catch (err) {
+    console.error('Error fetching background:', err);
+    res.status(500).json({ error: 'Failed to fetch background.' });
+  }
+});
+
+// POST /api/settings/background - Admin-only endpoint to save background image URL
+router.post('/background', firebaseAdminAuth, async (req, res) => {
+  try {
+    const { backgroundUrl } = req.body;
+    
+    if (!backgroundUrl || typeof backgroundUrl !== 'string') {
+      return res.status(400).json({ 
+        error: 'Invalid background URL. Must be a valid string.' 
+      });
+    }
+
+    // Validate URL format (basic check)
+    try {
+      new URL(backgroundUrl);
+    } catch (err) {
+      return res.status(400).json({ 
+        error: 'Invalid URL format.' 
+      });
+    }
+
+    // Upsert the background setting
+    const setting = await Setting.findOneAndUpdate(
+      { key: 'site_background' },
+      { key: 'site_background', value: backgroundUrl, updatedAt: Date.now() },
+      { upsert: true, new: true }
+    );
+
+    res.json({ message: 'Background image saved successfully!', backgroundUrl: setting.value });
+  } catch (err) {
+    console.error('Error saving background:', err);
+    res.status(500).json({ error: 'Failed to save background.' });
+  }
+});
+
+// DELETE /api/settings/background - Admin-only endpoint to remove background image
+router.delete('/background', firebaseAdminAuth, async (req, res) => {
+  try {
+    await Setting.deleteOne({ key: 'site_background' });
+    res.json({ message: 'Background image removed successfully!' });
+  } catch (err) {
+    console.error('Error removing background:', err);
+    res.status(500).json({ error: 'Failed to remove background.' });
+  }
+});
+
 module.exports = router;

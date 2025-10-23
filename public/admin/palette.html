@@ -168,6 +168,49 @@
       padding: 0.4rem 0.8rem;
       font-size: 0.85rem;
     }
+    .background-section {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: #e0f2f1;
+      border-radius: 8px;
+    }
+    .background-preview {
+      width: 100%;
+      height: 200px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      margin-top: 1rem;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .background-options {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .background-option {
+      flex: 1;
+      min-width: 200px;
+    }
+    .background-option label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .background-option input[type="file"],
+    .background-option input[type="text"] {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -250,6 +293,33 @@
       <button class="btn btn-secondary" id="importBtn">Import Colors</button>
     </div>
 
+    <!-- Background Section -->
+    <div class="background-section">
+      <h3>Background Image</h3>
+      <p>Upload a custom background image or provide a URL. This will be applied site-wide as the page background.</p>
+      
+      <div class="background-options">
+        <div class="background-option">
+          <label for="backgroundUpload">Upload Image</label>
+          <input type="file" id="backgroundUpload" accept="image/*">
+        </div>
+        <div class="background-option">
+          <label for="backgroundUrl">Or Enter Image URL</label>
+          <input type="text" id="backgroundUrl" placeholder="https://example.com/image.jpg">
+        </div>
+      </div>
+      
+      <div class="background-preview" id="backgroundPreview">
+        No background image selected
+      </div>
+      
+      <div class="button-group" style="margin-top: 1rem;">
+        <button class="btn btn-secondary" id="previewBackgroundBtn">Preview Background</button>
+        <button class="btn btn-primary" id="saveBackgroundBtn">Save Background</button>
+        <button class="btn btn-danger" id="removeBackgroundBtn">Remove Background</button>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="button-group">
       <button class="btn btn-secondary" id="previewBtn">Preview Locally</button>
@@ -281,6 +351,8 @@
       green: '#52b788',
       cream: '#f1faee'
     };
+
+    let currentBackgroundImageUrl = null;
 
     // Initialize color inputs
     function initColorInputs() {
@@ -526,6 +598,152 @@
       showStatus(`Imported ${colors.length} colors.`);
     });
 
+    // Background image handling
+    document.getElementById('backgroundUpload').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showStatus('Please select an image file.', true);
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showStatus('Image file size must be less than 5MB.', true);
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+
+        // Upload to Firebase Storage
+        const storageRef = firebase.storage().ref();
+        const fileName = `backgrounds/${Date.now()}-${file.name}`;
+        const fileRef = storageRef.child(fileName);
+        
+        showStatus('Uploading image...');
+        const snapshot = await fileRef.put(file);
+        const downloadUrl = await snapshot.ref.getDownloadURL();
+        
+        currentBackgroundImageUrl = downloadUrl;
+        document.getElementById('backgroundUrl').value = downloadUrl;
+        document.getElementById('backgroundPreview').style.backgroundImage = `url('${downloadUrl}')`;
+        document.getElementById('backgroundPreview').textContent = '';
+        
+        showStatus('Image uploaded successfully! Click "Preview Background" or "Save Background" to apply.');
+      } catch (err) {
+        console.error('Error uploading image:', err);
+        showStatus('Error uploading image: ' + err.message, true);
+      }
+    });
+
+    document.getElementById('backgroundUrl').addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        currentBackgroundImageUrl = url;
+        document.getElementById('backgroundPreview').style.backgroundImage = `url('${url}')`;
+        document.getElementById('backgroundPreview').textContent = '';
+      } else {
+        currentBackgroundImageUrl = null;
+        document.getElementById('backgroundPreview').style.backgroundImage = '';
+        document.getElementById('backgroundPreview').textContent = 'No background image selected';
+      }
+    });
+
+    document.getElementById('previewBackgroundBtn').addEventListener('click', () => {
+      if (!currentBackgroundImageUrl) {
+        showStatus('Please upload or enter a background image URL first.', true);
+        return;
+      }
+      
+      // Apply background locally for preview
+      document.body.style.background = `url('${currentBackgroundImageUrl}') center/cover fixed`;
+      showStatus('Background previewed locally! Changes are not saved yet.');
+    });
+
+    document.getElementById('saveBackgroundBtn').addEventListener('click', async () => {
+      if (!currentBackgroundImageUrl) {
+        showStatus('Please upload or enter a background image URL first.', true);
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(API_BASE + '/api/settings/background', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ backgroundUrl: currentBackgroundImageUrl })
+        });
+
+        const data = await parseJsonResponse(res, '/api/settings/background POST');
+        if (res.ok) {
+          showStatus('Background image saved successfully! Changes will apply site-wide.');
+          document.body.style.background = `url('${currentBackgroundImageUrl}') center/cover fixed`;
+        } else {
+          showStatus(data.error || 'Failed to save background image.', true);
+        }
+      } catch (err) {
+        showStatus('Error saving background: ' + err.message, true);
+        console.error('Save background error:', err);
+      }
+    });
+
+    document.getElementById('removeBackgroundBtn').addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to remove the background image?')) {
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          showStatus('Please login first.', true);
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(API_BASE + '/api/settings/background', {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        const data = await parseJsonResponse(res, '/api/settings/background DELETE');
+        if (res.ok) {
+          showStatus('Background image removed successfully!');
+          currentBackgroundImageUrl = null;
+          document.getElementById('backgroundUrl').value = '';
+          document.getElementById('backgroundUpload').value = '';
+          document.getElementById('backgroundPreview').style.backgroundImage = '';
+          document.getElementById('backgroundPreview').textContent = 'No background image selected';
+          
+          // Reset to default background
+          const palette = getCurrentPalette();
+          document.body.style.background = `${palette.cream || '#f1faee'} url('../img/fall-background.svg') center/cover fixed`;
+        } else {
+          showStatus(data.error || 'Failed to remove background image.', true);
+        }
+      } catch (err) {
+        showStatus('Error removing background: ' + err.message, true);
+        console.error('Remove background error:', err);
+      }
+    });
+
     // Load presets
     async function loadPresets() {
       try {
@@ -688,6 +906,23 @@
         }
       } catch (err) {
         console.error('Error loading current theme:', err);
+        // Don't show error to user on initial load - just use defaults
+      }
+    })();
+
+    // Load current background image on page load
+    (async function() {
+      try {
+        const res = await fetch(API_BASE + '/api/settings/background');
+        const data = await parseJsonResponse(res, '/api/settings/background GET');
+        if (data.backgroundUrl) {
+          currentBackgroundImageUrl = data.backgroundUrl;
+          document.getElementById('backgroundUrl').value = data.backgroundUrl;
+          document.getElementById('backgroundPreview').style.backgroundImage = `url('${data.backgroundUrl}')`;
+          document.getElementById('backgroundPreview').textContent = '';
+        }
+      } catch (err) {
+        console.error('Error loading current background:', err);
         // Don't show error to user on initial load - just use defaults
       }
     })();
