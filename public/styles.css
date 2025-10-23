@@ -815,11 +815,12 @@ footer a:hover {
 /* Contact social section - centered and styled */
 .contact-social {
   text-align: center;
-  margin-top: 2rem;
+  margin: 2rem auto 0 auto;
   padding: 1.5rem;
   background: #f1faee; /* Light cream background */
   border-radius: 16px;
   border: 2px solid #95d5b2; /* Light sage border */
+  max-width: 400px;
 }
 
 .contact-social p {
