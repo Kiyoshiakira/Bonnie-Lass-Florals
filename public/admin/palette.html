@@ -447,12 +447,14 @@
       const contentType = response.headers.get('content-type');
       const responseText = await response.text();
       
-      // Log for debugging
-      console.log(`Response from ${endpoint}:`, {
-        status: response.status,
-        contentType: contentType,
-        body: responseText.substring(0, 200) // Log first 200 chars
-      });
+      // Only log errors for debugging
+      if (!response.ok) {
+        console.error(`Error response from ${endpoint}:`, {
+          status: response.status,
+          contentType: contentType,
+          body: responseText.substring(0, 200) // Log first 200 chars
+        });
+      }
 
       if (!contentType || !contentType.includes('application/json')) {
         console.error(`Non-JSON response from ${endpoint}:`, responseText);
@@ -606,22 +608,28 @@
       // Validate file type
       if (!file.type.startsWith('image/')) {
         showStatus('Please select an image file.', true);
+        e.target.value = ''; // Clear the file input
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         showStatus('Image file size must be less than 5MB.', true);
+        e.target.value = ''; // Clear the file input
         return;
       }
 
       try {
         const user = firebase.auth().currentUser;
         if (!user) {
-          showStatus('Please login first.', true);
+          showStatus('You must be logged in to upload images. Please login first.', true);
+          e.target.value = ''; // Clear the file input
           return;
         }
 
+        // Get ID token to verify authentication
+        const token = await user.getIdToken();
+        
         // Upload to Firebase Storage
         const storageRef = firebase.storage().ref();
         const fileName = `backgrounds/${Date.now()}-${file.name}`;
@@ -639,7 +647,18 @@
         showStatus('Image uploaded successfully! Click "Preview Background" or "Save Background" to apply.');
       } catch (err) {
         console.error('Error uploading image:', err);
-        showStatus('Error uploading image: ' + err.message, true);
+        e.target.value = ''; // Clear the file input
+        
+        // Provide more helpful error messages
+        if (err.code === 'storage/unauthorized') {
+          showStatus('Upload failed: You do not have permission to upload images. Please ensure you are logged in as an admin and that Firebase Storage rules are properly configured.', true);
+        } else if (err.code === 'storage/canceled') {
+          showStatus('Upload was canceled.', true);
+        } else if (err.code === 'storage/unknown') {
+          showStatus('Upload failed due to an unknown error. Please try again or contact support.', true);
+        } else {
+          showStatus('Error uploading image: ' + err.message, true);
+        }
       }
     });
 
