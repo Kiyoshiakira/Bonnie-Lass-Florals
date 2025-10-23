@@ -2,6 +2,19 @@ const express = require('express');
 const router = express.Router();
 const Message = require('../models/Message');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth');
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter for messages API - 100 requests per 15 minutes per IP
+const messagesLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply rate limiting to all routes
+router.use(messagesLimiter);
 
 // All routes in this file require admin authentication
 router.use(firebaseAdminAuth);
