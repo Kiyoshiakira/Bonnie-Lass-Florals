@@ -4,6 +4,7 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
+const { body, validationResult } = require('express-validator');
 const Product = require('../models/Product');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // admin-only middleware
 const { distance } = require('fastest-levenshtein');
@@ -126,9 +127,42 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Validation rules for creating a product
+const createProductValidation = [
+  body('name')
+    .notEmpty().withMessage('Name is required')
+    .isLength({ max: 200 }).withMessage('Name must be 200 characters or less'),
+  body('description')
+    .optional()
+    .isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
+  body('price')
+    .notEmpty().withMessage('Price is required')
+    .isFloat({ min: 0 }).withMessage('Price must be a number greater than or equal to 0'),
+  body('type')
+    .optional()
+    .isIn(['decor', 'food']).withMessage('Type must be either "decor" or "food"'),
+  body('stock')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Stock must be a non-negative integer'),
+  body('options')
+    .optional()
+    .custom((value) => {
+      if (typeof value === 'string' || Array.isArray(value)) {
+        return true;
+      }
+      throw new Error('Options must be a string or array');
+    })
+];
+
 // POST /api/products - create product (admin only)
 // Accepts multipart/form-data (image file optional) or JSON
-router.post('/', firebaseAdminAuth, adminMutationLimiter, upload.single('image'), async (req, res) => {
+router.post('/', firebaseAdminAuth, adminMutationLimiter, createProductValidation, upload.single('image'), async (req, res) => {
+  // Check validation results
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
   try {
     const body = req.body || {};
     const productData = {
@@ -165,23 +199,51 @@ router.post('/', firebaseAdminAuth, adminMutationLimiter, upload.single('image')
   }
 });
 
+// Validation rules for batch product creation
+const batchProductValidation = [
+  body('products')
+    .notEmpty().withMessage('Products array is required')
+    .isArray().withMessage('Products must be an array')
+    .custom((products) => {
+      if (products.length === 0) {
+        throw new Error('Products array cannot be empty');
+      }
+      if (products.length > 100) {
+        throw new Error('Batch size limited to 100 products');
+      }
+      // Validate each product has name and numeric price
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        if (!product.name) {
+          throw new Error(`Product at index ${i} is missing required field: name`);
+        }
+        if (product.price === undefined || product.price === null) {
+          throw new Error(`Product at index ${i} is missing required field: price`);
+        }
+        // Check if price can be converted to a valid number
+        const priceNum = parseFloat(product.price);
+        if (isNaN(priceNum)) {
+          throw new Error(`Product at index ${i} has invalid price: must be numeric`);
+        }
+        if (priceNum < 0) {
+          throw new Error(`Product at index ${i} has invalid price: must be >= 0`);
+        }
+      }
+      return true;
+    })
+];
+
 // POST /api/products/batch - batch create products (admin only)
 // Accepts JSON array of product objects
-router.post('/batch', firebaseAdminAuth, adminMutationLimiter, async (req, res) => {
+router.post('/batch', firebaseAdminAuth, adminMutationLimiter, batchProductValidation, async (req, res) => {
+  // Check validation results
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
   try {
     const { products } = req.body;
-    
-    if (!products || !Array.isArray(products)) {
-      return res.status(400).json({ error: 'Request body must contain a "products" array' });
-    }
-    
-    if (products.length === 0) {
-      return res.status(400).json({ error: 'Products array cannot be empty' });
-    }
-    
-    if (products.length > 100) {
-      return res.status(400).json({ error: 'Batch size limited to 100 products' });
-    }
     
     // Fetch all existing products for duplicate checking
     const existingProducts = await Product.find();
@@ -272,9 +334,42 @@ router.post('/batch', firebaseAdminAuth, adminMutationLimiter, async (req, res) 
   }
 });
 
+// Validation rules for updating a product
+const updateProductValidation = [
+  body('name')
+    .optional()
+    .isLength({ max: 200 }).withMessage('Name must be 200 characters or less'),
+  body('description')
+    .optional()
+    .isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
+  body('price')
+    .optional()
+    .isFloat({ min: 0 }).withMessage('Price must be a number greater than or equal to 0'),
+  body('type')
+    .optional()
+    .isIn(['decor', 'food']).withMessage('Type must be either "decor" or "food"'),
+  body('stock')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Stock must be a non-negative integer'),
+  body('options')
+    .optional()
+    .custom((value) => {
+      if (typeof value === 'string' || Array.isArray(value)) {
+        return true;
+      }
+      throw new Error('Options must be a string or array');
+    })
+];
+
 // PUT /api/products/:id - update product (admin only)
 // Accepts multipart/form-data (image file optional) or JSON body
-router.put('/:id', firebaseAdminAuth, adminMutationLimiter, upload.single('image'), async (req, res) => {
+router.put('/:id', firebaseAdminAuth, adminMutationLimiter, updateProductValidation, upload.single('image'), async (req, res) => {
+  // Check validation results
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
   try {
     const id = req.params.id;
     const body = req.body || {};

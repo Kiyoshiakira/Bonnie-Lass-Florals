@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Setting = require('../models/Setting');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth');
+const logger = require('../utils/logger');
 
 // Helper function to validate hex color
 function isValidHex(color) {
@@ -28,7 +29,7 @@ router.get('/theme', async (req, res) => {
     }
     res.json({ theme: setting.value });
   } catch (err) {
-    console.error('Error fetching theme:', err);
+    logger.error('Error fetching theme:', err);
     res.status(500).json({ error: 'Failed to fetch theme.' });
   }
 });
@@ -53,7 +54,7 @@ router.post('/theme', firebaseAdminAuth, async (req, res) => {
 
     res.json({ message: 'Theme saved successfully!', theme: setting.value });
   } catch (err) {
-    console.error('Error saving theme:', err);
+    logger.error('Error saving theme:', err);
     res.status(500).json({ error: 'Failed to save theme.' });
   }
 });
@@ -67,7 +68,7 @@ router.get('/presets', async (req, res) => {
     }
     res.json({ presets: setting.value || [] });
   } catch (err) {
-    console.error('Error fetching presets:', err);
+    logger.error('Error fetching presets:', err);
     res.status(500).json({ error: 'Failed to fetch presets.' });
   }
 });
@@ -106,7 +107,7 @@ router.post('/presets', firebaseAdminAuth, async (req, res) => {
 
     res.json({ message: 'Preset saved successfully!', preset: newPreset });
   } catch (err) {
-    console.error('Error saving preset:', err);
+    logger.error('Error saving preset:', err);
     res.status(500).json({ error: 'Failed to save preset.' });
   }
 });
@@ -137,7 +138,7 @@ router.delete('/presets/:id', firebaseAdminAuth, async (req, res) => {
 
     res.json({ message: 'Preset deleted successfully!' });
   } catch (err) {
-    console.error('Error deleting preset:', err);
+    logger.error('Error deleting preset:', err);
     res.status(500).json({ error: 'Failed to delete preset.' });
   }
 });
@@ -151,7 +152,7 @@ router.get('/background', async (req, res) => {
     }
     res.json({ backgroundUrl: setting.value });
   } catch (err) {
-    console.error('Error fetching background:', err);
+    logger.error('Error fetching background:', err);
     res.status(500).json({ error: 'Failed to fetch background.' });
   }
 });
@@ -185,7 +186,7 @@ router.post('/background', firebaseAdminAuth, async (req, res) => {
 
     res.json({ message: 'Background image saved successfully!', backgroundUrl: setting.value });
   } catch (err) {
-    console.error('Error saving background:', err);
+    logger.error('Error saving background:', err);
     res.status(500).json({ error: 'Failed to save background.' });
   }
 });
@@ -196,7 +197,7 @@ router.delete('/background', firebaseAdminAuth, async (req, res) => {
     await Setting.deleteOne({ key: 'site_background' });
     res.json({ message: 'Background image removed successfully!' });
   } catch (err) {
-    console.error('Error removing background:', err);
+    logger.error('Error removing background:', err);
     res.status(500).json({ error: 'Failed to remove background.' });
   }
 });

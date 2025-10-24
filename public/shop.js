@@ -155,6 +155,18 @@ function escapeHtml(unsafe) {
     .replace(/'/g, '&#039;');
 }
 
+// Attribute escape helper for safe attribute values
+function escapeAttr(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // Event delegation handler for add-to-cart buttons
 let addToCartHandlersSetup = false;
 function setupAddToCartHandlers() {
@@ -208,7 +220,7 @@ function productToCard(p) {
   const isOutOfStock = stock === 0;
   
   // Use default placeholder if image is missing or empty
-  const imageUrl = p.image && p.image.trim() ? escapeHtml(p.image) : '/img/default-avatar.png';
+  const imageUrl = p.image && p.image.trim() ? escapeAttr(p.image) : '/img/default-product.png';
   const productName = escapeHtml(p.name);
   const productDesc = escapeHtml(p.description || '');
   const productPrice = p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A';
@@ -228,7 +240,7 @@ function productToCard(p) {
       <div class="product-desc">${productDesc}</div>
       <button 
         class="add-to-cart"
-        data-id="${escapeHtml(p._id)}"
+        data-id="${escapeAttr(p._id)}"
         ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
       >
         ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
