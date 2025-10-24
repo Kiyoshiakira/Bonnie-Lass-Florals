@@ -855,7 +855,7 @@ footer a:hover {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1.8rem;
+  gap: 1.2rem;
   margin-top: 1.5rem;
 }
 
@@ -864,9 +864,9 @@ footer a:hover {
   border: 3px solid #95d5b2; /* Light sage border */
   border-radius: 20px;
   box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
-  padding: 1.4em 1.6em 1.6em 1.6em;
-  max-width: 280px;
-  flex: 0 1 280px;
+  padding: 0.8em 1em 1em 1em;
+  max-width: 200px;
+  flex: 0 1 200px;
   text-align: left;
   transition: all 0.3s ease;
   position: relative;
@@ -891,10 +891,10 @@ footer a:hover {
 
 .product-img {
   width: 100%;
-  max-width: 230px;
+  max-width: 160px;
   height: auto;
   border-radius: 12px;
-  margin-bottom: 1em;
+  margin-bottom: 0.6em;
   cursor: zoom-in;
   transition: transform 0.3s ease;
   border: 2px solid #fff5e6;
@@ -907,21 +907,21 @@ footer a:hover {
 .product-title {
   font-weight: bold;
   color: #1b4332; /* Pine green */
-  font-size: 1.2em;
-  margin-bottom: 0.4em;
+  font-size: 0.95em;
+  margin-bottom: 0.3em;
 }
 
 .product-price {
   color: #2d6a4f; /* Emerald green */
   font-weight: bold;
-  font-size: 1.15em;
-  margin-bottom: 0.4em;
+  font-size: 0.95em;
+  margin-bottom: 0.3em;
 }
 
 .product-stock {
-  font-size: 0.97em;
+  font-size: 0.85em;
   color: #888;
-  margin-bottom: 0.3em;
+  margin-bottom: 0.25em;
   font-weight: 500;
 }
 
@@ -937,8 +937,9 @@ footer a:hover {
 
 .product-desc {
   color: #555;
-  margin-bottom: 0.9em;
-  line-height: 1.5;
+  margin-bottom: 0.6em;
+  line-height: 1.4;
+  font-size: 0.85em;
 }
 
 .product-card button {
@@ -946,9 +947,9 @@ footer a:hover {
   color: #fff; /* White text on dark green */
   border: none;
   border-radius: 12px;
-  padding: 0.7em 1.8em;
+  padding: 0.5em 1.2em;
   font-weight: bold;
-  font-size: 1.05em;
+  font-size: 0.9em;
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
