@@ -23,7 +23,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <script>
-    // Firebase client config (same as other pages)
+    // Firebase client config
+    // NOTE: API key is public by design - security is enforced by Firebase Storage Rules
+    // which require authentication and validate file types/sizes server-side
     const firebaseConfig = {
       apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
       authDomain: "bonnie-lass-florals.firebaseapp.com",
@@ -248,15 +250,41 @@
      * @returns {Promise<string>} Download URL from Firebase Storage
      */
     async function uploadImageToFirebase(file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+      }
+      
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        throw new Error('File size exceeds 10MB limit.');
+      }
+      
       const storage = firebase.storage();
       const storageRef = storage.ref();
       const timestamp = Date.now();
-      const safeName = file.name.replace(/\s+/g, '_');
+      
+      // Enhanced filename sanitization - remove special chars and path traversal
+      const safeName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, '_')  // Replace unsafe chars with underscore
+        .replace(/\.{2,}/g, '_')            // Remove path traversal sequences
+        .replace(/^\.+/, '')                // Remove leading dots
+        .substring(0, 100);                 // Limit filename length
+      
       const filename = `product-images/${timestamp}-${safeName}`;
       const imageRef = storageRef.child(filename);
       
-      // Upload file to Firebase Storage
-      const snapshot = await imageRef.put(file);
+      // Upload file to Firebase Storage with metadata
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          uploadedAt: new Date().toISOString()
+        }
+      };
+      
+      const snapshot = await imageRef.put(file, metadata);
       
       // Get the download URL
       const downloadURL = await snapshot.ref.getDownloadURL();
