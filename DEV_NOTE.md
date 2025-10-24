@@ -267,3 +267,299 @@ git checkout HEAD~1 -- public/shop.js
 - [ ] Add API response caching
 - [ ] Implement automated integration tests
 - [ ] Add monitoring/alerting for rate limit violations
+
+---
+
+## Request Validation & Image Normalization (Latest Updates)
+
+### New Features Added
+
+#### 1. Express-Validator Integration
+All product endpoints now validate input using `express-validator` middleware:
+
+**POST /api/products validation:**
+- `name` - Required, max 200 characters
+- `description` - Optional, max 2000 characters
+- `price` - Required, numeric, >= 0
+- `type` - Optional, must be "decor" or "food"
+- `stock` - Optional, integer >= 0
+- `options` - Optional, string or array
+
+**PUT /api/products/:id validation:**
+- Same as POST but all fields are optional
+- Only validates fields that are provided
+
+**POST /api/products/batch validation:**
+- `products` - Required, must be array
+- Array length: 1-100 items
+- Each product must have `name` and numeric `price`
+
+Invalid requests return 400 with detailed error messages:
+```json
+{
+  "errors": [
+    {
+      "msg": "Name must be 200 characters or less",
+      "param": "name",
+      "location": "body"
+    }
+  ]
+}
+```
+
+#### 2. Product Model Virtual - imageUrl
+- Added `imageUrl` virtual to Product schema
+- Automatically computes canonical image URL using `normalizeImageUrl()`
+- Virtuals included in JSON/Object serialization
+- Provides consistent image URL format across all API responses
+
+#### 3. Enhanced Frontend Security
+- Added `escapeAttr()` helper for safe HTML attribute values
+- Changed default product image from `default-avatar.png` to `default-product.png`
+- All product attributes properly escaped before rendering
+
+#### 4. Logger Usage Standardization
+- Replaced all `console.error()` calls with `logger.error()` in:
+  - `backend/routes/settings.js`
+  - `backend/routes/products.js` (already done in previous PR)
+- Consistent structured logging across backend
+
+### Manual Testing Instructions
+
+#### Test 1: POST /api/products Validation
+
+**Test invalid name (too long):**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "'"$(printf 'A%.0s' {1..250})"'",
+    "price": 25.99
+  }'
+```
+
+Expected: `400 Bad Request` with error message about name length
+
+**Test invalid price (negative):**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Product",
+    "price": -10
+  }'
+```
+
+Expected: `400 Bad Request` with error about price >= 0
+
+**Test invalid type:**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Product",
+    "price": 25.99,
+    "type": "invalid_type"
+  }'
+```
+
+Expected: `400 Bad Request` with error about type must be "decor" or "food"
+
+**Test missing required fields:**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Missing name and price"
+  }'
+```
+
+Expected: `400 Bad Request` with errors for missing name and price
+
+**Test valid product creation:**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Beautiful Floral Arrangement",
+    "description": "A lovely arrangement perfect for any occasion",
+    "price": 45.99,
+    "type": "decor",
+    "stock": 10
+  }'
+```
+
+Expected: `201 Created` with product object including `imageUrl` virtual
+
+#### Test 2: PUT /api/products/:id Validation
+
+**Test invalid update (description too long):**
+```bash
+curl -X PUT https://bonnie-lass-florals.onrender.com/api/products/<PRODUCT_ID> \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "'"$(printf 'A%.0s' {1..2100})"'"
+  }'
+```
+
+Expected: `400 Bad Request` with error about description max length
+
+**Test valid partial update:**
+```bash
+curl -X PUT https://bonnie-lass-florals.onrender.com/api/products/<PRODUCT_ID> \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": 39.99,
+    "stock": 5
+  }'
+```
+
+Expected: `200 OK` with updated product including `imageUrl` virtual
+
+#### Test 3: POST /api/products/batch Validation
+
+**Test empty products array:**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products/batch \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"products": []}'
+```
+
+Expected: `400 Bad Request` with error "Products array cannot be empty"
+
+**Test too many products (>100):**
+```bash
+# Generate 101 products
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products/batch \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d "{\"products\": $(node -e 'console.log(JSON.stringify(Array(101).fill({name:"Test",price:10})))')}"
+```
+
+Expected: `400 Bad Request` with error "Batch size limited to 100 products"
+
+**Test missing required fields in batch:**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products/batch \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "products": [
+      {"name": "Product 1", "price": 10},
+      {"name": "Product 2"},
+      {"price": 15}
+    ]
+  }'
+```
+
+Expected: `400 Bad Request` with errors identifying products missing required fields
+
+**Test valid batch upload:**
+```bash
+curl -X POST https://bonnie-lass-florals.onrender.com/api/products/batch \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "products": [
+      {"name": "Batch Product 1", "price": 20, "type": "decor"},
+      {"name": "Batch Product 2", "price": 30, "type": "food", "stock": 5}
+    ]
+  }'
+```
+
+Expected: `201 Created` with success/error/skipped results
+
+#### Test 4: Product imageUrl Virtual
+
+**Verify virtual in API response:**
+```bash
+curl https://bonnie-lass-florals.onrender.com/api/products | jq '.[0] | {image, imageUrl}'
+```
+
+Expected output shows both `image` (DB value) and `imageUrl` (computed virtual):
+```json
+{
+  "image": "/admin/uploads/product.jpg",
+  "imageUrl": "https://bonnie-lass-florals.onrender.com/admin/uploads/product.jpg"
+}
+```
+
+Or for absolute URLs:
+```json
+{
+  "image": "https://firebasestorage.googleapis.com/...",
+  "imageUrl": "https://firebasestorage.googleapis.com/..."
+}
+```
+
+#### Test 5: Frontend Default Product Image
+
+1. Navigate to `https://bonnie-lass-florals.web.app/shop.html`
+2. Create a product with empty image via admin panel
+3. Verify the product displays with `/img/default-product.png` placeholder
+4. Inspect element to confirm:
+   - Image has `loading="lazy"` attribute
+   - Image has `width="300" height="300"` attributes
+   - No broken image icon displayed
+
+#### Test 6: Attribute Escaping
+
+1. Create a product with special characters in the name:
+   ```json
+   {
+     "name": "Test <script>alert('xss')</script> Product",
+     "price": 10
+   }
+   ```
+2. View on shop.html
+3. Verify:
+   - Name displays as text (no script execution)
+   - HTML is properly escaped in display
+   - Attributes are safely escaped
+
+### Validator Error Response Format
+
+When validation fails, the API returns a 400 status with this structure:
+
+```json
+{
+  "errors": [
+    {
+      "value": "<invalid_value>",
+      "msg": "<human_readable_error_message>",
+      "param": "<field_name>",
+      "location": "body"
+    }
+  ]
+}
+```
+
+Multiple validation errors are returned together in the `errors` array.
+
+### Rollback Instructions
+
+If validation causes issues:
+
+**Temporarily disable validation on specific endpoint:**
+
+In `backend/routes/products.js`, remove the validation middleware array:
+```javascript
+// Before:
+router.post('/', firebaseAdminAuth, adminMutationLimiter, createProductValidation, upload.single('image'), async (req, res) => {
+
+// After:
+router.post('/', firebaseAdminAuth, adminMutationLimiter, upload.single('image'), async (req, res) => {
+```
+
+**Revert to previous version:**
+```bash
+git checkout HEAD~1 -- backend/routes/products.js backend/models/Product.js
+```

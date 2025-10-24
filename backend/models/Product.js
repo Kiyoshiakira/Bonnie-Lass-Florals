@@ -14,4 +14,14 @@ const productSchema = new mongoose.Schema({
   occasion: String // e.g., 'birthday', 'wedding', 'anniversary', etc.
 });
 
+// Virtual for imageUrl that provides canonical image URL
+productSchema.virtual('imageUrl').get(function() {
+  const { normalizeImageUrl } = require('../utils/media');
+  return normalizeImageUrl(this.image);
+});
+
+// Ensure virtuals are included when converting to JSON or Object
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true });
+
 module.exports = mongoose.model('Product', productSchema);
