@@ -3,6 +3,14 @@
 ## Overview
 The admin upload page now supports batch uploading products via CSV files. This feature allows administrators to upload multiple products at once, significantly streamlining the product management process.
 
+### Intelligent CSV Parsing
+The uploader uses PapaParse, a robust CSV parsing library, to accurately parse CSV files. It intelligently:
+- Handles multi-line field values (e.g., product descriptions spanning multiple lines)
+- Processes quoted fields containing commas correctly
+- Filters out empty rows and non-product data
+- Supports RFC 4180 compliant CSV files from Etsy and other platforms
+- Accurately counts only valid products (rows with name/title and at least 3 filled fields)
+
 ## CSV Format
 
 ### Required Columns
@@ -38,6 +46,8 @@ Navigate to `/admin/upload.html` (requires admin login)
 - Ensure all required fields (name, description, price) are populated
 - Validate that prices are numeric values
 - Check that image URLs are valid (if provided)
+- **Note**: The parser intelligently filters out non-product rows, so your CSV can include metadata or header rows that will be automatically skipped
+- **Etsy CSV Support**: You can directly upload CSV files exported from Etsy - the parser will extract product information correctly
 
 ### 3. Upload the CSV
 1. Click the "Choose File" button in the "Batch Upload via CSV" section
@@ -84,11 +94,19 @@ The system will display:
 ### Common Errors
 - **"Invalid CSV data"**: CSV file is empty or improperly formatted
 - **"Missing required fields"**: One or more products lacks name, description, or price
-- **"Batch size limited to 100 products"**: Your CSV contains more than 100 products
+- **"Batch size limited to 100 products"**: Your CSV contains more than 100 valid products (rows are accurately counted, excluding empty rows and metadata)
 - **"Invalid product ID format"**: The product ID is not a valid MongoDB ObjectId
+
+### CSV Parsing Intelligence
+The uploader now uses advanced CSV parsing that:
+- **Accurately counts products**: Only rows with valid product data are counted, not empty lines or metadata
+- **Handles complex CSVs**: Supports multi-line descriptions and quoted fields
+- **Works with Etsy exports**: Directly compatible with CSV files downloaded from Etsy
+- **Example**: A 227-line Etsy CSV file is correctly parsed as 31 products
 
 ### Tips
 - Use UTF-8 encoding for your CSV files
-- Avoid special characters in product names that might interfere with CSV parsing
+- You can include multi-line descriptions in quoted fields - they will be parsed correctly
+- The parser is forgiving and will skip rows that don't look like products
 - Test with a small batch first (2-3 products) before uploading larger batches
 - Keep a backup of your CSV file before uploading
