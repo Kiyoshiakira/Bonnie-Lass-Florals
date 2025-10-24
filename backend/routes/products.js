@@ -225,6 +225,9 @@ const batchProductValidation = [
         if (isNaN(priceNum)) {
           throw new Error(`Product at index ${i} has invalid price: must be numeric`);
         }
+        if (priceNum < 0) {
+          throw new Error(`Product at index ${i} has invalid price: must be >= 0`);
+        }
       }
       return true;
     })
