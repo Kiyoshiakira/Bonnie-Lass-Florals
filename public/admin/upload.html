@@ -496,6 +496,13 @@
             });
             html += '</ul>';
           }
+          if (data.results && data.results.skipped && data.results.skipped.length > 0) {
+            html += `<p style="color:orange;"><strong>Skipped ${data.results.skipped.length} duplicate products:</strong></p><ul>`;
+            data.results.skipped.forEach(item => {
+              html += `<li>Row ${item.row}: "${item.name}" - ${item.reason} (similar to "${item.duplicateOf}")</li>`;
+            });
+            html += '</ul>';
+          }
           if (data.results && data.results.errors && data.results.errors.length > 0) {
             html += `<p style="color:red;"><strong>Failed ${data.results.errors.length} products:</strong></p><ul>`;
             data.results.errors.forEach(item => {
