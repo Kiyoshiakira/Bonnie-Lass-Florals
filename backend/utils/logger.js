@@ -4,42 +4,42 @@
  */
 const pino = require('pino');
 
+// Configure pretty printing for development
+const transport = process.env.NODE_ENV !== 'production' ? {
+  target: 'pino-pretty',
+  options: {
+    colorize: true,
+    translateTime: 'SYS:standard',
+    ignore: 'pid,hostname'
+  }
+} : undefined;
+
 // Create logger with pretty printing in development
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  transport: process.env.NODE_ENV !== 'production' ? {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname'
-    }
-  } : undefined
+  transport
 });
+
+// Helper function to handle logging with optional arguments
+function logWithArgs(loggerMethod, message, args) {
+  if (args.length > 0) {
+    loggerMethod({ data: args }, message);
+  } else {
+    loggerMethod(message);
+  }
+}
 
 // Export wrapper functions for backward compatibility
 function info(message, ...args) {
-  if (args.length > 0) {
-    logger.info({ data: args }, message);
-  } else {
-    logger.info(message);
-  }
+  logWithArgs(logger.info.bind(logger), message, args);
 }
 
 function warn(message, ...args) {
-  if (args.length > 0) {
-    logger.warn({ data: args }, message);
-  } else {
-    logger.warn(message);
-  }
+  logWithArgs(logger.warn.bind(logger), message, args);
 }
 
 function error(message, ...args) {
-  if (args.length > 0) {
-    logger.error({ data: args }, message);
-  } else {
-    logger.error(message);
-  }
+  logWithArgs(logger.error.bind(logger), message, args);
 }
 
 module.exports = {
