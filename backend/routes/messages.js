@@ -3,6 +3,7 @@ const router = express.Router();
 const Message = require('../models/Message');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth');
 const rateLimit = require('express-rate-limit');
+const logger = require('../utils/logger');
 
 // Rate limiter for messages API - 100 requests per 15 minutes per IP
 const messagesLimiter = rateLimit({
@@ -44,7 +45,7 @@ router.get('/', async (req, res) => {
     const messages = await messagesQuery;
     res.json(messages);
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    logger.error('Error fetching messages:', error);
     res.status(500).json({ error: 'Failed to fetch messages.' });
   }
 });
@@ -55,7 +56,7 @@ router.get('/unread-count', async (req, res) => {
     const count = await Message.countDocuments({ read: false });
     res.json({ count });
   } catch (error) {
-    console.error('Error fetching unread count:', error);
+    logger.error('Error fetching unread count:', error);
     res.status(500).json({ error: 'Failed to fetch unread count.' });
   }
 });
@@ -83,7 +84,7 @@ router.put('/:id/read', async (req, res) => {
     
     res.json(message);
   } catch (error) {
-    console.error('Error updating message:', error);
+    logger.error('Error updating message:', error);
     res.status(500).json({ error: 'Failed to update message.' });
   }
 });
@@ -101,7 +102,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ message: 'Message deleted successfully.' });
   } catch (error) {
-    console.error('Error deleting message:', error);
+    logger.error('Error deleting message:', error);
     res.status(500).json({ error: 'Failed to delete message.' });
   }
 });

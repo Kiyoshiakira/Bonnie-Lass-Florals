@@ -8,6 +8,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const logger = require('./logger');
 
 const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'admin', 'uploads');
 
@@ -48,7 +49,7 @@ function deleteFile(filename) {
     }
     return false;
   } catch (err) {
-    console.error('Error deleting file:', err);
+    logger.error('Error deleting file:', err);
     return false;
   }
 }
