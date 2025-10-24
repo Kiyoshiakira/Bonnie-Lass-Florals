@@ -23,6 +23,8 @@ Your CSV file should include the following columns (case-insensitive):
 ### Optional Columns
 - **type**: Product type (default: "decor", options: "decor" for Handmade Crafts, "food" for Cottage Foods)
 - **subcategory**: Product subcategory
+- **collection**: Holiday collection (for Handmade Crafts only, e.g., "christmas", "halloween", "easter", "thanksgiving", "valentines", "spring", "summer", "fall", "winter")
+- **occasion**: Occasion (for Handmade Crafts only, e.g., "birthday", "wedding", "anniversary", "baby-shower", "graduation", "housewarming", "retirement", "sympathy")
 - **stock** (or QUANTITY): Stock quantity (default: 1)
 - **options**: Comma-separated list of product options (e.g., "Small,Medium,Large")
 - **image** (or IMAGE1): Product image URL
@@ -30,10 +32,10 @@ Your CSV file should include the following columns (case-insensitive):
 ### Example CSV Format
 
 ```csv
-name,description,price,type,subcategory,stock,options,image
-Sample Handmade Craft 1,Beautiful handcrafted item with unique design,45.99,decor,craft,5,"Small,Medium,Large",https://example.com/image1.jpg
-Sample Handmade Craft 2,Handcrafted wreath,65.00,decor,wreath,3,,https://example.com/image2.jpg
-Sample Product 3,Homemade jam,12.50,food,preserve,10,"8oz,16oz",https://example.com/image3.jpg
+name,description,price,type,subcategory,stock,options,image,collection,occasion
+Sample Handmade Craft 1,Beautiful handcrafted item with unique design,45.99,decor,craft,5,"Small,Medium,Large",https://example.com/image1.jpg,christmas,
+Sample Handmade Craft 2,Handcrafted wreath,65.00,decor,wreath,3,,https://example.com/image2.jpg,fall,wedding
+Sample Product 3,Homemade jam,12.50,food,preserve,10,"8oz,16oz",https://example.com/image3.jpg,,
 ```
 
 ## Usage Instructions

@@ -58,7 +58,7 @@
     <!-- CSV Batch Upload Section -->
     <div style="background:#f8fafc; padding:1.5rem; border-radius:0.5rem; margin-bottom:1.5rem;">
       <h2 style="margin-top:0;">Batch Upload via CSV</h2>
-      <p>Upload multiple products at once using a CSV file. The CSV should include columns: name, description, price, type, subcategory, stock, options (optional), image (URL)</p>
+      <p>Upload multiple products at once using a CSV file. The CSV should include columns: name, description, price, type, subcategory, stock, options (optional), image (URL), collection (optional), occasion (optional)</p>
       <input type="file" id="csvFile" accept=".csv" style="margin-bottom:1rem;">
       <button type="button" id="uploadCsvBtn" style="background:#10b981;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Upload CSV</button>
       <div id="csv-result" style="margin-top:1rem;"></div>
@@ -84,6 +84,33 @@
 
       <label for="subcategory">Subcategory</label>
       <input type="text" id="subcategory" name="subcategory">
+
+      <label for="collection">Holiday Collection (for Handmade Crafts)</label>
+      <select id="collection" name="collection">
+        <option value="">None</option>
+        <option value="christmas">Christmas</option>
+        <option value="halloween">Halloween</option>
+        <option value="easter">Easter</option>
+        <option value="thanksgiving">Thanksgiving</option>
+        <option value="valentines">Valentine's Day</option>
+        <option value="spring">Spring</option>
+        <option value="summer">Summer</option>
+        <option value="fall">Fall</option>
+        <option value="winter">Winter</option>
+      </select>
+
+      <label for="occasion">Occasion (for Handmade Crafts)</label>
+      <select id="occasion" name="occasion">
+        <option value="">None</option>
+        <option value="birthday">Birthday</option>
+        <option value="wedding">Wedding</option>
+        <option value="anniversary">Anniversary</option>
+        <option value="baby-shower">Baby Shower</option>
+        <option value="graduation">Graduation</option>
+        <option value="housewarming">Housewarming</option>
+        <option value="retirement">Retirement</option>
+        <option value="sympathy">Sympathy</option>
+      </select>
 
       <label for="stock">Stock</label>
       <input type="number" id="stock" name="stock" min="1" value="1" required>
@@ -144,6 +171,33 @@
 
           <label for="editSubcategory">Subcategory</label>
           <input type="text" id="editSubcategory" name="subcategory">
+
+          <label for="editCollection">Holiday Collection (for Handmade Crafts)</label>
+          <select id="editCollection" name="collection">
+            <option value="">None</option>
+            <option value="christmas">Christmas</option>
+            <option value="halloween">Halloween</option>
+            <option value="easter">Easter</option>
+            <option value="thanksgiving">Thanksgiving</option>
+            <option value="valentines">Valentine's Day</option>
+            <option value="spring">Spring</option>
+            <option value="summer">Summer</option>
+            <option value="fall">Fall</option>
+            <option value="winter">Winter</option>
+          </select>
+
+          <label for="editOccasion">Occasion (for Handmade Crafts)</label>
+          <select id="editOccasion" name="occasion">
+            <option value="">None</option>
+            <option value="birthday">Birthday</option>
+            <option value="wedding">Wedding</option>
+            <option value="anniversary">Anniversary</option>
+            <option value="baby-shower">Baby Shower</option>
+            <option value="graduation">Graduation</option>
+            <option value="housewarming">Housewarming</option>
+            <option value="retirement">Retirement</option>
+            <option value="sympathy">Sympathy</option>
+          </select>
 
           <label for="editStock">Stock</label>
           <input type="number" id="editStock" name="stock" min="1" required>
@@ -214,6 +268,8 @@
       const price = parseFloat(document.getElementById('price').value);
       const type = document.getElementById('type').value;
       const subcategory = document.getElementById('subcategory').value.trim();
+      const collection = document.getElementById('collection').value;
+      const occasion = document.getElementById('occasion').value;
       const stock = parseInt(document.getElementById('stock').value, 10) || 1;
       const options = document.getElementById('options').value;
       let imageUrl = document.getElementById('image').value;
@@ -247,6 +303,8 @@
           price,
           type,
           subcategory,
+          collection,
+          occasion,
           stock,
           options,
           image: imageUrl || ''
@@ -342,6 +400,8 @@
             price: row.price || '0',
             type: row.type || 'decor',
             subcategory: row.subcategory || '',
+            collection: row.collection || '',
+            occasion: row.occasion || '',
             stock: row.stock || row.quantity || '1',
             options: row.options || '',
             image: row.image || row.image1 || ''
@@ -561,6 +621,8 @@
         document.getElementById('editPrice').value = product.price;
         document.getElementById('editType').value = product.type;
         document.getElementById('editSubcategory').value = product.subcategory || '';
+        document.getElementById('editCollection').value = product.collection || '';
+        document.getElementById('editOccasion').value = product.occasion || '';
         document.getElementById('editStock').value = product.stock;
         document.getElementById('editOptions').value = product.options ? product.options.join(', ') : '';
         document.getElementById('editImage').value = product.image || '';
@@ -629,6 +691,8 @@
           price: parseFloat(document.getElementById('editPrice').value),
           type: document.getElementById('editType').value,
           subcategory: document.getElementById('editSubcategory').value.trim(),
+          collection: document.getElementById('editCollection').value,
+          occasion: document.getElementById('editOccasion').value,
           stock: parseInt(document.getElementById('editStock').value, 10),
           options: document.getElementById('editOptions').value,
           image: imageUrl || ''

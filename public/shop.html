@@ -132,6 +132,35 @@
             <option value="out-of-stock">Out of Stock</option>
           </select>
         </div>
+        <div class="filter-group">
+          <label for="decorCollection">Collection:</label>
+          <select id="decorCollection" onchange="applyFilters('decor')">
+            <option value="all">All Collections</option>
+            <option value="christmas">Christmas</option>
+            <option value="halloween">Halloween</option>
+            <option value="easter">Easter</option>
+            <option value="thanksgiving">Thanksgiving</option>
+            <option value="valentines">Valentine's Day</option>
+            <option value="spring">Spring</option>
+            <option value="summer">Summer</option>
+            <option value="fall">Fall</option>
+            <option value="winter">Winter</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="decorOccasion">Occasion:</label>
+          <select id="decorOccasion" onchange="applyFilters('decor')">
+            <option value="all">All Occasions</option>
+            <option value="birthday">Birthday</option>
+            <option value="wedding">Wedding</option>
+            <option value="anniversary">Anniversary</option>
+            <option value="baby-shower">Baby Shower</option>
+            <option value="graduation">Graduation</option>
+            <option value="housewarming">Housewarming</option>
+            <option value="retirement">Retirement</option>
+            <option value="sympathy">Sympathy</option>
+          </select>
+        </div>
         <button class="filter-reset" onclick="resetFilters('decor')">Reset Filters</button>
       </div>
       <div id="decor-products"></div>
