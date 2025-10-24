@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const Product = require('../models/Product');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // admin-only middleware
 const { distance } = require('fastest-levenshtein');
+const logger = require('../utils/logger');
+const { normalizeImageUrl, normalizeProduct } = require('../utils/media');
 
 // Ensure upload directory exists and is writable
 const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'admin', 'uploads');
@@ -23,28 +26,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Helper function to normalize image URLs to absolute URLs
-// Stores relative paths in DB but returns absolute URLs to clients
-const BACKEND_URL = process.env.BACKEND_URL || 'https://bonnie-lass-florals.onrender.com';
-function normalizeImageUrl(image) {
-  if (!image) return '';
-  // If already an absolute URL, return as-is
-  if (image.startsWith('http://') || image.startsWith('https://')) {
-    return image;
-  }
-  // Convert relative path to absolute URL
-  if (image.startsWith('/')) {
-    return BACKEND_URL + image;
-  }
-  return BACKEND_URL + '/' + image;
-}
-
-// Helper function to normalize a product object
-function normalizeProduct(product) {
-  const normalized = product.toObject ? product.toObject() : { ...product };
-  normalized.image = normalizeImageUrl(normalized.image);
-  return normalized;
-}
+// Stricter rate limiter for admin mutating endpoints (10 requests per minute)
+const adminMutationLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: { error: 'Too many admin requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Helper function to calculate string similarity (0 to 1, where 1 is identical)
 function calculateSimilarity(str1, str2) {
@@ -118,7 +107,7 @@ router.get('/', async (req, res) => {
     const normalizedProducts = products.map(p => normalizeProduct(p));
     res.json(normalizedProducts);
   } catch (err) {
-    console.error('GET /api/products error', err);
+    logger.error('GET /api/products error', err);
     res.status(500).json({ error: 'Failed to load products' });
   }
 });
@@ -132,14 +121,14 @@ router.get('/:id', async (req, res) => {
     // Normalize image URL to absolute URL
     res.json(normalizeProduct(product));
   } catch (err) {
-    console.error('GET /api/products/:id error', err);
+    logger.error('GET /api/products/:id error', err);
     res.status(500).json({ error: 'Failed to load product' });
   }
 });
 
 // POST /api/products - create product (admin only)
 // Accepts multipart/form-data (image file optional) or JSON
-router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => {
+router.post('/', firebaseAdminAuth, adminMutationLimiter, upload.single('image'), async (req, res) => {
   try {
     const body = req.body || {};
     const productData = {
@@ -171,14 +160,14 @@ router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => 
     // Return normalized product with absolute image URL
     res.status(201).json(normalizeProduct(product));
   } catch (err) {
-    console.error('POST /api/products error', err);
+    logger.error('POST /api/products error', err);
     res.status(500).json({ error: err.message || 'Failed to create product' });
   }
 });
 
 // POST /api/products/batch - batch create products (admin only)
 // Accepts JSON array of product objects
-router.post('/batch', firebaseAdminAuth, async (req, res) => {
+router.post('/batch', firebaseAdminAuth, adminMutationLimiter, async (req, res) => {
   try {
     const { products } = req.body;
     
@@ -278,14 +267,14 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
       results
     });
   } catch (err) {
-    console.error('POST /api/products/batch error', err);
+    logger.error('POST /api/products/batch error', err);
     res.status(500).json({ error: err.message || 'Batch upload failed' });
   }
 });
 
 // PUT /api/products/:id - update product (admin only)
 // Accepts multipart/form-data (image file optional) or JSON body
-router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) => {
+router.put('/:id', firebaseAdminAuth, adminMutationLimiter, upload.single('image'), async (req, res) => {
   try {
     const id = req.params.id;
     const body = req.body || {};
@@ -323,13 +312,13 @@ router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) =
     // Return normalized product with absolute image URL
     res.json(normalizeProduct(product));
   } catch (err) {
-    console.error('PUT /api/products/:id error', err);
+    logger.error('PUT /api/products/:id error', err);
     res.status(500).json({ error: err.message || 'Failed to update product' });
   }
 });
 
 // DELETE /api/products/:id - delete product (admin only)
-router.delete('/:id', firebaseAdminAuth, async (req, res) => {
+router.delete('/:id', firebaseAdminAuth, adminMutationLimiter, async (req, res) => {
   try {
     const id = req.params.id;
     const product = await Product.findByIdAndDelete(id);
@@ -341,12 +330,12 @@ router.delete('/:id', firebaseAdminAuth, async (req, res) => {
         const full = path.join(UPLOAD_DIR, fname);
         if (fs.existsSync(full)) fs.unlinkSync(full);
       } catch (e) {
-        console.warn('Failed to remove product image file:', e);
+        logger.warn('Failed to remove product image file:', e);
       }
     }
     res.json({ message: 'Product deleted' });
   } catch (err) {
-    console.error('DELETE /api/products/:id error', err);
+    logger.error('DELETE /api/products/:id error', err);
     res.status(500).json({ error: err.message || 'Failed to delete product' });
   }
 });

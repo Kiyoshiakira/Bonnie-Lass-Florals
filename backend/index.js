@@ -2,7 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
+const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -25,7 +28,7 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.warn('CORS blocked origin:', origin);
+      logger.warn('CORS blocked origin:', origin);
       callback(null, false);
     }
   },
@@ -35,6 +38,21 @@ app.use(cors({
 }));
 app.options('*', cors());
 
+// --- Security Headers ---
+app.use(helmet());
+
+// --- Rate Limiting ---
+// Global rate limiter for all API routes (60 requests per minute per IP)
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+app.use('/api/', globalLimiter);
+
 // --- Middleware ---
 app.use(express.json());
 
@@ -42,41 +60,55 @@ app.use(express.json());
 // This allows images to be accessed at /admin/uploads/filename.jpg
 const uploadsPath = path.join(__dirname, 'public', 'admin', 'uploads');
 app.use('/admin/uploads', express.static(uploadsPath));
-console.log('Serving static uploads from:', uploadsPath);
+logger.info('Serving static uploads from:', uploadsPath);
 
 // --- Connect to MongoDB ---
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => logger.info('MongoDB connected'))
+  .catch(err => logger.error('MongoDB connection error:', err));
 
 // --- ROUTE REGISTRATION (with debug logging) ---
-console.log('Loading router: /api/auth');
+logger.info('Loading router: /api/auth');
 app.use('/api/auth', require('./routes/auth'));
 
-console.log('Loading router: /api/contact');
+logger.info('Loading router: /api/contact');
 app.use('/api/contact', require('./routes/contact'));
 
-console.log('Loading router: /api/products');
+logger.info('Loading router: /api/products');
 app.use('/api/products', require('./routes/products'));
 
-console.log('Loading router: /api/orders');
+logger.info('Loading router: /api/orders');
 app.use('/api/orders', require('./routes/orders'));
 
-console.log('Loading router: /api/messages');
+logger.info('Loading router: /api/messages');
 app.use('/api/messages', require('./routes/messages'));
 
-console.log('Loading router: /api/payments');
+logger.info('Loading router: /api/payments');
 app.use('/api/payments', require('./routes/payments'));
 
-console.log('Loading router: /api/settings');
+logger.info('Loading router: /api/settings');
 app.use('/api/settings', require('./routes/settings'));
 
-console.log('Loading router: /api/admin');
+logger.info('Loading router: /api/admin');
 app.use('/api/admin', require('./routes/admin'));
 
 // --- Optional: Add gallery/socials routes if you have them ---
 // app.use('/api/gallery', require('./routes/gallery'));
 // app.use('/api/socials', require('./routes/socials'));
+
+// --- Centralized Error Handler ---
+// Must be after all routes
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error:', err);
+  
+  // Don't leak error details in production
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  res.status(err.status || 500).json({
+    error: isDevelopment ? err.message : 'Internal server error',
+    ...(isDevelopment && { stack: err.stack })
+  });
+});
 
 // --- 404 Handler for unmatched API routes ---
 app.use((req, res) => {
@@ -85,5 +117,5 @@ app.use((req, res) => {
 
 // --- Start Server ---
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });
