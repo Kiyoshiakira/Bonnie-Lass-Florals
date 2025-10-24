@@ -13,6 +13,170 @@ This document describes the security, logging, and performance improvements made
   - Defaults to: `https://bonnielassflorals.com,https://bonnie-lass-florals.onrender.com,https://bonnie-lass-florals.web.app,https://bonnie-lass-florals.firebaseapp.com`
 - `NODE_ENV` - Set to `development` for detailed error messages, `production` for minimal error responses
 
+## Firebase Storage Image Upload
+
+### Overview
+Product images are now uploaded directly to Firebase Storage from the admin UI, eliminating the need for server-side file uploads and preventing image loss on deployments. The backend stores Firebase Storage URLs in the database and serves them as-is to clients.
+
+### How It Works
+
+#### Client-Side Upload Flow (Primary)
+1. Admin selects an image file in the upload form (`public/admin/upload.html`)
+2. JavaScript uploads the file directly to Firebase Storage using the Firebase SDK
+3. Firebase Storage returns a secure download URL (e.g., `https://firebasestorage.googleapis.com/...`)
+4. The admin UI sends a JSON request to the backend with the Firebase Storage URL
+5. Backend saves the URL in the product's `image` field
+6. All clients receive the Firebase Storage URL when fetching products
+
+#### Fallback: Multer Disk Upload (Legacy Support)
+If a client sends a `multipart/form-data` request with an image file:
+1. Backend uses multer to save the file to `/admin/uploads/`
+2. Stores a relative path (e.g., `/admin/uploads/123-image.jpg`) in the database
+3. `normalizeImageUrl()` converts this to an absolute URL when serving to clients
+
+**Note:** New uploads should use Firebase Storage. Multer is maintained for backward compatibility with existing products that have local images.
+
+### Admin Upload Instructions
+
+#### Single Product Upload
+1. Navigate to `/admin/upload.html`
+2. Fill in product details
+3. Either:
+   - **Option A (Recommended):** Upload an image file using the "Or upload image file" field
+     - File is uploaded to Firebase Storage automatically
+     - Max size: 10MB
+     - Allowed types: JPEG, PNG, GIF, WebP
+   - **Option B:** Enter a publicly accessible image URL in the "Image URL" field
+4. Click "Upload Product"
+5. The form will show "Uploading image..." then "Saving product..." before completing
+
+#### Edit Existing Product
+1. Click "Edit" on any product in the Manage Products section
+2. Either:
+   - Upload a new image file (replaces the current image)
+   - Update the Image URL field with a new URL
+   - Leave both blank to keep the existing image
+3. Click "Save Changes"
+
+#### CSV Batch Upload
+1. Prepare a CSV file with columns: `name`, `description`, `price`, `type`, `subcategory`, `stock`, `options`, `image`
+2. In the `image` column:
+   - **Recommended:** Provide publicly accessible image URLs (http:// or https://)
+   - **Not recommended:** Local file paths (these will be treated as missing)
+3. Upload the CSV using the "Batch Upload via CSV" section
+4. The backend will save URL values as-is
+
+**Important:** CSV upload does NOT support uploading image files. You must provide image URLs. To use Firebase Storage URLs in CSV:
+1. Upload images manually using the single product upload form
+2. Copy the Firebase Storage URLs from the database or product details
+3. Use these URLs in your CSV file
+
+### Security & Validation
+
+#### Client-Side Validation (upload.html)
+- **File type check:** Only allows JPEG, PNG, GIF, and WebP
+- **File size limit:** Maximum 10MB per image
+- **Filename sanitization:** Removes special characters and path traversal sequences
+- **User authentication:** Requires Firebase authentication before upload
+
+#### Firebase Storage Rules
+Firebase Storage security rules (see `storage.rules`) enforce:
+- Authenticated writes only
+- Maximum file size: 10MB
+- Allowed content types: image/jpeg, image/png, image/gif, image/webp
+- Path structure: `product-images/{timestamp}-{filename}`
+
+#### Backend Handling
+- Accepts both Firebase Storage URLs and legacy relative paths
+- `normalizeImageUrl()` validates and normalizes all image URLs
+- Returns absolute URLs to all clients for consistent rendering
+
+### Migration Strategy
+
+#### Existing Products
+Products with relative image paths (e.g., `/admin/uploads/image.jpg`) continue to work:
+1. The `normalizeImageUrl()` function converts them to absolute URLs
+2. If `BACKEND_URL` is set, prepends it: `https://bonnie-lass-florals.onrender.com/admin/uploads/image.jpg`
+3. If not set, returns the relative path (works for same-origin deployments)
+
+#### Gradual Migration
+You can optionally migrate existing images to Firebase Storage:
+1. Download images from `/admin/uploads/` directory
+2. Re-upload them using the admin UI (will upload to Firebase Storage)
+3. Delete local files after verifying the new URLs work
+
+**Note:** Migration is optional. The system supports both storage methods indefinitely.
+
+### Troubleshooting
+
+#### "Failed to upload image to storage" Error
+- **Cause:** User is not authenticated with Firebase
+- **Solution:** Sign in to Firebase using the admin login
+
+#### "Invalid file type" Error
+- **Cause:** File is not JPEG, PNG, GIF, or WebP
+- **Solution:** Convert the image to a supported format
+
+#### "File size exceeds 10MB limit" Error
+- **Cause:** Image file is too large
+- **Solution:** Compress or resize the image before uploading
+
+#### Images Don't Display on Frontend
+1. **Check the image URL in the database:** Should start with `https://firebasestorage.googleapis.com/` for new uploads
+2. **Check Firebase Storage rules:** Ensure public read access is enabled
+3. **Check browser console:** Look for CORS or authentication errors
+4. **Verify BACKEND_URL:** For legacy images, ensure this environment variable is set correctly
+
+### Technical Details
+
+#### Image URL Normalization (backend/utils/media.js)
+```javascript
+function normalizeImageUrl(image) {
+  if (!image) return '';
+  
+  // Firebase Storage URLs and other absolute URLs: return as-is
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    return image;
+  }
+  
+  // Legacy relative paths: convert to absolute URL if BACKEND_URL is set
+  if (!BACKEND_URL) {
+    return image.startsWith('/') ? image : '/' + image;
+  }
+  
+  return BACKEND_URL + (image.startsWith('/') ? image : '/' + image);
+}
+```
+
+#### Upload Function (public/admin/upload.html)
+```javascript
+async function uploadImageToFirebase(file) {
+  // Validate file type and size
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Invalid file type');
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error('File size exceeds 10MB limit');
+  }
+  
+  // Upload to Firebase Storage
+  const storage = firebase.storage();
+  const storageRef = storage.ref();
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const filename = `product-images/${timestamp}-${safeName}`;
+  const imageRef = storageRef.child(filename);
+  
+  const snapshot = await imageRef.put(file, {
+    contentType: file.type,
+    customMetadata: { uploadedAt: new Date().toISOString() }
+  });
+  
+  return await snapshot.ref.getDownloadURL();
+}
+```
+
 ## New Features
 
 ### Backend Security & Reliability
@@ -258,15 +422,112 @@ Replace `public/shop.js` with the previous version from git:
 git checkout HEAD~1 -- public/shop.js
 ```
 
+### 9. Test Firebase Storage Upload
+
+**Prerequisites:**
+- Valid admin Firebase credentials
+- Access to `https://bonnie-lass-florals.web.app/admin/upload.html`
+
+#### Test Single Product Upload with Firebase Storage
+
+1. Sign in to Firebase on the admin upload page
+2. Fill in product details:
+   - Name: "Test Firebase Storage Product"
+   - Description: "Testing direct Firebase upload"
+   - Price: 25.99
+   - Type: "decor"
+   - Stock: 5
+3. Select an image file (< 10MB, JPEG/PNG/GIF/WebP)
+4. Click "Upload Product"
+5. Verify:
+   - [ ] Button text changes to "Uploading image..."
+   - [ ] Button text changes to "Saving product..."
+   - [ ] Success message appears
+   - [ ] Form resets
+
+#### Verify Firebase Storage URL in Database
+
+```bash
+curl https://bonnie-lass-florals.onrender.com/api/products | jq '.products[] | select(.name == "Test Firebase Storage Product") | .image'
+```
+
+Expected output:
+```
+"https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.firebasestorage.app/o/product-images%2F..."
+```
+
+#### Test Edit Product with New Firebase Image
+
+1. Click "Load All Products" in Manage Products section
+2. Click "Edit" on the test product
+3. Upload a different image file
+4. Click "Save Changes"
+5. Verify:
+   - [ ] Button shows "Uploading image..." then "Saving changes..."
+   - [ ] Modal closes after success
+   - [ ] Product list updates with new image
+   - [ ] New image displays correctly
+
+#### Test CSV Batch Upload with Image URLs
+
+1. Create a CSV file `test-products.csv`:
+   ```csv
+   name,description,price,type,image
+   "CSV Product 1","First test",15.99,decor,https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.firebasestorage.app/o/sample1.jpg
+   "CSV Product 2","Second test",20.00,food,https://example.com/image2.jpg
+   ```
+2. Upload the CSV using "Batch Upload via CSV"
+3. Verify:
+   - [ ] Both products are created successfully
+   - [ ] Image URLs are saved exactly as provided in CSV
+   - [ ] No upload to Firebase Storage occurs (CSV uses URLs as-is)
+
+#### Test Image URL Validation
+
+1. Try to upload a product with image URL field set to `https://example.com/image.jpg`
+2. Verify:
+   - [ ] Product is created
+   - [ ] No file upload occurs
+   - [ ] URL is saved as-is in the database
+   - [ ] Image displays on frontend (if URL is valid)
+
+#### Test Fallback Behavior (Legacy Support)
+
+**Note:** This requires using multipart/form-data instead of JSON, which is the fallback mode.
+
+To test multer fallback, you would need to:
+1. Modify the frontend temporarily to use FormData
+2. Upload a product
+3. Verify file is saved to `/admin/uploads/` directory
+4. Verify relative path is saved in database
+
+**In production:** This fallback is maintained for compatibility but new uploads should use Firebase Storage.
+
+#### Test Error Handling
+
+1. **Test file size limit:**
+   - Try to upload an image > 10MB
+   - Expected: "File size exceeds 10MB limit" error
+
+2. **Test invalid file type:**
+   - Try to upload a PDF or TXT file
+   - Expected: "Invalid file type" error
+
+3. **Test unauthenticated upload:**
+   - Sign out of Firebase
+   - Try to upload a product with image
+   - Expected: Firebase authentication error
+
 ## Future Improvements
 
 - [ ] Add Redis for distributed rate limiting (multi-instance deployments)
 - [ ] Implement request logging middleware
-- [ ] Add pagination for large product lists
-- [ ] Migrate to Firebase Storage for all images
+- [x] ~~Migrate to Firebase Storage for all images~~ (COMPLETED - new uploads use Firebase Storage, legacy local images still supported)
+- [ ] Optionally migrate existing local images to Firebase Storage
 - [ ] Add API response caching
 - [ ] Implement automated integration tests
 - [ ] Add monitoring/alerting for rate limit violations
+- [ ] Add server-side Firebase Admin cleanup for orphaned images
 
 ---
 
