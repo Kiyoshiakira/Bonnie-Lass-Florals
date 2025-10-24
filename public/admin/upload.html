@@ -4,19 +4,26 @@
   <meta charset="utf-8" />
   <title>Admin — Upload Product | Bonnie Lass Florals</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="../styles.css">
-  <link rel="stylesheet" href="../auth.css">
+  <!-- Root-absolute asset paths so this works from /admin/ and root -->
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/auth.css">
+  <!-- Ensure relative links resolve from site root (helps copied header work) -->
+  <base href="/" />
   <!-- Theme Loader - Load early to minimize FOUC -->
-  <script src="../theme-loader.js"></script>
+  <script src="/theme-loader.js"></script>
   <!-- Admin Guard - Must be loaded before Firebase to prevent unauthorized access -->
-  <script src="../admin-guard.js"></script>
+  <script src="/admin-guard.js"></script>
+
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
-  <!-- PapaParse for proper CSV parsing -->
+
+  <!-- PapaParse for CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
   <script>
+    // Firebase client config (same as other pages)
     const firebaseConfig = {
       apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
       authDomain: "bonnie-lass-florals.firebaseapp.com",
@@ -28,767 +35,550 @@
     };
     firebase.initializeApp(firebaseConfig);
   </script>
+
+  <style>
+    /* Small admin page tweaks for layout */
+    main { max-width: 1000px; margin: 2rem auto; padding: 1rem; }
+    header { display:flex; align-items:center; gap:1rem; padding:1rem; border-bottom:1px solid #eee; }
+    header .logo { display:flex; align-items:center; gap:12px; font-weight:bold; color:#4b2f6f; }
+    header nav { display:flex; gap:1rem; margin-left:1rem; }
+    #profileCircleContainer { margin-left:auto; position:relative; }
+    #profileDropdown { display:none; position:absolute; right:0; top:48px; background:#fff; border:1px solid #ddd; border-radius:6px; min-width:180px; box-shadow:0 6px 18px rgba(0,0,0,0.08); z-index:50; }
+    #profileDropdown a { display:block; padding:0.5rem 0.75rem; color:#333; text-decoration:none; }
+    #profileDropdown a:hover { background:#f6f6f6; }
+    .admin-section { background:#f8fafc; padding:1.25rem; border-radius:8px; margin-bottom:1.25rem; }
+    label { display:block; margin-top:0.75rem; font-weight:600; }
+    input[type="text"], input[type="number"], textarea, select { width:100%; padding:0.5rem; margin-top:0.25rem; border-radius:6px; border:1px solid #ddd; }
+    button { cursor:pointer; }
+    .product-card img { max-width:100%; display:block; }
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:90; }
+    .modal .panel { background:#fff; padding:1rem; border-radius:8px; width:90%; max-width:720px; max-height:90vh; overflow:auto; }
+  </style>
 </head>
 <body>
   <header>
     <div class="logo">
-      <img src="../img/logo.png" alt="Bonnie Lass Florals Logo" style="height:48px;vertical-align:middle;margin-right:12px;">
+      <img src="/img/logo.png" alt="Bonnie Lass Florals Logo" style="height:48px;vertical-align:middle;">
       Bonnie Lass Florals
     </div>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="about.html">About</a>
-      <a href="shop.html">Shop</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="contact.html">Contact</a>
-      <a href="cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
-      <div id="profileCircleContainer">
-        <img id="profileCircle" src="img/default-avatar.png" alt="Profile" />
-        <div id="profileDropdown">
-          <div id="userInfoDropdown"></div>
-          <a href="profile.html">Profile</a>
-          <a href="orders.html">Orders</a>
-          <a id="adminOrdersLink" href="/admin/orders.html" style="display:none;">All Orders (Admin)</a>
-          <a id="uploadProductLink" href="/admin/upload.html" style="display:none;">Upload Product</a>
-          <a id="paletteLink" href="/admin/palette.html" style="display:none;">Palette Editor</a>
-          <a id="messagesLink" href="/admin/messages.html" style="display:none;">Messages</a>
-          <button id="logoutMenu">Logout</button>
-        </div>
-      </div>
-      <a id="loginBtn" href="#">Login</a>
-    </nav>
-  </header>
-  <div id="loginModal">
-    <div id="loginModalContent">
-      <h2 id="loginTitle">Login</h2>
-      <form id="authForm">
-        <div id="signupFields" class="hidden">
-          <input type="text" id="signupName" placeholder="Your Name" required>
-        </div>
-        <input type="email" id="emailField" placeholder="Email" required>
-        <input type="password" id="passwordField" placeholder="Password" required>
-        <button type="submit" id="loginEmailBtn">Login</button>
-        <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
-      </form>
-      <div style="margin:1em 0;">OR</div>
-      <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
-      <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
-      <div id="loginError" style="color:red;margin-top:1em;"></div>
-    </div>
 
-  <main style="max-width:1000px;margin:2rem auto;padding:1rem;">
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/about.html">About</a>
+      <a href="/shop.html">Shop</a>
+      <a href="/gallery.html">Gallery</a>
+      <a href="/contact.html">Contact</a>
+    </nav>
+
+    <!-- Profile circle + dropdown -->
+    <div id="profileCircleContainer">
+      <img id="profileCircle" src="/img/default-avatar.png" alt="Profile" style="height:40px;width:40px;border-radius:50%;cursor:pointer;" />
+      <div id="profileDropdown">
+        <div id="userInfoDropdown" style="padding:0.75rem;border-bottom:1px solid #f0f0f0;"></div>
+        <a href="/profile.html">Profile</a>
+        <a href="/orders.html">Orders</a>
+        <a id="adminOrdersLink" href="/admin/orders.html" style="display:none;">All Orders (Admin)</a>
+        <a id="uploadProductLink" href="/admin/upload.html" style="display:none;">Upload Product</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
     <div style="font-size:0.95rem;color:#666;margin-bottom:0.75rem;">
-      <a href="../index.html">Home</a>
-      <span class="breadcrumb-separator">›</span>
-      <a href="../profile.html">Profile</a>
-      <span class="breadcrumb-separator">›</span>
-      <span class="breadcrumb-current">Upload Product</span>
+      <a href="/index.html">Home</a> <span style="color:#bbb;margin:0 8px;">›</span>
+      <a href="/profile.html">Profile</a> <span style="color:#bbb;margin:0 8px;">›</span>
+      <span style="font-weight:600;">Upload Product</span>
     </div>
 
     <h1>Upload New Product</h1>
 
     <!-- CSV Batch Upload Section -->
-    <div style="background:#f8fafc; padding:1.5rem; border-radius:0.5rem; margin-bottom:1.5rem;">
-      <h2 style="margin-top:0;">Batch Upload via CSV</h2>
-      <p>Upload multiple products at once using a CSV file. The CSV should include columns: name, description, price, type, subcategory, stock, options (optional), image (URL), collection (optional), occasion (optional)</p>
-      <input type="file" id="csvFile" accept=".csv" style="margin-bottom:1rem;">
-      <button type="button" id="uploadCsvBtn" style="background:#10b981;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Upload CSV</button>
+    <section class="admin-section" aria-labelledby="csv-title">
+      <h2 id="csv-title" style="margin-top:0;">Batch Upload via CSV</h2>
+      <p style="margin:0 0 0.5rem 0;">Upload multiple products at once using a CSV. Columns: name, description, price, type, subcategory, stock, options, image</p>
+      <input type="file" id="csvFile" accept=".csv" style="margin-bottom:0.75rem;">
+      <div>
+        <button id="uploadCsvBtn" style="background:#10b981;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;">Upload CSV</button>
+      </div>
       <div id="csv-result" style="margin-top:1rem;"></div>
-    </div>
+    </section>
 
     <!-- Single Product Upload Form -->
-    <h2>Single Product Upload</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-      <label for="name">Product Name</label>
-      <input type="text" id="name" name="name" required>
+    <section>
+      <h2>Single Product Upload</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <label for="name">Product Name</label>
+        <input type="text" id="name" name="name" required>
 
-      <label for="description">Description</label>
-      <textarea id="description" name="description" required></textarea>
+        <label for="description">Description</label>
+        <textarea id="description" name="description" required rows="4"></textarea>
 
-      <label for="price">Price</label>
-      <input type="number" id="price" name="price" step="0.01" required>
+        <label for="price">Price</label>
+        <input type="number" id="price" name="price" step="0.01" required>
 
-      <label for="type">Type</label>
-      <select id="type" name="type" required>
-        <option value="decor">Handmade Crafts</option>
-        <option value="food">Cottage Food</option>
-      </select>
+        <label for="type">Type</label>
+        <select id="type" name="type" required>
+          <option value="decor">Handmade Crafts</option>
+          <option value="food">Cottage Food</option>
+        </select>
 
-      <label for="subcategory">Subcategory</label>
-      <input type="text" id="subcategory" name="subcategory">
+        <label for="subcategory">Subcategory</label>
+        <input type="text" id="subcategory" name="subcategory">
 
-      <label for="collection">Holiday Collection (for Handmade Crafts)</label>
-      <select id="collection" name="collection">
-        <option value="">None</option>
-        <option value="christmas">Christmas</option>
-        <option value="halloween">Halloween</option>
-        <option value="easter">Easter</option>
-        <option value="thanksgiving">Thanksgiving</option>
-        <option value="valentines">Valentine's Day</option>
-        <option value="spring">Spring</option>
-        <option value="summer">Summer</option>
-        <option value="fall">Fall</option>
-        <option value="winter">Winter</option>
-      </select>
+        <label for="stock">Stock</label>
+        <input type="number" id="stock" name="stock" min="0" value="1" required>
 
-      <label for="occasion">Occasion (for Handmade Crafts)</label>
-      <select id="occasion" name="occasion">
-        <option value="">None</option>
-        <option value="birthday">Birthday</option>
-        <option value="wedding">Wedding</option>
-        <option value="anniversary">Anniversary</option>
-        <option value="baby-shower">Baby Shower</option>
-        <option value="graduation">Graduation</option>
-        <option value="housewarming">Housewarming</option>
-        <option value="retirement">Retirement</option>
-        <option value="sympathy">Sympathy</option>
-      </select>
+        <label for="options">Options (comma-separated)</label>
+        <input type="text" id="options" name="options">
 
-      <label for="stock">Stock</label>
-      <input type="number" id="stock" name="stock" min="1" value="1" required>
+        <label for="image">Image URL</label>
+        <input type="text" id="image" name="image">
 
-      <label for="options">Options (comma-separated)</label>
-      <input type="text" id="options" name="options">
+        <label for="imageFile">Or upload image file</label>
+        <input type="file" id="imageFile" name="imageFile" accept="image/*">
 
-      <label for="image">Image URL</label>
-      <input type="text" id="image" name="image">
+        <div style="margin-top:1rem;">
+          <button type="submit" id="uploadBtn" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;">Upload Product</button>
+          <button type="button" id="uploadAnotherBtn" style="display:none;margin-left:8px;">Upload another</button>
+        </div>
+      </form>
 
-      <label for="imageFile">Or upload image file</label>
-      <input type="file" id="imageFile" name="imageFile" accept="image/*">
-
-      <div style="margin-top:1rem;">
-        <button type="submit" id="uploadBtn" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Upload Product</button>
-        <button type="button" id="uploadAnotherBtn" style="display:none;margin-left:8px;">Upload another</button>
-      </div>
-    </form>
-
-    <div id="upload-success" style="display:none;margin-top:1rem;color:green;">Product uploaded successfully!</div>
-    <div id="upload-error" style="display:none;margin-top:1rem;color:red;"></div>
+      <div id="upload-success" style="display:none;margin-top:1rem;color:green;">Product uploaded successfully!</div>
+      <div id="upload-error" style="display:none;margin-top:1rem;color:red;"></div>
+    </section>
 
     <!-- Manage Products -->
-    <h2 style="margin-top:2rem;">Manage Products</h2>
-    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;">
-      <button id="loadProductsBtn" style="background:#efefef;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid #ddd;cursor:pointer;">Load All Products</button>
-      <div style="display:flex;gap:0.5rem;align-items:center;">
-        <span style="font-size:0.9rem;color:#666;">View as:</span>
-        <button id="viewToggleBtn" data-view="line" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;cursor:pointer;">
-          <span id="viewToggleText">Panels</span>
-        </button>
+    <section style="margin-top:2rem;">
+      <h2>Manage Products</h2>
+      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;">
+        <button id="loadProductsBtn" style="background:#efefef;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid #ddd;">Load All Products</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <span style="font-size:0.9rem;color:#666;">View as:</span>
+          <button id="viewToggleBtn" data-view="line" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;">
+            <span id="viewToggleText">Panels</span>
+          </button>
+        </div>
       </div>
-    </div>
-    <div id="products-list" style="margin-top:1rem;"></div>
-    
-    <!-- Edit Product Modal -->
-    <div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;">
-      <div style="background:#fff;max-width:600px;margin:2rem auto;padding:2rem;border-radius:8px;position:relative;">
-        <button id="closeEditModal" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;">&times;</button>
-        <h2>Edit Product</h2>
-        <form id="editForm" enctype="multipart/form-data">
+
+      <div id="products-list" style="min-height:120px;"></div>
+    </section>
+
+    <!-- Edit modal -->
+    <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="panel">
+        <h3>Edit Product</h3>
+        <form id="editForm">
           <input type="hidden" id="editProductId">
-          
-          <label for="editName">Product Name</label>
-          <input type="text" id="editName" name="name" required>
-
+          <label for="editName">Name</label>
+          <input id="editName" name="name" type="text" required>
           <label for="editDescription">Description</label>
-          <textarea id="editDescription" name="description" required></textarea>
-
+          <textarea id="editDescription" name="description" rows="3"></textarea>
           <label for="editPrice">Price</label>
-          <input type="number" id="editPrice" name="price" step="0.01" required>
-
+          <input id="editPrice" name="price" type="number" step="0.01">
           <label for="editType">Type</label>
-          <select id="editType" name="type" required>
+          <select id="editType" name="type">
             <option value="decor">Handmade Crafts</option>
             <option value="food">Cottage Food</option>
           </select>
-
-          <label for="editSubcategory">Subcategory</label>
-          <input type="text" id="editSubcategory" name="subcategory">
-
-          <label for="editCollection">Holiday Collection (for Handmade Crafts)</label>
-          <select id="editCollection" name="collection">
-            <option value="">None</option>
-            <option value="christmas">Christmas</option>
-            <option value="halloween">Halloween</option>
-            <option value="easter">Easter</option>
-            <option value="thanksgiving">Thanksgiving</option>
-            <option value="valentines">Valentine's Day</option>
-            <option value="spring">Spring</option>
-            <option value="summer">Summer</option>
-            <option value="fall">Fall</option>
-            <option value="winter">Winter</option>
-          </select>
-
-          <label for="editOccasion">Occasion (for Handmade Crafts)</label>
-          <select id="editOccasion" name="occasion">
-            <option value="">None</option>
-            <option value="birthday">Birthday</option>
-            <option value="wedding">Wedding</option>
-            <option value="anniversary">Anniversary</option>
-            <option value="baby-shower">Baby Shower</option>
-            <option value="graduation">Graduation</option>
-            <option value="housewarming">Housewarming</option>
-            <option value="retirement">Retirement</option>
-            <option value="sympathy">Sympathy</option>
-          </select>
-
           <label for="editStock">Stock</label>
-          <input type="number" id="editStock" name="stock" min="1" required>
-
-          <label for="editOptions">Options (comma-separated)</label>
-          <input type="text" id="editOptions" name="options">
-
+          <input id="editStock" name="stock" type="number" min="0">
+          <label for="editOptions">Options</label>
+          <input id="editOptions" name="options" type="text">
           <label>Current Image</label>
           <div id="currentImagePreview" style="margin-bottom:1rem;"></div>
-
           <label for="editImage">Image URL</label>
-          <input type="text" id="editImage" name="image">
-
+          <input id="editImage" name="image" type="text">
           <label for="editImageFile">Or upload new image file</label>
-          <input type="file" id="editImageFile" name="imageFile" accept="image/*">
+          <input id="editImageFile" name="imageFile" type="file" accept="image/*">
 
           <div style="margin-top:1rem;display:flex;gap:0.5rem;">
-            <button type="submit" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Save Changes</button>
-            <button type="button" id="cancelEditBtn" style="background:#ccc;color:#333;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Cancel</button>
+            <button type="submit" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;">Save Changes</button>
+            <button type="button" id="cancelEditBtn" style="background:#ccc;color:#333;padding:0.6rem 1rem;border-radius:8px;border:none;">Cancel</button>
           </div>
         </form>
-        <div id="edit-success" style="display:none;margin-top:1rem;color:green;"></div>
-        <div id="edit-error" style="display:none;margin-top:1rem;color:red;"></div>
       </div>
     </div>
   </main>
 
-  <script src="../mobile-nav.js"></script>
-  <script src="../auth.js"></script>
-
   <script>
-    // Firebase Storage helper function
-    async function uploadImageToFirebase(file) {
-      if (!file) return null;
-      
-      try {
-        const storage = firebase.storage();
-        const storageRef = storage.ref();
-        
-        // Create a unique filename with timestamp
-        const timestamp = Date.now();
-        const safeName = file.name.replace(/\s+/g, '_');
-        const filename = `product-images/${timestamp}-${safeName}`;
-        
-        const imageRef = storageRef.child(filename);
-        
-        // Upload the file
-        const snapshot = await imageRef.put(file);
-        
-        // Get the download URL
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        
-        return downloadURL;
-      } catch (error) {
-        console.error('Firebase Storage upload error:', error);
-        throw error;
-      }
-    }
+    // Small utility & config
+    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:5000'
+      : 'https://bonnie-lass-florals.onrender.com';
 
-    // Single product upload handler (existing behavior)
+    // Profile dropdown behavior
+    const profileImg = document.getElementById('profileCircle');
+    const dropdown = document.getElementById('profileDropdown');
+    profileImg && profileImg.addEventListener('click', () => {
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('profileCircleContainer').contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    // Initialize UI state based on Firebase auth
+    firebase.auth().onAuthStateChanged(async (user) => {
+      const userInfo = document.getElementById('userInfoDropdown');
+      const adminOrdersLink = document.getElementById('adminOrdersLink');
+      const uploadProductLink = document.getElementById('uploadProductLink');
+      if (!user) {
+        userInfo.innerHTML = '<div style="color:#666;">Not signed in</div>';
+        adminOrdersLink.style.display = 'none';
+        uploadProductLink.style.display = 'none';
+        return;
+      }
+      const token = await user.getIdToken();
+      const email = user.email || '';
+      userInfo.innerHTML = `<strong style="display:block;">${email}</strong>`;
+      // Show admin links for known admin emails (matches backend list)
+      const adminEmails = ['shaunessy24@gmail.com','bonnielassflorals@gmail.com'];
+      const isAdmin = adminEmails.includes((email||'').toLowerCase());
+      adminOrdersLink.style.display = isAdmin ? 'block' : 'none';
+      uploadProductLink.style.display = isAdmin ? 'block' : 'none';
+    });
+
+    // --------------------------
+    // Single product upload
+    // --------------------------
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      document.getElementById('upload-error').style.display = 'none';
-      document.getElementById('upload-success').style.display = 'none';
+      const user = firebase.auth().currentUser;
+      if (!user) { alert('Please login first'); return; }
+      const token = await user.getIdToken();
 
-      const name = document.getElementById('name').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const price = parseFloat(document.getElementById('price').value);
-      const type = document.getElementById('type').value;
-      const subcategory = document.getElementById('subcategory').value.trim();
-      const collection = document.getElementById('collection').value;
-      const occasion = document.getElementById('occasion').value;
-      const stock = parseInt(document.getElementById('stock').value, 10) || 1;
-      const options = document.getElementById('options').value;
-      let imageUrl = document.getElementById('image').value;
+      const form = e.target;
+      const formData = new FormData();
+      formData.append('name', form.name.value);
+      formData.append('description', form.description.value);
+      formData.append('price', form.price.value);
+      formData.append('type', form.type.value);
+      formData.append('subcategory', form.subcategory.value || '');
+      formData.append('stock', form.stock.value || 1);
+      formData.append('options', form.options.value || '');
+      if (form.imageFile.files && form.imageFile.files[0]) {
+        formData.append('image', form.imageFile.files[0]);
+      } else if (form.image.value) {
+        formData.append('image', form.image.value);
+      }
 
       try {
-        // If user selected a file, upload to Firebase Storage first
-        const imageFile = document.getElementById('imageFile').files[0];
-        if (imageFile) {
-          document.getElementById('upload-error').textContent = 'Uploading image to Firebase Storage...';
-          document.getElementById('upload-error').style.display = 'block';
-          document.getElementById('upload-error').style.color = '#666';
-          
-          imageUrl = await uploadImageToFirebase(imageFile);
-          
-          document.getElementById('upload-error').style.display = 'none';
-        }
-
-        const user = firebase.auth().currentUser;
-        if (!user) {
-          document.getElementById('upload-error').textContent = 'Please login first.';
-          document.getElementById('upload-error').style.display = 'block';
-          document.getElementById('upload-error').style.color = 'red';
-          return;
-        }
-        const token = await user.getIdToken();
-
-        // Send product data with Firebase Storage URL
-        const productData = {
-          name,
-          description,
-          price,
-          type,
-          subcategory,
-          collection,
-          occasion,
-          stock,
-          options,
-          image: imageUrl || ''
-        };
-
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products', {
+        const res = await fetch(`${API_BASE}/api/products`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
+            // DO NOT set Content-Type when sending FormData
           },
-          body: JSON.stringify(productData)
+          body: formData
         });
 
         const data = await res.json();
         if (res.ok) {
           document.getElementById('upload-success').style.display = 'block';
-          document.getElementById('upload-success').textContent = 'Product uploaded successfully!';
-          document.getElementById('uploadForm').reset();
+          document.getElementById('upload-error').style.display = 'none';
+          form.reset();
         } else {
           document.getElementById('upload-error').textContent = data.error || 'Upload failed.';
           document.getElementById('upload-error').style.display = 'block';
-          document.getElementById('upload-error').style.color = 'red';
         }
       } catch (err) {
         document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
         document.getElementById('upload-error').style.display = 'block';
-        document.getElementById('upload-error').style.color = 'red';
       }
     });
 
-    // Upload Another Product button handler
-    document.getElementById('uploadAnotherBtn').addEventListener('click', function() {
-      document.getElementById('uploadForm').reset();
-      document.getElementById('uploadAnotherBtn').style.display = 'none';
-      document.getElementById('upload-success').style.display = 'none';
-    });
-
-    // CSV Batch Upload functionality
+    // --------------------------
+    // CSV batch upload
+    // --------------------------
     document.getElementById('uploadCsvBtn').addEventListener('click', async function() {
       const fileInput = document.getElementById('csvFile');
       const csvFile = fileInput.files[0];
+      const resultEl = document.getElementById('csv-result');
 
       if (!csvFile) {
-        document.getElementById('csv-result').innerHTML = '<p style="color:red;">Please select a CSV file.</p>';
+        resultEl.innerHTML = '<p style="color:red;">Please select a CSV file.</p>';
         return;
       }
-
-      document.getElementById('csv-result').innerHTML = '<p>Processing CSV...</p>';
+      resultEl.innerHTML = '<p>Processing CSV...</p>';
 
       try {
         const text = await csvFile.text();
-        
-        // Use PapaParse for proper CSV parsing (handles quoted fields, multi-line values, etc.)
         const parseResult = Papa.parse(text, {
           header: true,
           skipEmptyLines: true,
-          transformHeader: (header) => header.trim().toLowerCase()
+          transformHeader: h => (h || '').trim().toLowerCase()
         });
 
-        if (parseResult.errors.length > 0) {
-          console.warn('CSV parsing warnings:', parseResult.errors);
+        if (parseResult.errors && parseResult.errors.length) {
+          console.warn('CSV parse warnings:', parseResult.errors);
         }
 
-        if (!parseResult.data || parseResult.data.length === 0) {
-          document.getElementById('csv-result').innerHTML = '<p style="color:red;">CSV file is empty or contains no valid data.</p>';
+        const products = (parseResult.data || []).map(row => ({
+          name: row.name || row.title || '',
+          description: row.description || '',
+          price: row.price || row.priceusd || '',
+          type: row.type || 'decor',
+          subcategory: row.subcategory || '',
+          stock: row.stock || row.quantity || '1',
+          options: row.options || '',
+          image: row.image || row.image1 || ''
+        })).filter(p => p.name && p.price);
+
+        if (!products.length) {
+          resultEl.innerHTML = '<p style="color:red;">No valid products to upload. Check CSV headers (name & price required).</p>';
+          return;
+        }
+        if (products.length > 100) {
+          resultEl.innerHTML = '<p style="color:red;">CSV contains more than 100 valid products. Split into smaller batches.</p>';
           return;
         }
 
-        // Extract products from parsed data
-        // Filter out rows that don't have basic product information
-        const products = [];
-        
-        for (let i = 0; i < parseResult.data.length; i++) {
-          const row = parseResult.data[i];
-          
-          // Skip rows without a name/title (likely empty or metadata rows)
-          const name = row.name || row.title;
-          if (!name || name.trim() === '') {
-            continue;
-          }
-          
-          // Skip rows that look like they might be section headers or metadata
-          // (e.g., rows with only 1-2 fields filled)
-          const filledFields = Object.values(row).filter(val => val && String(val).trim() !== '').length;
-          if (filledFields < 3) {
-            continue;
-          }
-          
-          products.push({
-            name: name.trim(),
-            description: (row.description || '').trim(),
-            price: row.price || '0',
-            type: row.type || 'decor',
-            subcategory: row.subcategory || '',
-            collection: row.collection || '',
-            occasion: row.occasion || '',
-            stock: row.stock || row.quantity || '1',
-            options: row.options || '',
-            image: row.image || row.image1 || ''
-          });
-        }
-
-        if (products.length === 0) {
-          document.getElementById('csv-result').innerHTML = '<p style="color:red;">No valid products found in CSV. Ensure your CSV has name/title and price columns.</p>';
-          return;
-        }
-
-        // ================= DEBUG SNIPPET START =================
-        // Place this debug block right before sending the batch so you can inspect what will be sent.
-        // It logs counts, sample rows, attaches the parsed array to window for ad-hoc inspection,
-        // and prevents sending if client-side validation fails (or exceeds 100).
-        try {
-          // expose parsed products for interactive inspection
-          window.__csvParsedProducts = products;
-
-          const parsedCount = products.length;
-          const validProducts = products.filter(p => {
-            // basic validity: has name, description (can be empty string allowed) and price present (not empty)
-            const hasName = !!(p.name && String(p.name).trim());
-            const hasPrice = p.price !== undefined && String(p.price).trim() !== '';
-            const hasDescription = p.description !== undefined; // server allows empty description, keep it flexible
-            return hasName && hasPrice && hasDescription;
-          });
-          const validCount = validProducts.length;
-
-          console.log('CSV parsed products count:', parsedCount);
-          console.log('CSV valid products count (name+price present):', validCount);
-          console.log('First 5 parsed products (sample):', products.slice(0, 5));
-          console.log('First 5 valid products (sample):', validProducts.slice(0, 5));
-
-          // UI feedback
-          document.getElementById('csv-result').innerHTML = `<p>Parsed ${parsedCount} rows, ${validCount} valid products.</p>`;
-
-          // Client-side safety check: don't send more than 100 items (backend limit)
-          if (validCount === 0) {
-            document.getElementById('csv-result').innerHTML += '<p style="color:red;">No valid products to upload.</p>';
-            return;
-          }
-          if (validCount > 100) {
-            document.getElementById('csv-result').innerHTML += '<p style="color:red;">CSV contains more than 100 valid products. Split into smaller batches.</p>';
-            console.warn('CSV upload blocked: client-side found', validCount, 'valid products (limit 100).');
-            return;
-          }
-
-          // Prepare payload using only valid products (so backend receives expected shape)
-          var payloadProducts = validProducts;
-        } catch (dbgErr) {
-          console.error('CSV debug helper error:', dbgErr);
-          // Fallback: send original products array if debug block fails
-          var payloadProducts = products;
-        }
-        // ================= DEBUG SNIPPET END =================
-
-        // Get Firebase token
         const user = firebase.auth().currentUser;
-        if (!user) {
-          document.getElementById('csv-result').innerHTML = '<p style="color:red;">Please login first.</p>';
-          return;
-        }
-
+        if (!user) { resultEl.innerHTML = '<p style="color:red;">Please login first.</p>'; return; }
         const token = await user.getIdToken();
 
-        // Send batch upload request (use payloadProducts prepared by debug block)
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products/batch', {
+        const res = await fetch(`${API_BASE}/api/products/batch`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
           },
-          body: JSON.stringify({ products: payloadProducts })
+          body: JSON.stringify({ products })
         });
 
-        // Read raw response for better debugging if server returns 400
         const raw = await res.text();
         let data;
-        try {
-          data = raw ? JSON.parse(raw) : {};
-        } catch (err) {
-          data = { error: raw };
-        }
+        try { data = raw ? JSON.parse(raw) : {}; } catch (err) { data = { error: raw }; }
 
         if (res.ok) {
-          let html = `<p style="color:green;">${data.message}</p>`;
-          if (data.results && data.results.success && data.results.success.length > 0) {
+          let html = `<p style="color:green;">${data.message || 'Batch upload completed.'}</p>`;
+          if (data.results && data.results.success && data.results.success.length) {
             html += `<p><strong>Uploaded ${data.results.success.length} products:</strong></p><ul>`;
-            data.results.success.forEach(item => {
-              html += `<li>${item.name} (ID: ${item.id})</li>`;
-            });
+            data.results.success.forEach(it => { html += `<li>${escapeHtml(it.name || '')} (ID: ${it.id})</li>`; });
             html += '</ul>';
           }
-          if (data.results && data.results.skipped && data.results.skipped.length > 0) {
-            html += `<p style="color:orange;"><strong>Skipped ${data.results.skipped.length} duplicate products:</strong></p><ul>`;
-            data.results.skipped.forEach(item => {
-              html += `<li>Row ${item.row}: "${item.name}" - ${item.reason} (similar to "${item.duplicateOf}")</li>`;
-            });
-            html += '</ul>';
-          }
-          if (data.results && data.results.errors && data.results.errors.length > 0) {
+          if (data.results && data.results.errors && data.results.errors.length) {
             html += `<p style="color:red;"><strong>Failed ${data.results.errors.length} products:</strong></p><ul>`;
-            data.results.errors.forEach(item => {
-              html += `<li>Row ${item.row}: ${item.error}</li>`;
-            });
+            data.results.errors.forEach(it => { html += `<li>Row ${it.row}: ${escapeHtml(it.error || 'error')}</li>`; });
             html += '</ul>';
           }
-          document.getElementById('csv-result').innerHTML = html;
+          resultEl.innerHTML = html;
           fileInput.value = '';
         } else {
-          // Show server-provided error (helps reveal if backend says "Batch size limited to 100 products" etc.)
-          document.getElementById('csv-result').innerHTML = `<p style="color:red;">Error uploading CSV (status ${res.status}): ${data.error || raw}</p>`;
+          resultEl.innerHTML = `<p style="color:red;">Error uploading CSV (status ${res.status}): ${escapeHtml(data.error || raw || 'Unknown error')}</p>`;
           console.error('Batch upload failed:', res.status, data || raw);
         }
       } catch (err) {
-        document.getElementById('csv-result').innerHTML = `<p style="color:red;">Upload error: ${err.message}</p>`;
+        resultEl.innerHTML = `<p style="color:red;">Upload error: ${escapeHtml(err.message)}</p>`;
         console.error('CSV upload error:', err);
       }
     });
 
-    // Load Products functionality
+    // --------------------------
+    // Load / Manage products
+    // --------------------------
+    let allProducts = [];
     let currentView = 'line'; // 'line' or 'panel'
-    
+
     document.getElementById('viewToggleBtn').addEventListener('click', function() {
       currentView = currentView === 'line' ? 'panel' : 'line';
       this.dataset.view = currentView;
       document.getElementById('viewToggleText').textContent = currentView === 'line' ? 'Panels' : 'Lines';
-      
-      // Reload products with new view
       if (document.getElementById('products-list').innerHTML !== '') {
         document.getElementById('loadProductsBtn').click();
       }
     });
-    
+
     document.getElementById('loadProductsBtn').addEventListener('click', async function() {
       const list = document.getElementById('products-list');
       list.innerHTML = '<p>Loading products...</p>';
       try {
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
+        const res = await fetch(`${API_BASE}/api/products`);
+        if (!res.ok) throw new Error('Failed to fetch products');
         const products = await res.json();
-        if (res.ok && products.length > 0) {
-          if (currentView === 'line') {
-            renderLineView(products);
-          } else {
-            renderPanelView(products);
-          }
-        } else {
-          list.innerHTML = '<p>No products found.</p>';
-        }
+        allProducts = products || [];
+        if (currentView === 'line') renderLineView(allProducts);
+        else renderPanelView(allProducts);
       } catch (err) {
-        list.innerHTML = `<p style="color:red;">Error loading products: ${err.message}</p>`;
+        console.error('Error loading products:', err);
+        document.getElementById('products-list').innerHTML = '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
       }
     });
-    
+
     function renderLineView(products) {
-      const list = document.getElementById('products-list');
-      let html = '<table style="width:100%; border-collapse:collapse; margin-top:1rem;">';
-      html += '<thead><tr style="background:#f0f0f0;">';
-      html += '<th style="padding:0.5rem; text-align:left;">Name</th>';
-      html += '<th style="padding:0.5rem; text-align:left;">Price</th>';
-      html += '<th style="padding:0.5rem; text-align:left;">Stock</th>';
-      html += '<th style="padding:0.5rem; text-align:left;">Type</th>';
-      html += '<th style="padding:0.5rem; text-align:left;">Actions</th>';
-      html += '</tr></thead><tbody>';
+      let html = `<table style="width:100%;border-collapse:collapse">`;
+      html += `<thead><tr><th style="text-align:left;padding:0.5rem;border-bottom:1px solid #eee;">Name</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Price</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Stock</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Type</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Actions</th></tr></thead>`;
+      html += `<tbody>`;
       products.forEach(p => {
         html += `<tr>`;
-        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.name}</td>`;
-        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">$${p.price}</td>`;
-        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.stock}</td>`;
-        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">${p.type}</td>`;
-        html += `<td style="padding:0.5rem;border-top:1px solid #eee;">`;
-        html += `<button onclick="window.editProduct('${p._id}')" style="margin-right:6px;padding:0.4rem 0.6rem;background:#6e33b7;color:#fff;border:none;border-radius:4px;cursor:pointer;">Edit</button>`;
-        html += `<button onclick="window.deleteProduct('${p._id}')" style="padding:0.4rem 0.6rem;background:#f87171;color:#fff;border:none;border-radius:4px;cursor:pointer;">Delete</button>`;
-        html += `</td></tr>`;
+        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(p.name || '')}</td>`;
+        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">$${(p.price || 0).toFixed ? (Number(p.price).toFixed(2)) : escapeHtml(String(p.price || ''))}</td>`;
+        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(String(p.stock || 0))}</td>`;
+        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(p.type || '')}</td>`;
+        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">`;
+        html += `<button data-id="${p._id}" class="edit-btn" style="margin-right:0.5rem;">Edit</button>`;
+        html += `<button data-id="${p._id}" class="delete-btn" style="background:#f87171;color:#fff;border:none;padding:0.4rem 0.6rem;border-radius:4px;">Delete</button>`;
+        html += `</td>`;
+        html += `</tr>`;
       });
-      html += '</tbody></table>';
-      list.innerHTML = html;
+      html += `</tbody></table>`;
+      document.getElementById('products-list').innerHTML = html;
     }
-    
+
     function renderPanelView(products) {
-      const list = document.getElementById('products-list');
-      let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-top:1rem;">';
+      let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">';
       products.forEach(p => {
-        const imageUrl = p.image || '';
-        html += `<div style="border:1px solid #ddd;border-radius:8px;padding:1rem;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);">`;
-        if (imageUrl) {
-          html += `<img src="${imageUrl}" alt="${p.name}" style="width:100%;height:200px;object-fit:cover;border-radius:4px;margin-bottom:0.75rem;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`;
-          html += `<div style="display:none;width:100%;height:200px;background:#f0f0f0;border-radius:4px;margin-bottom:0.75rem;align-items:center;justify-content:center;color:#999;">No Image</div>`;
-        } else {
-          html += `<div style="width:100%;height:200px;background:#f0f0f0;border-radius:4px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;color:#999;">No Image</div>`;
-        }
-        html += `<h3 style="margin:0 0 0.5rem 0;font-size:1.1rem;">${p.name}</h3>`;
-        html += `<p style="margin:0 0 0.5rem 0;color:#666;font-size:0.9rem;">${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}</p>`;
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">`;
-        html += `<span style="font-weight:bold;font-size:1.1rem;color:#6e33b7;">$${p.price}</span>`;
-        html += `<span style="font-size:0.9rem;color:#666;">Stock: ${p.stock}</span>`;
-        html += `</div>`;
+        const imageUrl = p.image || '/img/default-product.png';
+        html += `<div style="border:1px solid #ddd;border-radius:8px;padding:1rem;background:#fff;">`;
+        html += `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(p.name||'')}" style="width:100%;height:200px;object-fit:cover;border-radius:4px;margin-bottom:0.75rem;" onerror="this.src='/img/default-product.png'">`;
+        html += `<div style="font-weight:700;margin-bottom:0.25rem;">${escapeHtml(p.name || '')}</div>`;
+        html += `<div style="color:#666;margin-bottom:0.5rem;">$${(p.price || 0).toFixed ? Number(p.price).toFixed(2) : escapeHtml(String(p.price||''))}</div>`;
         html += `<div style="display:flex;gap:0.5rem;">`;
-        html += `<button onclick="window.editProduct('${p._id}')" style="flex:1;padding:0.5rem;background:#6e33b7;color:#fff;border:none;border-radius:4px;cursor:pointer;">Edit</button>`;
-        html += `<button onclick="window.deleteProduct('${p._id}')" style="flex:1;padding:0.5rem;background:#f87171;color:#fff;border:none;border-radius:4px;cursor:pointer;">Delete</button>`;
+        html += `<button data-id="${p._id}" class="edit-btn" style="flex:1;padding:0.5rem;background:#efefef;border-radius:4px;border:1px solid #ddd;">Edit</button>`;
+        html += `<button data-id="${p._id}" class="delete-btn" style="flex:1;padding:0.5rem;background:#f87171;color:#fff;border:none;border-radius:4px;">Delete</button>`;
         html += `</div></div>`;
       });
       html += '</div>';
-      list.innerHTML = html;
+      document.getElementById('products-list').innerHTML = html;
     }
 
-    // Edit Product functionality
-    window.editProduct = async function(id) {
-      try {
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
-        const products = await res.json();
-        const product = products.find(p => p._id === id);
-        
-        if (!product) {
-          alert('Product not found');
-          return;
+    // Event delegation for edit/delete buttons
+    document.getElementById('products-list').addEventListener('click', async function(e) {
+      if (e.target.classList.contains('edit-btn')) {
+        const id = e.target.dataset.id;
+        openEditModal(id);
+      } else if (e.target.classList.contains('delete-btn')) {
+        const id = e.target.dataset.id;
+        if (!confirm('Delete product? This action cannot be undone.')) return;
+        try {
+          const user = firebase.auth().currentUser;
+          if (!user) { alert('Please login first'); return; }
+          const token = await user.getIdToken();
+          const res = await fetch(`${API_BASE}/api/products/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (res.ok) {
+            alert('Deleted.');
+            document.getElementById('loadProductsBtn').click();
+          } else {
+            const text = await res.text();
+            alert('Delete failed: ' + text);
+          }
+        } catch (err) {
+          alert('Error: ' + err.message);
         }
-        
-        // Populate edit form
-        document.getElementById('editProductId').value = product._id;
-        document.getElementById('editName').value = product.name;
-        document.getElementById('editDescription').value = product.description;
-        document.getElementById('editPrice').value = product.price;
-        document.getElementById('editType').value = product.type;
-        document.getElementById('editSubcategory').value = product.subcategory || '';
-        document.getElementById('editCollection').value = product.collection || '';
-        document.getElementById('editOccasion').value = product.occasion || '';
-        document.getElementById('editStock').value = product.stock;
-        document.getElementById('editOptions').value = product.options ? product.options.join(', ') : '';
-        document.getElementById('editImage').value = product.image || '';
-        
-        // Show current image
-        const preview = document.getElementById('currentImagePreview');
-        if (product.image) {
-          preview.innerHTML = `<img src="${product.image}" alt="${product.name}" style="max-width:200px;max-height:200px;border-radius:4px;" onerror="this.style.display='none'">`;
-        } else {
-          preview.innerHTML = '<p style="color:#666;font-size:0.9rem;">No image</p>';
-        }
-        
-        // Show modal
-        document.getElementById('editModal').style.display = 'block';
-        document.getElementById('edit-success').style.display = 'none';
-        document.getElementById('edit-error').style.display = 'none';
-      } catch (err) {
-        alert('Error loading product: ' + err.message);
       }
-    };
-    
-    // Close edit modal handlers
-    document.getElementById('closeEditModal').addEventListener('click', function() {
-      document.getElementById('editModal').style.display = 'none';
     });
-    
+
+    // --------------------------
+    // Edit modal handlers
+    // --------------------------
+    function openEditModal(id) {
+      const product = allProducts.find(p => p._id === id);
+      if (!product) { alert('Product not found'); return; }
+      document.getElementById('editProductId').value = product._id;
+      document.getElementById('editName').value = product.name || '';
+      document.getElementById('editDescription').value = product.description || '';
+      document.getElementById('editPrice').value = product.price || '';
+      document.getElementById('editType').value = product.type || 'decor';
+      document.getElementById('editStock').value = product.stock || 1;
+      document.getElementById('editOptions').value = (product.options && product.options.join) ? product.options.join(',') : (product.options || '');
+      document.getElementById('editImage').value = product.image || '';
+      document.getElementById('currentImagePreview').innerHTML = product.image ? `<img src="${escapeAttr(product.image)}" style="max-width:200px;">` : '<div style="color:#999;">No image</div>';
+      document.getElementById('editModal').style.display = 'flex';
+      document.getElementById('editModal').setAttribute('aria-hidden', 'false');
+    }
+
     document.getElementById('cancelEditBtn').addEventListener('click', function() {
-      document.getElementById('editModal').style.display = 'none';
+      closeEditModal();
     });
-    
-    // Submit edit form
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      document.getElementById('editModal').setAttribute('aria-hidden', 'true');
+    }
+
+    // Submit edit
     document.getElementById('editForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      document.getElementById('edit-error').style.display = 'none';
-      document.getElementById('edit-success').style.display = 'none';
-      
-      const productId = document.getElementById('editProductId').value;
-      let imageUrl = document.getElementById('editImage').value;
+      const id = document.getElementById('editProductId').value;
+      const body = {
+        name: document.getElementById('editName').value,
+        description: document.getElementById('editDescription').value,
+        price: document.getElementById('editPrice').value,
+        type: document.getElementById('editType').value,
+        stock: document.getElementById('editStock').value,
+        options: document.getElementById('editOptions').value
+      };
 
-      try {
-        // If user selected a new file, upload to Firebase Storage first
-        const imageFile = document.getElementById('editImageFile').files[0];
-        if (imageFile) {
-          document.getElementById('edit-error').textContent = 'Uploading image to Firebase Storage...';
-          document.getElementById('edit-error').style.display = 'block';
-          document.getElementById('edit-error').style.color = '#666';
-          
-          imageUrl = await uploadImageToFirebase(imageFile);
-          
-          document.getElementById('edit-error').style.display = 'none';
-        }
-
-        const user = firebase.auth().currentUser;
-        if (!user) {
-          document.getElementById('edit-error').textContent = 'Please login first.';
-          document.getElementById('edit-error').style.display = 'block';
-          document.getElementById('edit-error').style.color = 'red';
-          return;
-        }
-        const token = await user.getIdToken();
-
-        // Send product data with Firebase Storage URL
-        const productData = {
-          name: document.getElementById('editName').value.trim(),
-          description: document.getElementById('editDescription').value.trim(),
-          price: parseFloat(document.getElementById('editPrice').value),
-          type: document.getElementById('editType').value,
-          subcategory: document.getElementById('editSubcategory').value.trim(),
-          collection: document.getElementById('editCollection').value,
-          occasion: document.getElementById('editOccasion').value,
-          stock: parseInt(document.getElementById('editStock').value, 10),
-          options: document.getElementById('editOptions').value,
-          image: imageUrl || ''
-        };
-        
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products/' + productId, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-          },
-          body: JSON.stringify(productData)
-        });
-        
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById('edit-success').textContent = 'Product updated successfully!';
-          document.getElementById('edit-success').style.display = 'block';
-          
-          // Refresh products list
-          setTimeout(() => {
-            document.getElementById('editModal').style.display = 'none';
-            document.getElementById('loadProductsBtn').click();
-          }, 1500);
-        } else {
-          document.getElementById('edit-error').textContent = data.error || 'Update failed.';
-          document.getElementById('edit-error').style.display = 'block';
-          document.getElementById('edit-error').style.color = 'red';
-        }
-      } catch (err) {
-        document.getElementById('edit-error').textContent = 'Update error: ' + err.message;
-        document.getElementById('edit-error').style.display = 'block';
-        document.getElementById('edit-error').style.color = 'red';
-      }
-    });
-    
-    window.deleteProduct = async function(id) {
-      if (!confirm('Delete product? This action cannot be undone.')) return;
       try {
         const user = firebase.auth().currentUser;
         if (!user) { alert('Please login first'); return; }
         const token = await user.getIdToken();
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products/' + id, {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        if (res.ok) {
-          alert('Deleted.');
-          document.getElementById('loadProductsBtn').click();
+
+        // If a file was provided, use FormData to upload image
+        const fileInput = document.getElementById('editImageFile');
+        if (fileInput.files && fileInput.files[0]) {
+          const fd = new FormData();
+          Object.keys(body).forEach(k => fd.append(k, body[k]));
+          fd.append('image', fileInput.files[0]);
+          const res = await fetch(`${API_BASE}/api/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: fd
+          });
+          const data = await res.json();
+          if (res.ok) {
+            closeEditModal();
+            document.getElementById('loadProductsBtn').click();
+          } else {
+            alert('Update failed: ' + (data.error || JSON.stringify(data)));
+          }
         } else {
-          const text = await res.text();
-          alert('Delete failed: ' + text);
+          // JSON PUT
+          const res = await fetch(`${API_BASE}/api/products/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(body)
+          });
+          const data = await res.json();
+          if (res.ok) {
+            closeEditModal();
+            document.getElementById('loadProductsBtn').click();
+          } else {
+            alert('Update failed: ' + (data.error || JSON.stringify(data)));
+          }
         }
       } catch (err) {
         alert('Error: ' + err.message);
       }
-    };
+    });
+
+    // --------------------------
+    // Helpers
+    // --------------------------
+    function escapeHtml(s) {
+      if (!s && s !== 0) return '';
+      return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/"/g, '&quot;');
+    }
+
+    // Load products on page load (non-admin will be redirected by admin-guard)
+    document.addEventListener('DOMContentLoaded', function() {
+      // Keep initial products hidden until user clicks load (safer for admin-only)
+      // Optionally auto-load:
+      // document.getElementById('loadProductsBtn').click();
+    });
   </script>
+
+  <script src="/mobile-nav.js"></script>
+  <script src="/auth.js"></script>
 </body>
 </html>
