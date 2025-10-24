@@ -87,7 +87,9 @@ router.post('/', firebaseAdminAuth, upload.single('image'), async (req, res) => 
       options: body.options
         ? (Array.isArray(body.options) ? body.options : String(body.options).split(',').map(s => s.trim()).filter(Boolean))
         : [],
-      featured: body.featured === 'true' || body.featured === true
+      featured: body.featured === 'true' || body.featured === true,
+      collection: body.collection || '',
+      occasion: body.occasion || ''
     };
 
     if (req.file) {
@@ -156,7 +158,9 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
             ? (Array.isArray(productData.options) ? productData.options : String(productData.options).split(',').map(s => s.trim()).filter(Boolean))
             : [],
           image: productData.image || '',
-          featured: productData.featured === 'true' || productData.featured === true || false
+          featured: productData.featured === 'true' || productData.featured === true || false,
+          collection: productData.collection || '',
+          occasion: productData.occasion || ''
         };
         
         const product = new Product(newProduct);
@@ -207,6 +211,8 @@ router.put('/:id', firebaseAdminAuth, upload.single('image'), async (req, res) =
     if (typeof body.featured !== 'undefined') {
       updates.featured = (body.featured === 'true' || body.featured === true);
     }
+    if (typeof body.collection !== 'undefined') updates.collection = body.collection;
+    if (typeof body.occasion !== 'undefined') updates.occasion = body.occasion;
 
     // If an image file was uploaded via multipart/form-data, set image path (relative for DB)
     if (req.file) {

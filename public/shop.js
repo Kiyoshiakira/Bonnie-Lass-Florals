@@ -73,6 +73,8 @@ function renderProducts() {
 function applyFilters(type) {
   const sortBy = document.getElementById(`${type}Sort`)?.value || 'default';
   const stockFilter = document.getElementById(`${type}Stock`)?.value || 'all';
+  const collectionFilter = document.getElementById(`${type}Collection`)?.value || 'all';
+  const occasionFilter = document.getElementById(`${type}Occasion`)?.value || 'all';
   
   let filtered = allProducts.filter(p => p.type === type);
   
@@ -81,6 +83,16 @@ function applyFilters(type) {
     filtered = filtered.filter(p => (p.stock || 0) > 0);
   } else if (stockFilter === 'out-of-stock') {
     filtered = filtered.filter(p => (p.stock || 0) === 0);
+  }
+  
+  // Apply collection filter (only for decor/handmade crafts)
+  if (type === 'decor' && collectionFilter !== 'all') {
+    filtered = filtered.filter(p => p.collection === collectionFilter);
+  }
+  
+  // Apply occasion filter (only for decor/handmade crafts)
+  if (type === 'decor' && occasionFilter !== 'all') {
+    filtered = filtered.filter(p => p.occasion === occasionFilter);
   }
   
   // Apply sorting
@@ -114,9 +126,13 @@ function applyFilters(type) {
 function resetFilters(type) {
   const sortSelect = document.getElementById(`${type}Sort`);
   const stockSelect = document.getElementById(`${type}Stock`);
+  const collectionSelect = document.getElementById(`${type}Collection`);
+  const occasionSelect = document.getElementById(`${type}Occasion`);
   
   if (sortSelect) sortSelect.value = 'default';
   if (stockSelect) stockSelect.value = 'all';
+  if (collectionSelect) collectionSelect.value = 'all';
+  if (occasionSelect) occasionSelect.value = 'all';
   
   renderProducts();
 }
