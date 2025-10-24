@@ -6,7 +6,7 @@ const productSchema = new mongoose.Schema({
   price: Number,
   image: String, // URL or file path
   featured: Boolean,
-  type: String, // e.g., 'decor', 'food'
+  type: String, // e.g., 'decor' (Handmade Crafts), 'food' (Cottage Foods)
   subcategory: String,
   stock: { type: Number, default: 1 },
   options: [String] // e.g., ["Small", "Medium", "Large"]

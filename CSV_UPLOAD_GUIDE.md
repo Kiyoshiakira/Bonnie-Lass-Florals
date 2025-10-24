@@ -21,7 +21,7 @@ Your CSV file should include the following columns (case-insensitive):
 - **price** (or PRICE): Product price (numeric)
 
 ### Optional Columns
-- **type**: Product type (default: "decor", options: "decor", "food")
+- **type**: Product type (default: "decor", options: "decor" for Handmade Crafts, "food" for Cottage Foods)
 - **subcategory**: Product subcategory
 - **stock** (or QUANTITY): Stock quantity (default: 1)
 - **options**: Comma-separated list of product options (e.g., "Small,Medium,Large")
@@ -31,8 +31,8 @@ Your CSV file should include the following columns (case-insensitive):
 
 ```csv
 name,description,price,type,subcategory,stock,options,image
-Sample Product 1,Beautiful floral arrangement with roses,45.99,decor,arrangement,5,"Small,Medium,Large",https://example.com/image1.jpg
-Sample Product 2,Handcrafted wreath,65.00,decor,wreath,3,,https://example.com/image2.jpg
+Sample Handmade Craft 1,Beautiful handcrafted item with unique design,45.99,decor,craft,5,"Small,Medium,Large",https://example.com/image1.jpg
+Sample Handmade Craft 2,Handcrafted wreath,65.00,decor,wreath,3,,https://example.com/image2.jpg
 Sample Product 3,Homemade jam,12.50,food,preserve,10,"8oz,16oz",https://example.com/image3.jpg
 ```
 
