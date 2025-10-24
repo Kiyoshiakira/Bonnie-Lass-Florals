@@ -3,6 +3,7 @@ const router = express.Router();
 const Message = require('../models/Message');
 const nodemailer = require('nodemailer');
 const rateLimit = require('express-rate-limit');
+const logger = require('../utils/logger');
 
 // Rate limiter for contact form - 5 submissions per 15 minutes per IP
 const contactLimiter = rateLimit({
@@ -24,7 +25,7 @@ async function sendEmailNotification(messageData) {
   const adminEmails = process.env.ADMIN_EMAILS;
 
   if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !emailFrom || !adminEmails) {
-    console.log('SMTP not fully configured. Skipping email notification.');
+    logger.info('SMTP not fully configured. Skipping email notification.');
     return;
   }
 
@@ -59,9 +60,9 @@ async function sendEmailNotification(messageData) {
       `
     });
 
-    console.log('Email notification sent successfully');
+    logger.info('Email notification sent successfully');
   } catch (error) {
-    console.error('Failed to send email notification:', error);
+    logger.error('Failed to send email notification:', error);
     // Don't throw - email failure shouldn't block the contact form submission
   }
 }
@@ -88,18 +89,18 @@ router.post('/', contactLimiter, async (req, res) => {
     });
 
     await newMessage.save();
-    console.log('Contact message saved to database:', newMessage._id);
+    logger.info('Contact message saved to database:', newMessage._id);
 
     // Send email notification asynchronously (don't wait for it)
     sendEmailNotification({
       name: newMessage.name,
       email: newMessage.email,
       message: newMessage.message
-    }).catch(err => console.error('Email notification error:', err));
+    }).catch(err => logger.error('Email notification error:', err));
 
     res.json({ message: 'Message sent! Thank you for contacting us.' });
   } catch (error) {
-    console.error('Error processing contact form:', error);
+    logger.error('Error processing contact form:', error);
     res.status(500).json({ error: 'Failed to send message. Please try again later.' });
   }
 });
