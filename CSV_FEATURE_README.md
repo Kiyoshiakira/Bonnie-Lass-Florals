@@ -4,10 +4,11 @@
 
 ## 🎯 What Was Implemented
 
-This feature adds two major capabilities to the admin upload page:
+This feature adds major capabilities to the admin upload page:
 
 1. **CSV Batch Upload** - Upload up to 100 products at once from a CSV file with intelligent parsing
-2. **Product Management** - Edit and delete uploaded products
+2. **Smart Duplicate Detection** 🆕 - Automatically prevent duplicate products from being added
+3. **Product Management** - Edit and delete uploaded products
 
 ### Intelligent CSV Parser
 The CSV uploader uses PapaParse for accurate, robust parsing that:
@@ -17,6 +18,14 @@ The CSV uploader uses PapaParse for accurate, robust parsing that:
 - ✅ Supports RFC 4180 compliant CSV files
 - ✅ Works seamlessly with Etsy CSV exports
 - ✅ Accurately counts only valid products (not total lines)
+
+### Smart Duplicate Detection 🆕
+The uploader now prevents duplicate products:
+- ✅ Checks both product names and descriptions for similarity
+- ✅ Intelligently handles minor edits and typos
+- ✅ Recognizes color differences (Blue vs Red = different products)
+- ✅ Skips duplicates automatically with detailed reporting
+- ✅ Perfect for re-uploading Etsy CSVs after description changes
 
 ## 🚀 Quick Start
 
@@ -46,7 +55,8 @@ All documentation is in the repository root:
 
 | File | Purpose |
 |------|---------|
-| **FEATURE_SUMMARY.md** | Complete overview and quick start |
+| **CSV_FEATURE_README.md** | Complete overview and quick start |
+| **DUPLICATE_DETECTION_GUIDE.md** 🆕 | Detailed guide on duplicate detection |
 | **CSV_UPLOAD_GUIDE.md** | CSV format specs and user guide |
 | **IMPLEMENTATION_DETAILS.md** | Technical documentation |
 | **UI_CHANGES_SUMMARY.md** | UI/UX documentation |
@@ -113,10 +123,11 @@ All documentation is in the repository root:
 | Feature | Details |
 |---------|---------|
 | **Batch Upload** | Up to 100 products per CSV |
+| **Duplicate Detection** 🆕 | Smart algorithm prevents duplicate products |
 | **Intelligent Parsing** | PapaParse library ensures accurate product counting |
 | **Flexible Format** | Supports custom + Etsy CSV format |
 | **Multi-line Support** | Handles descriptions spanning multiple lines |
-| **Real-time Results** | Shows success/error per product |
+| **Real-time Results** | Shows success/error/skipped per product |
 | **Full Editing** | All product fields editable |
 | **Image Upload** | Support in both CSV and edit form |
 | **Instant Updates** | Changes reflected immediately |

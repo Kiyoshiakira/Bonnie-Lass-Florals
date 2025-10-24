@@ -11,6 +11,16 @@ The uploader uses PapaParse, a robust CSV parsing library, to accurately parse C
 - Supports RFC 4180 compliant CSV files from Etsy and other platforms
 - Accurately counts only valid products (rows with name/title and at least 3 filled fields)
 
+### Smart Duplicate Detection 🆕
+The uploader now includes intelligent duplicate detection to prevent adding duplicate products:
+- **Automatically skips duplicates**: Products similar to existing ones are not added
+- **Smart matching**: Checks both product names AND descriptions for similarity
+- **Color-aware**: Recognizes products with different colors as unique (e.g., "Blue Wreath" vs "Red Wreath")
+- **Minor edits handled**: Detects duplicates even if descriptions were modified on Etsy
+- **Detailed reporting**: Shows which products were skipped and why
+
+See [DUPLICATE_DETECTION_GUIDE.md](DUPLICATE_DETECTION_GUIDE.md) for full details on how duplicate detection works.
+
 ## CSV Format
 
 ### Required Columns
@@ -61,8 +71,12 @@ Navigate to `/admin/upload.html` (requires admin login)
 The system will display:
 - Number of successfully uploaded products
 - List of uploaded products with their IDs
+- **Number of skipped duplicate products** 🆕
+- **Details of skipped products with explanation** 🆕
 - Any errors encountered during upload
 - Details of failed rows with error messages
+
+**Note**: Products identified as duplicates are automatically skipped to prevent duplicate entries. Review the skipped products list to ensure the detection worked correctly.
 
 ## Limitations
 - Maximum batch size: 100 products per upload
