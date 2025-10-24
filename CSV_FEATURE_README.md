@@ -33,7 +33,7 @@ The CSV uploader uses PapaParse for accurate, robust parsing that:
 
 ```csv
 name,description,price,type,subcategory,stock,options,image
-Beautiful Roses,Red roses in vase,45.99,decor,arrangement,5,"Small,Large",https://example.com/img.jpg
+Beautiful Handmade Craft,Handcrafted item with unique design,45.99,decor,craft,5,"Small,Large",https://example.com/img.jpg
 Spring Wreath,Seasonal door wreath,65.00,decor,wreath,3,,https://example.com/wreath.jpg
 Strawberry Jam,Homemade preserve,12.50,food,preserve,10,"8oz,16oz",https://example.com/jam.jpg
 ```

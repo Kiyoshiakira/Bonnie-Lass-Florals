@@ -1,4 +1,4 @@
-// Handles tab switching between Decor and Cottage Foods
+// Handles tab switching between Handmade Crafts and Cottage Foods
 function showShopSection(type) {
   document.getElementById('shop-decor').classList.remove('active');
   document.getElementById('shop-food').classList.remove('active');

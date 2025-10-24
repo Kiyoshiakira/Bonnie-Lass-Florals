@@ -1,4 +1,4 @@
 name,description,price,type,subcategory,stock,options,image
-Sample Product 1,Beautiful floral arrangement with roses and lilies,45.99,decor,arrangement,5,Small,Medium,Large,https://example.com/image1.jpg
-Sample Product 2,Handcrafted wreath with seasonal flowers,65.00,decor,wreath,3,,https://example.com/image2.jpg
+Sample Handmade Craft 1,Beautiful handcrafted item with unique design,45.99,decor,craft,5,Small,Medium,Large,https://example.com/image1.jpg
+Sample Handmade Craft 2,Handcrafted wreath with seasonal flowers,65.00,decor,wreath,3,,https://example.com/image2.jpg
 Sample Product 3,Homemade jam from local berries,12.50,food,preserve,10,8oz,16oz,https://example.com/image3.jpg

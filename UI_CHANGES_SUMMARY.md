@@ -49,7 +49,7 @@ Existing form with new section header "Single Product Upload"
 - Product Name (required)
 - Description (required)
 - Price (required)
-- Type dropdown (Decor/Cottage Food)
+- Type dropdown (Handmade Crafts/Cottage Food)
 - Subcategory (optional)
 - Stock (required, default: 1)
 - Options (optional, comma-separated)
@@ -100,7 +100,7 @@ Appears as an overlay when Edit button is clicked.
 │  │ Description:  [                                    ]    │ │
 │  │               [                                    ]    │ │
 │  │ Price:        [          ]                             │ │
-│  │ Type:         [Decor ▼]                               │ │
+│  │ Type:         [Handmade Crafts ▼]                     │ │
 │  │ Subcategory:  [                                    ]    │ │
 │  │ Stock:        [          ]                             │ │
 │  │ Options:      [                                    ]    │ │

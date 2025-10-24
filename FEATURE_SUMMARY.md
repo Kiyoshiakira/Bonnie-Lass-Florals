@@ -17,7 +17,7 @@ This feature adds CSV batch upload functionality and product editing capabilitie
 **CSV Format:**
 ```csv
 name,description,price,type,subcategory,stock,options,image
-Product Name,Description here,45.99,decor,arrangement,5,"Small,Medium",https://image.url
+Product Name,Description here,45.99,decor,craft,5,"Small,Medium",https://image.url
 ```
 
 See `CSV_UPLOAD_GUIDE.md` for detailed format specifications.
