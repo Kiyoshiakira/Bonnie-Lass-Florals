@@ -23,7 +23,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <script>
-    // Firebase client config (same as other pages)
+    // Firebase client config
+    // NOTE: API key is public by design - security is enforced by Firebase Storage Rules
+    // which require authentication and validate file types/sizes server-side
     const firebaseConfig = {
       apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
       authDomain: "bonnie-lass-florals.firebaseapp.com",
@@ -240,6 +242,56 @@
     });
 
     // --------------------------
+    // Firebase Storage helper
+    // --------------------------
+    /**
+     * Upload image file to Firebase Storage
+     * @param {File} file - Image file to upload
+     * @returns {Promise<string>} Download URL from Firebase Storage
+     */
+    async function uploadImageToFirebase(file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+      }
+      
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        throw new Error('File size exceeds 10MB limit.');
+      }
+      
+      const storage = firebase.storage();
+      const storageRef = storage.ref();
+      const timestamp = Date.now();
+      
+      // Enhanced filename sanitization - remove special chars and path traversal
+      const safeName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, '_')  // Replace unsafe chars with underscore
+        .replace(/\.{2,}/g, '_')            // Remove path traversal sequences
+        .replace(/^\.+/, '')                // Remove leading dots
+        .substring(0, 100);                 // Limit filename length
+      
+      const filename = `product-images/${timestamp}-${safeName}`;
+      const imageRef = storageRef.child(filename);
+      
+      // Upload file to Firebase Storage with metadata
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          uploadedAt: new Date().toISOString()
+        }
+      };
+      
+      const snapshot = await imageRef.put(file, metadata);
+      
+      // Get the download URL
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
+    }
+
+    // --------------------------
     // Single product upload
     // --------------------------
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
@@ -249,28 +301,50 @@
       const token = await user.getIdToken();
 
       const form = e.target;
-      const formData = new FormData();
-      formData.append('name', form.name.value);
-      formData.append('description', form.description.value);
-      formData.append('price', form.price.value);
-      formData.append('type', form.type.value);
-      formData.append('subcategory', form.subcategory.value || '');
-      formData.append('stock', form.stock.value || 1);
-      formData.append('options', form.options.value || '');
-      if (form.imageFile.files && form.imageFile.files[0]) {
-        formData.append('image', form.imageFile.files[0]);
-      } else if (form.image.value) {
-        formData.append('image', form.image.value);
-      }
-
+      
+      // Hide previous messages
+      document.getElementById('upload-success').style.display = 'none';
+      document.getElementById('upload-error').style.display = 'none';
+      
       try {
+        let imageUrl = form.image.value || '';
+        
+        // If a file was selected, upload it to Firebase Storage first
+        if (form.imageFile.files && form.imageFile.files[0]) {
+          const uploadBtn = document.getElementById('uploadBtn');
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = 'Uploading image...';
+          
+          try {
+            imageUrl = await uploadImageToFirebase(form.imageFile.files[0]);
+          } catch (uploadErr) {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload Product';
+            throw new Error('Failed to upload image to storage: ' + uploadErr.message);
+          }
+          
+          uploadBtn.textContent = 'Saving product...';
+        }
+        
+        // Send product data as JSON with image URL
+        const productData = {
+          name: form.name.value,
+          description: form.description.value,
+          price: form.price.value,
+          type: form.type.value,
+          subcategory: form.subcategory.value || '',
+          stock: form.stock.value || 1,
+          options: form.options.value || '',
+          image: imageUrl
+        };
+
         const res = await fetch(`${API_BASE}/api/products`, {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
-            // DO NOT set Content-Type when sending FormData
           },
-          body: formData
+          body: JSON.stringify(productData)
         });
 
         const data = await res.json();
@@ -285,6 +359,10 @@
       } catch (err) {
         document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
         document.getElementById('upload-error').style.display = 'block';
+      } finally {
+        const uploadBtn = document.getElementById('uploadBtn');
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload Product';
       }
     });
 
@@ -518,44 +596,53 @@
         if (!user) { alert('Please login first'); return; }
         const token = await user.getIdToken();
 
-        // If a file was provided, use FormData to upload image
+        // If a file was provided, upload to Firebase Storage first
         const fileInput = document.getElementById('editImageFile');
         if (fileInput.files && fileInput.files[0]) {
-          const fd = new FormData();
-          Object.keys(body).forEach(k => fd.append(k, body[k]));
-          fd.append('image', fileInput.files[0]);
-          const res = await fetch(`${API_BASE}/api/products/${id}`, {
-            method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + token },
-            body: fd
-          });
-          const data = await res.json();
-          if (res.ok) {
-            closeEditModal();
-            document.getElementById('loadProductsBtn').click();
-          } else {
-            alert('Update failed: ' + (data.error || JSON.stringify(data)));
+          const submitBtn = e.target.querySelector('button[type="submit"]');
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Uploading image...';
+          
+          try {
+            const imageUrl = await uploadImageToFirebase(fileInput.files[0]);
+            body.image = imageUrl;
+          } catch (uploadErr) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Changes';
+            throw new Error('Failed to upload image to storage: ' + uploadErr.message);
           }
+          
+          submitBtn.textContent = 'Saving changes...';
+        } else if (document.getElementById('editImage').value) {
+          // Use the URL provided in the text field
+          body.image = document.getElementById('editImage').value;
+        }
+
+        // Send as JSON with image URL
+        const res = await fetch(`${API_BASE}/api/products/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(body)
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          closeEditModal();
+          document.getElementById('loadProductsBtn').click();
         } else {
-          // JSON PUT
-          const res = await fetch(`${API_BASE}/api/products/${id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(body)
-          });
-          const data = await res.json();
-          if (res.ok) {
-            closeEditModal();
-            document.getElementById('loadProductsBtn').click();
-          } else {
-            alert('Update failed: ' + (data.error || JSON.stringify(data)));
-          }
+          alert('Update failed: ' + (data.error || JSON.stringify(data)));
         }
       } catch (err) {
         alert('Error: ' + err.message);
+      } finally {
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Changes';
+        }
       }
     });
 

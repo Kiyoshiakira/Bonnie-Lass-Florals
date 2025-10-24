@@ -17,7 +17,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// Multer storage config
+// Multer storage config (fallback for legacy support)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -26,6 +26,17 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+
+// Conditional multer middleware - only processes multipart/form-data
+function optionalUpload(req, res, next) {
+  const contentType = req.get('content-type') || '';
+  if (contentType.includes('multipart/form-data')) {
+    // Use multer for multipart uploads (legacy support)
+    return upload.single('image')(req, res, next);
+  }
+  // Skip multer for JSON requests (primary flow)
+  next();
+}
 
 // Stricter rate limiter for admin mutating endpoints (10 requests per minute)
 const adminMutationLimiter = rateLimit({
@@ -155,8 +166,8 @@ const createProductValidation = [
 ];
 
 // POST /api/products - create product (admin only)
-// Accepts multipart/form-data (image file optional) or JSON
-router.post('/', firebaseAdminAuth, adminMutationLimiter, createProductValidation, upload.single('image'), async (req, res) => {
+// Accepts JSON with image URL (primary) or multipart/form-data (fallback)
+router.post('/', firebaseAdminAuth, adminMutationLimiter, optionalUpload, createProductValidation, async (req, res) => {
   // Check validation results
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -362,8 +373,8 @@ const updateProductValidation = [
 ];
 
 // PUT /api/products/:id - update product (admin only)
-// Accepts multipart/form-data (image file optional) or JSON body
-router.put('/:id', firebaseAdminAuth, adminMutationLimiter, updateProductValidation, upload.single('image'), async (req, res) => {
+// Accepts JSON with image URL (primary) or multipart/form-data (fallback)
+router.put('/:id', firebaseAdminAuth, adminMutationLimiter, optionalUpload, updateProductValidation, async (req, res) => {
   // Check validation results
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
