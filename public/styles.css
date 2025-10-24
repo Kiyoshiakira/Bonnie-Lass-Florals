@@ -1449,10 +1449,10 @@ footer a:hover {
   
   /* Login button in mobile menu */
   #loginBtn {
-    margin: 1rem 2rem;
+    padding: 1rem 2rem;
     text-align: center;
     display: block;
-    width: calc(100% - 4rem);
+    width: 100%;
   }
   
   .features, .pricing-table {
