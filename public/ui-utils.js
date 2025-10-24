@@ -116,6 +116,33 @@ function closeImageModal() {
   }
 }
 
+// Check if current user is an admin using backend API
+async function checkIsAdmin(user) {
+  if (!user) return false;
+  
+  const API_BASE = window.API_BASE || 'https://bonnie-lass-florals.onrender.com';
+  
+  try {
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${API_BASE}/api/admin/check`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`
+      }
+    });
+
+    if (!response.ok) {
+      console.error('Admin check failed with status', response.status);
+      return false;
+    }
+
+    const data = await response.json();
+    return data.isAdmin === true;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
 // Expose functions to global scope
 window.showNotification = showNotification;
 window.showLoading = showLoading;
@@ -124,3 +151,4 @@ window.showInlineLoading = showInlineLoading;
 window.initImageZoom = initImageZoom;
 window.openImageModal = openImageModal;
 window.closeImageModal = closeImageModal;
+window.checkIsAdmin = checkIsAdmin;

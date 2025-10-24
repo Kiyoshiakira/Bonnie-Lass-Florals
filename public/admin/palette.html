@@ -925,14 +925,24 @@
 
       try {
         const token = await user.getIdToken();
-        // Check if user has admin access by trying to fetch presets
-        // (This is a simple check; in production you might want a dedicated admin check endpoint)
-        const adminEmails = ['shaunessy24@gmail.com', 'bonnielassflorals@gmail.com'];
-        if (!adminEmails.includes(user.email.toLowerCase())) {
+        // Check if user has admin access using backend API
+        const response = await fetch(API_BASE + '/api/admin/check', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.isAdmin) {
+            document.getElementById('notAdminMsg').style.display = 'block';
+          }
+        } else {
           document.getElementById('notAdminMsg').style.display = 'block';
         }
       } catch (err) {
         console.error('Error checking admin status:', err);
+        document.getElementById('notAdminMsg').style.display = 'block';
       }
     });
 

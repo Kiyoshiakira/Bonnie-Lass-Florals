@@ -234,11 +234,23 @@
       const token = await user.getIdToken();
       const email = user.email || '';
       userInfo.innerHTML = `<strong style="display:block;">${email}</strong>`;
-      // Show admin links for known admin emails (matches backend list)
-      const adminEmails = ['shaunessy24@gmail.com','bonnielassflorals@gmail.com'];
-      const isAdmin = adminEmails.includes((email||'').toLowerCase());
-      adminOrdersLink.style.display = isAdmin ? 'block' : 'none';
-      uploadProductLink.style.display = isAdmin ? 'block' : 'none';
+      
+      // Check admin status using backend API
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/check`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const isAdmin = response.ok ? (await response.json()).isAdmin : false;
+        adminOrdersLink.style.display = isAdmin ? 'block' : 'none';
+        uploadProductLink.style.display = isAdmin ? 'block' : 'none';
+      } catch (err) {
+        console.error('Error checking admin status:', err);
+        adminOrdersLink.style.display = 'none';
+        uploadProductLink.style.display = 'none';
+      }
     });
 
     // --------------------------

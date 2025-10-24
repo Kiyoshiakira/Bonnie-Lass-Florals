@@ -68,8 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (window.firebase && firebase.auth) {
     firebase.auth().onAuthStateChanged(async function(user) {
       if (user) {
-        const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
-        let role = admins.includes(user.email.toLowerCase()) ? "Admin" : "Customer";
+        // Check admin status using backend API
+        const isAdmin = await window.checkIsAdmin(user);
+        const role = isAdmin ? "Admin" : "Customer";
         setProfile(user, role);
 
         // Get Firebase ID token for backend authorization

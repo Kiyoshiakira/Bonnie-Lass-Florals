@@ -124,10 +124,10 @@
     }
 
     // Handle user login - update UI and store user info
-    function handleLogin(user) {
-      // Admin emails list - must match backend configuration
-      const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
-      let role = admins.includes(user.email.toLowerCase()) ? "Admin" : "Customer";
+    async function handleLogin(user) {
+      // Check admin status using backend API
+      const isAdmin = await window.checkIsAdmin(user);
+      const role = isAdmin ? "Admin" : "Customer";
       
       // Update user info in dropdown
       if (userInfoDropdown) {
