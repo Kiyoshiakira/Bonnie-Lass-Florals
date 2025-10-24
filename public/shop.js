@@ -32,7 +32,9 @@ async function loadProducts(page = 1, append = false) {
     }
     
     // Use your Render API URL with pagination parameters
-    // Load all products at once by setting a high limit to maintain current behavior
+    // Note: Using limit=1000 to maintain current UX (load all products at once)
+    // This can be changed to a lower limit (e.g., 20) when implementing
+    // "load more" or infinite scroll functionality
     const res = await fetch(`https://bonnie-lass-florals.onrender.com/api/products?page=${page}&limit=1000`);
     
     if (!res.ok) {

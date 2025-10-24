@@ -11,6 +11,14 @@ const { distance } = require('fastest-levenshtein');
 const logger = require('../utils/logger');
 const { normalizeImageUrl, normalizeProduct } = require('../utils/media');
 
+// Pagination constants
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+// Cache control constants (in seconds)
+const CACHE_MAX_AGE = 300; // 5 minutes
+const STALE_WHILE_REVALIDATE = 600; // 10 minutes
+
 // Ensure upload directory exists and is writable
 const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'admin', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -116,7 +124,7 @@ router.get('/', async (req, res) => {
   try {
     // Parse pagination parameters
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
     
     // Get total count for pagination metadata
@@ -135,8 +143,7 @@ router.get('/', async (req, res) => {
     const totalPages = Math.ceil(total / limit);
     
     // Set Cache-Control headers for better performance
-    // Cache for 5 minutes (300 seconds) to reduce database load
-    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    res.setHeader('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`);
     
     res.json({
       products: normalizedProducts,
