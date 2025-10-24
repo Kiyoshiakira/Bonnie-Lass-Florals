@@ -6,8 +6,17 @@
 
 This feature adds two major capabilities to the admin upload page:
 
-1. **CSV Batch Upload** - Upload up to 100 products at once from a CSV file
+1. **CSV Batch Upload** - Upload up to 100 products at once from a CSV file with intelligent parsing
 2. **Product Management** - Edit and delete uploaded products
+
+### Intelligent CSV Parser
+The CSV uploader uses PapaParse for accurate, robust parsing that:
+- ✅ Correctly handles multi-line field values (descriptions, etc.)
+- ✅ Processes quoted fields containing commas
+- ✅ Filters out empty rows and non-product metadata automatically
+- ✅ Supports RFC 4180 compliant CSV files
+- ✅ Works seamlessly with Etsy CSV exports
+- ✅ Accurately counts only valid products (not total lines)
 
 ## 🚀 Quick Start
 
@@ -71,7 +80,9 @@ All documentation is in the repository root:
   - Edit product modal
 
 ### Dependencies Added
-- `papaparse` - CSV parsing library
+- `papaparse` - Professional-grade CSV parsing library (RFC 4180 compliant)
+  - Loaded via CDN in frontend for robust CSV parsing
+  - Handles complex CSV files from Etsy and other platforms
 
 ## ✅ Testing Checklist
 
@@ -102,7 +113,9 @@ All documentation is in the repository root:
 | Feature | Details |
 |---------|---------|
 | **Batch Upload** | Up to 100 products per CSV |
-| **Flexible Format** | Supports custom + Etsy format |
+| **Intelligent Parsing** | PapaParse library ensures accurate product counting |
+| **Flexible Format** | Supports custom + Etsy CSV format |
+| **Multi-line Support** | Handles descriptions spanning multiple lines |
 | **Real-time Results** | Shows success/error per product |
 | **Full Editing** | All product fields editable |
 | **Image Upload** | Support in both CSV and edit form |
@@ -177,8 +190,13 @@ Only these emails have admin access:
 - **Solution:** Check CSV has header row and data rows
 
 ### "Batch size limited to 100 products"
-- **Cause:** CSV has more than 100 products
+- **Cause:** CSV has more than 100 valid products (accurately counted)
 - **Solution:** Split into smaller batches
+- **Note:** The parser now accurately counts only valid product rows, not total lines
+
+### "No valid products found"
+- **Cause:** CSV rows don't contain name/title field or have insufficient data
+- **Solution:** Ensure CSV has header row with 'name' or 'title' column and at least 3 fields per product
 
 ### "Missing required fields"
 - **Cause:** Product missing name, description, or price
