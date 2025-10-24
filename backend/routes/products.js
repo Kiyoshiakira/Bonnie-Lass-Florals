@@ -111,13 +111,43 @@ function isDuplicateProduct(newProduct, existingProduct) {
   return isNameMatch || isBothMatch || isDescStrongMatch;
 }
 
-// GET /api/products - list all products
+// GET /api/products - list all products with pagination
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    // Parse pagination parameters
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const skip = (page - 1) * limit;
+    
+    // Get total count for pagination metadata
+    const total = await Product.countDocuments();
+    
+    // Fetch paginated products
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
     // Normalize image URLs to absolute URLs for all products
     const normalizedProducts = products.map(p => normalizeProduct(p));
-    res.json(normalizedProducts);
+    
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    
+    // Set Cache-Control headers for better performance
+    // Cache for 5 minutes (300 seconds) to reduce database load
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    
+    res.json({
+      products: normalizedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages
+      }
+    });
   } catch (err) {
     logger.error('GET /api/products error', err);
     res.status(500).json({ error: 'Failed to load products' });

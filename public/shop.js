@@ -15,21 +15,50 @@ function showShopSection(type) {
 
 // Global products cache
 let allProducts = [];
+let currentPage = 1;
+let totalPages = 1;
+let isLoading = false;
 
-// Load products dynamically from backend
-async function loadProducts() {
+// Load products dynamically from backend with pagination
+async function loadProducts(page = 1, append = false) {
+  if (isLoading) return;
+  
   try {
-    showInlineLoading('decor-products');
-    showInlineLoading('food-products');
+    isLoading = true;
     
-    // Use your Render API URL
-    const res = await fetch('https://bonnie-lass-florals.onrender.com/api/products');
+    if (!append) {
+      showInlineLoading('decor-products');
+      showInlineLoading('food-products');
+    }
+    
+    // Use your Render API URL with pagination parameters
+    // Load all products at once by setting a high limit to maintain current behavior
+    const res = await fetch(`https://bonnie-lass-florals.onrender.com/api/products?page=${page}&limit=1000`);
     
     if (!res.ok) {
       throw new Error('Failed to fetch products');
     }
     
-    allProducts = await res.json();
+    const data = await res.json();
+    
+    // Handle both old format (array) and new format (object with products array)
+    if (Array.isArray(data)) {
+      // Old format - backward compatibility
+      allProducts = data;
+    } else {
+      // New format with pagination
+      if (append) {
+        allProducts = [...allProducts, ...data.products];
+      } else {
+        allProducts = data.products;
+      }
+      
+      if (data.pagination) {
+        currentPage = data.pagination.page;
+        totalPages = data.pagination.totalPages;
+      }
+    }
+    
     renderProducts();
     
     // Initialize image zoom after products are loaded
@@ -40,6 +69,8 @@ async function loadProducts() {
       '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
     document.getElementById('food-products').innerHTML = 
       '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
+  } finally {
+    isLoading = false;
   }
 }
 
