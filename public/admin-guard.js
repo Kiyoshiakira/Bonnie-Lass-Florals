@@ -3,16 +3,30 @@
 (function() {
   'use strict';
 
-  // List of admin emails - must match backend configuration
-  const ADMIN_EMAILS = [
-    'shaunessy24@gmail.com',
-    'bonnielassflorals@gmail.com'
-  ];
+  // API Base URL
+  const API_BASE = window.API_BASE || 'https://bonnie-lass-florals.onrender.com';
 
-  // Check if user is admin
-  function isAdmin(user) {
-    if (!user || !user.email) return false;
-    return ADMIN_EMAILS.includes(user.email.toLowerCase());
+  // Check if user is admin using backend API
+  async function checkAdminStatus(user) {
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch(`${API_BASE}/api/admin/check`, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Admin guard: API check failed with status', response.status);
+        return false;
+      }
+
+      const data = await response.json();
+      return data.isAdmin === true;
+    } catch (error) {
+      console.error('Admin guard: Error checking admin status', error);
+      return false;
+    }
   }
 
   // Redirect to home page if not admin
@@ -28,18 +42,22 @@
       return;
     }
 
-    firebase.auth().onAuthStateChanged(function(user) {
+    firebase.auth().onAuthStateChanged(async function(user) {
       if (!user) {
         // Not logged in - redirect
         console.log('Admin guard: User not logged in, redirecting to home');
         redirectToHome();
-      } else if (!isAdmin(user)) {
-        // Logged in but not admin - redirect
-        console.log('Admin guard: User is not an admin, redirecting to home');
-        redirectToHome();
       } else {
-        // User is admin - allow access
-        console.log('Admin guard: Admin access granted for', user.email);
+        // Check admin status via API
+        const isAdmin = await checkAdminStatus(user);
+        if (!isAdmin) {
+          // Logged in but not admin - redirect
+          console.log('Admin guard: User is not an admin, redirecting to home');
+          redirectToHome();
+        } else {
+          // User is admin - allow access
+          console.log('Admin guard: Admin access granted for', user.email);
+        }
       }
     });
   }

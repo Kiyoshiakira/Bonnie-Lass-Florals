@@ -98,15 +98,38 @@
     }
     updateCartCount();
 
-    const admins = ["shaunessy24@gmail.com", "bonnielassflorals@gmail.com"];
+    const API_BASE = window.API_BASE || 'https://bonnie-lass-florals.onrender.com';
 
     // Wait for Firebase auth to be ready
     document.addEventListener('DOMContentLoaded', function() {
       firebase.auth().onAuthStateChanged(async function(user) {
-        if (user && admins.includes(user.email.toLowerCase())) {
-          document.getElementById('notAdminMsg').style.display = 'none';
-          fetchAndShowOrders(await user.getIdToken());
-        } else {
+        if (!user) {
+          document.getElementById('adminOrders').innerHTML = '';
+          document.getElementById('notAdminMsg').style.display = '';
+          return;
+        }
+        
+        const token = await user.getIdToken();
+        
+        // Check admin status using backend API
+        try {
+          const response = await fetch(`${API_BASE}/api/admin/check`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          const isAdmin = response.ok ? (await response.json()).isAdmin : false;
+          
+          if (isAdmin) {
+            document.getElementById('notAdminMsg').style.display = 'none';
+            fetchAndShowOrders(token);
+          } else {
+            document.getElementById('adminOrders').innerHTML = '';
+            document.getElementById('notAdminMsg').style.display = '';
+          }
+        } catch (err) {
+          console.error('Error checking admin status:', err);
           document.getElementById('adminOrders').innerHTML = '';
           document.getElementById('notAdminMsg').style.display = '';
         }
@@ -117,7 +140,7 @@
       const container = document.getElementById('adminOrders');
       container.innerHTML = "Loading orders...";
       try {
-        const res = await fetch('https://bonnie-lass-florals.onrender.com/api/orders', {
+        const res = await fetch(`${API_BASE}/api/orders`, {
           headers: { Authorization: 'Bearer ' + token }
         });
         if (!res.ok) {
