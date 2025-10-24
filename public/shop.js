@@ -67,6 +67,9 @@ function renderProducts() {
     });
     initImageZoom();
   }, 50);
+  
+  // Setup event delegation for add-to-cart buttons (only once)
+  setupAddToCartHandlers();
 }
 
 // Apply filters to products
@@ -120,6 +123,9 @@ function applyFilters(type) {
     });
     initImageZoom();
   }, 50);
+  
+  // Re-setup event handlers after filtering
+  setupAddToCartHandlers();
 }
 
 // Reset filters
@@ -137,6 +143,55 @@ function resetFilters(type) {
   renderProducts();
 }
 
+// HTML escape helper to prevent XSS
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Event delegation handler for add-to-cart buttons
+let addToCartHandlersSetup = false;
+function setupAddToCartHandlers() {
+  if (addToCartHandlersSetup) return; // Only setup once
+  
+  // Use event delegation on the container elements
+  document.getElementById('decor-products').addEventListener('click', handleAddToCart);
+  document.getElementById('food-products').addEventListener('click', handleAddToCart);
+  
+  addToCartHandlersSetup = true;
+}
+
+function handleAddToCart(event) {
+  const button = event.target.closest('.add-to-cart');
+  if (!button) return; // Click was not on an add-to-cart button
+  
+  const productId = button.dataset.id;
+  if (!productId) return;
+  
+  // Find the product in our cached array
+  const product = allProducts.find(p => p._id === productId);
+  if (!product) {
+    console.error('Product not found:', productId);
+    return;
+  }
+  
+  // Call the existing addToCart function from cart.js
+  if (typeof addToCart === 'function') {
+    addToCart({
+      name: product.name,
+      price: product.price,
+      id: product._id,
+      image: product.image
+    });
+  }
+}
+
 function productToCard(p) {
   const stock = p.stock !== undefined ? p.stock : 0;
   let stockClass = '';
@@ -152,16 +207,28 @@ function productToCard(p) {
   
   const isOutOfStock = stock === 0;
   
+  // Use default placeholder if image is missing or empty
+  const imageUrl = p.image && p.image.trim() ? escapeHtml(p.image) : '/img/default-avatar.png';
+  const productName = escapeHtml(p.name);
+  const productDesc = escapeHtml(p.description || '');
+  const productPrice = p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A';
+  
+  // Escape options if present
+  const optionsHtml = p.options && p.options.length 
+    ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.map(escapeHtml).join(', ')}</div>` 
+    : '';
+  
   return `
     <div class="product-card">
-      <img src="${p.image}" alt="${p.name}" class="product-img"/>
-      <div class="product-title">${p.name}</div>
-      <div class="product-price">$${p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A'}</div>
+      <img src="${imageUrl}" alt="${productName}" class="product-img" loading="lazy" width="300" height="300"/>
+      <div class="product-title">${productName}</div>
+      <div class="product-price">$${productPrice}</div>
       <div class="product-stock ${stockClass}">${stockText}</div>
-      ${p.options && p.options.length ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.join(', ')}</div>` : ''}
-      <div class="product-desc">${p.description || ''}</div>
+      ${optionsHtml}
+      <div class="product-desc">${productDesc}</div>
       <button 
-        onclick='addToCart(${JSON.stringify({name: p.name, price: p.price, id: p._id, image: p.image})})' 
+        class="add-to-cart"
+        data-id="${escapeHtml(p._id)}"
         ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
       >
         ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
