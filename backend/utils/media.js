@@ -7,7 +7,7 @@ const BACKEND_URL = process.env.BACKEND_URL || '';
 
 /**
  * Normalize image URLs to absolute URLs
- * Priority: absolute URLs > storage provider URLs > BACKEND_URL fallback
+ * Priority: absolute URLs (Firebase Storage, etc.) > BACKEND_URL for relative paths
  * @param {string} image - Image URL or path
  * @returns {string} Normalized absolute URL or empty string
  */
@@ -15,6 +15,7 @@ function normalizeImageUrl(image) {
   if (!image) return '';
   
   // If already an absolute URL (http:// or https://), return as-is
+  // This includes Firebase Storage URLs and other external URLs
   if (image.startsWith('http://') || image.startsWith('https://')) {
     return image;
   }
@@ -26,6 +27,7 @@ function normalizeImageUrl(image) {
   }
   
   // Convert relative path to absolute URL using BACKEND_URL
+  // This handles legacy /admin/uploads/ paths for old images
   if (image.startsWith('/')) {
     return BACKEND_URL + image;
   }

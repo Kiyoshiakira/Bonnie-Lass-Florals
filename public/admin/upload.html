@@ -240,6 +240,30 @@
     });
 
     // --------------------------
+    // Firebase Storage helper
+    // --------------------------
+    /**
+     * Upload image file to Firebase Storage
+     * @param {File} file - Image file to upload
+     * @returns {Promise<string>} Download URL from Firebase Storage
+     */
+    async function uploadImageToFirebase(file) {
+      const storage = firebase.storage();
+      const storageRef = storage.ref();
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/\s+/g, '_');
+      const filename = `product-images/${timestamp}-${safeName}`;
+      const imageRef = storageRef.child(filename);
+      
+      // Upload file to Firebase Storage
+      const snapshot = await imageRef.put(file);
+      
+      // Get the download URL
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
+    }
+
+    // --------------------------
     // Single product upload
     // --------------------------
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
@@ -249,28 +273,50 @@
       const token = await user.getIdToken();
 
       const form = e.target;
-      const formData = new FormData();
-      formData.append('name', form.name.value);
-      formData.append('description', form.description.value);
-      formData.append('price', form.price.value);
-      formData.append('type', form.type.value);
-      formData.append('subcategory', form.subcategory.value || '');
-      formData.append('stock', form.stock.value || 1);
-      formData.append('options', form.options.value || '');
-      if (form.imageFile.files && form.imageFile.files[0]) {
-        formData.append('image', form.imageFile.files[0]);
-      } else if (form.image.value) {
-        formData.append('image', form.image.value);
-      }
-
+      
+      // Hide previous messages
+      document.getElementById('upload-success').style.display = 'none';
+      document.getElementById('upload-error').style.display = 'none';
+      
       try {
+        let imageUrl = form.image.value || '';
+        
+        // If a file was selected, upload it to Firebase Storage first
+        if (form.imageFile.files && form.imageFile.files[0]) {
+          const uploadBtn = document.getElementById('uploadBtn');
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = 'Uploading image...';
+          
+          try {
+            imageUrl = await uploadImageToFirebase(form.imageFile.files[0]);
+          } catch (uploadErr) {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload Product';
+            throw new Error('Failed to upload image to storage: ' + uploadErr.message);
+          }
+          
+          uploadBtn.textContent = 'Saving product...';
+        }
+        
+        // Send product data as JSON with image URL
+        const productData = {
+          name: form.name.value,
+          description: form.description.value,
+          price: form.price.value,
+          type: form.type.value,
+          subcategory: form.subcategory.value || '',
+          stock: form.stock.value || 1,
+          options: form.options.value || '',
+          image: imageUrl
+        };
+
         const res = await fetch(`${API_BASE}/api/products`, {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
-            // DO NOT set Content-Type when sending FormData
           },
-          body: formData
+          body: JSON.stringify(productData)
         });
 
         const data = await res.json();
@@ -285,6 +331,10 @@
       } catch (err) {
         document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
         document.getElementById('upload-error').style.display = 'block';
+      } finally {
+        const uploadBtn = document.getElementById('uploadBtn');
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload Product';
       }
     });
 
@@ -518,44 +568,53 @@
         if (!user) { alert('Please login first'); return; }
         const token = await user.getIdToken();
 
-        // If a file was provided, use FormData to upload image
+        // If a file was provided, upload to Firebase Storage first
         const fileInput = document.getElementById('editImageFile');
         if (fileInput.files && fileInput.files[0]) {
-          const fd = new FormData();
-          Object.keys(body).forEach(k => fd.append(k, body[k]));
-          fd.append('image', fileInput.files[0]);
-          const res = await fetch(`${API_BASE}/api/products/${id}`, {
-            method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + token },
-            body: fd
-          });
-          const data = await res.json();
-          if (res.ok) {
-            closeEditModal();
-            document.getElementById('loadProductsBtn').click();
-          } else {
-            alert('Update failed: ' + (data.error || JSON.stringify(data)));
+          const submitBtn = e.target.querySelector('button[type="submit"]');
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Uploading image...';
+          
+          try {
+            const imageUrl = await uploadImageToFirebase(fileInput.files[0]);
+            body.image = imageUrl;
+          } catch (uploadErr) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Changes';
+            throw new Error('Failed to upload image to storage: ' + uploadErr.message);
           }
+          
+          submitBtn.textContent = 'Saving changes...';
+        } else if (document.getElementById('editImage').value) {
+          // Use the URL provided in the text field
+          body.image = document.getElementById('editImage').value;
+        }
+
+        // Send as JSON with image URL
+        const res = await fetch(`${API_BASE}/api/products/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(body)
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          closeEditModal();
+          document.getElementById('loadProductsBtn').click();
         } else {
-          // JSON PUT
-          const res = await fetch(`${API_BASE}/api/products/${id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(body)
-          });
-          const data = await res.json();
-          if (res.ok) {
-            closeEditModal();
-            document.getElementById('loadProductsBtn').click();
-          } else {
-            alert('Update failed: ' + (data.error || JSON.stringify(data)));
-          }
+          alert('Update failed: ' + (data.error || JSON.stringify(data)));
         }
       } catch (err) {
         alert('Error: ' + err.message);
+      } finally {
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Changes';
+        }
       }
     });
 
