@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const Product = require('../models/Product');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // admin-only middleware
+const { distance } = require('fastest-levenshtein');
 
 // Ensure upload directory exists and is writable
 const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'admin', 'uploads');
@@ -43,6 +44,70 @@ function normalizeProduct(product) {
   const normalized = product.toObject ? product.toObject() : { ...product };
   normalized.image = normalizeImageUrl(normalized.image);
   return normalized;
+}
+
+// Helper function to calculate string similarity (0 to 1, where 1 is identical)
+function calculateSimilarity(str1, str2) {
+  if (!str1 || !str2) return 0;
+  
+  // Normalize strings for comparison (lowercase, trim whitespace)
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+  
+  if (s1 === s2) return 1;
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  // Use Levenshtein distance to calculate similarity
+  const maxLength = Math.max(s1.length, s2.length);
+  const dist = distance(s1, s2);
+  const similarity = 1 - (dist / maxLength);
+  
+  return similarity;
+}
+
+// Helper function to check if a product is a duplicate of an existing product
+function isDuplicateProduct(newProduct, existingProduct) {
+  // Calculate similarity scores
+  const nameSimilarity = calculateSimilarity(newProduct.name, existingProduct.name);
+  const descSimilarity = calculateSimilarity(newProduct.description, existingProduct.description);
+  
+  // Check for key differentiators (colors, sizes, types) in the name
+  const colorWords = ['red', 'blue', 'green', 'yellow', 'pink', 'purple', 'orange', 'white', 'black', 'brown', 'tan', 'gray', 'grey'];
+  const sizeWords = ['small', 'medium', 'large', 'mini', 'tiny', 'huge', 'giant'];
+  const name1Lower = newProduct.name.toLowerCase();
+  const name2Lower = existingProduct.name.toLowerCase();
+  
+  // Check if both names have different colors or sizes
+  for (const color of colorWords) {
+    const name1HasColor = name1Lower.includes(color);
+    const name2HasColor = name2Lower.includes(color);
+    if (name1HasColor !== name2HasColor) {
+      // One has a color word, the other doesn't - likely different
+      return false;
+    }
+    if (name1HasColor && name2HasColor) {
+      // Check if they mention the SAME color
+      const name1Colors = colorWords.filter(c => name1Lower.includes(c));
+      const name2Colors = colorWords.filter(c => name2Lower.includes(c));
+      if (name1Colors.length > 0 && name2Colors.length > 0) {
+        const hasSameColor = name1Colors.some(c => name2Colors.includes(c));
+        if (!hasSameColor) {
+          // Different colors mentioned - likely different products
+          return false;
+        }
+      }
+    }
+  }
+  
+  // Consider it a duplicate if:
+  // 1. Name is very similar (>= 0.90) - likely same product even if description changed
+  // 2. OR both name and description are quite similar (name >= 0.65 AND desc >= 0.85) - same product with minor edits
+  // 3. OR description is very similar with moderate name match (name >= 0.60 AND desc >= 0.92)
+  const isNameMatch = nameSimilarity >= 0.90;
+  const isBothMatch = nameSimilarity >= 0.65 && descSimilarity >= 0.85;
+  const isDescStrongMatch = nameSimilarity >= 0.60 && descSimilarity >= 0.92;
+  
+  return isNameMatch || isBothMatch || isDescStrongMatch;
 }
 
 // GET /api/products - list all products
@@ -129,9 +194,13 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
       return res.status(400).json({ error: 'Batch size limited to 100 products' });
     }
     
+    // Fetch all existing products for duplicate checking
+    const existingProducts = await Product.find();
+    
     const results = {
       success: [],
-      errors: []
+      errors: [],
+      skipped: [] // Track products skipped due to duplicates
     };
     
     for (let i = 0; i < products.length; i++) {
@@ -163,8 +232,34 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
           occasion: productData.occasion || ''
         };
         
+        // Check for duplicates against existing products
+        let foundDuplicate = false;
+        let duplicateProductName = '';
+        
+        for (const existingProduct of existingProducts) {
+          if (isDuplicateProduct(newProduct, existingProduct)) {
+            foundDuplicate = true;
+            duplicateProductName = existingProduct.name;
+            break;
+          }
+        }
+        
+        if (foundDuplicate) {
+          // Skip this product as it's a duplicate
+          results.skipped.push({
+            row: i + 1,
+            name: newProduct.name,
+            duplicateOf: duplicateProductName,
+            reason: 'Similar product already exists'
+          });
+          continue;
+        }
+        
         const product = new Product(newProduct);
         await product.save();
+        
+        // Add to existing products list for checking against subsequent items in this batch
+        existingProducts.push(product);
         
         results.success.push({
           name: product.name,
@@ -179,7 +274,7 @@ router.post('/batch', firebaseAdminAuth, async (req, res) => {
     }
     
     res.status(201).json({
-      message: `Batch upload completed: ${results.success.length} succeeded, ${results.errors.length} failed`,
+      message: `Batch upload completed: ${results.success.length} added, ${results.skipped.length} skipped (duplicates), ${results.errors.length} failed`,
       results
     });
   } catch (err) {
