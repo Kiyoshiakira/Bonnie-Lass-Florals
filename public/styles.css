@@ -150,6 +150,75 @@ nav a:hover {
   border-color: #2d6a4f;
 }
 /* ============================================================================
+   COTTAGE FOOD DISCLAIMER - Prominent, centered disclaimer box
+   ============================================================================ */
+.cottage-food-disclaimer {
+  max-width: 700px;
+  margin: 2rem auto 2rem auto;
+  padding: 2rem 2.5rem;
+  background: linear-gradient(135deg, #fff5e6 0%, #fffaf5 100%);
+  border: 3px solid #ff8c42; /* Fall orange border */
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(255, 140, 66, 0.25);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cottage-food-disclaimer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #ff8c42, #d4692d, #ffd700);
+}
+
+.cottage-food-disclaimer .disclaimer-title {
+  color: #d4692d; /* Fall red-orange */
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: none;
+  display: block;
+}
+
+.cottage-food-disclaimer .disclaimer-text {
+  color: #2d2d2d;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0.8rem 0;
+  font-weight: 500;
+}
+
+.cottage-food-disclaimer .disclaimer-text strong {
+  color: #1b4332; /* Pine green for emphasis */
+  font-weight: 700;
+}
+
+.cottage-food-disclaimer .disclaimer-link {
+  color: #2d2d2d;
+  font-size: 1rem;
+  margin: 1rem 0 0 0;
+  font-weight: 500;
+}
+
+.cottage-food-disclaimer .disclaimer-link a {
+  color: #2d6a4f; /* Emerald green */
+  text-decoration: underline;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.cottage-food-disclaimer .disclaimer-link a:hover {
+  color: #ff8c42; /* Fall orange */
+  text-decoration: none;
+}
+
+/* ============================================================================
    PRODUCT FILTERS & SORTING - Green and fall styling
    ============================================================================ */
 .shop-filters {
@@ -1478,6 +1547,19 @@ footer a:hover {
   
   p {
     font-size: 1.05rem;
+  }
+  
+  .cottage-food-disclaimer {
+    padding: 1.5rem 1.2rem;
+    margin: 1.5rem auto;
+  }
+  
+  .cottage-food-disclaimer .disclaimer-title {
+    font-size: 1.3rem;
+  }
+  
+  .cottage-food-disclaimer .disclaimer-text {
+    font-size: 1rem;
   }
   
   .shop-filters {
