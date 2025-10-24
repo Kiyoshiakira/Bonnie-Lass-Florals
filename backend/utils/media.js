@@ -3,8 +3,6 @@
  * Handles converting relative paths to absolute URLs for clients
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || '';
-
 /**
  * Normalize image URLs to absolute URLs
  * Priority: absolute URLs (Firebase Storage, etc.) > BACKEND_URL for relative paths
@@ -19,6 +17,9 @@ function normalizeImageUrl(image) {
   if (image.startsWith('http://') || image.startsWith('https://')) {
     return image;
   }
+  
+  // Read BACKEND_URL from environment at runtime (allows testing and hot config changes)
+  const BACKEND_URL = process.env.BACKEND_URL || '';
   
   // If BACKEND_URL is not set, return the relative path as-is
   // This allows for local development or when serving from same domain
