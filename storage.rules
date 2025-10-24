@@ -1,0 +1,83 @@
+rules_version = '2';
+
+// Firebase Storage Rules for Bonnie Lass Florals
+// 
+// This file defines security rules for Firebase Storage buckets.
+// These rules must be deployed via Firebase Console or Firebase CLI.
+//
+// To deploy these rules:
+// 1. Firebase Console: Storage > Rules > Copy and Paste > Publish
+// 2. Firebase CLI: firebase deploy --only storage
+//
+// For detailed documentation, see FIREBASE_STORAGE_RULES.md
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Product images - public read, authenticated write
+    // Path: /product-images/*
+    match /product-images/{imageName} {
+      // Allow public read access for all product images
+      // This enables the website to display products to all visitors
+      allow read: if true;
+      
+      // Allow write (create/update/delete) only for authenticated users
+      // Validates file size (max 10MB) and content type (images only)
+      allow write: if request.auth != null
+                  && request.resource.size < 10 * 1024 * 1024  // Max 10MB
+                  && request.resource.contentType.matches('image/.*');  // Only image types
+    }
+    
+    // Background images - public read, authenticated admin write
+    // Path: /backgrounds/*
+    match /backgrounds/{imageName} {
+      // Allow public read access for all background images
+      // This enables theme backgrounds to be displayed to all visitors
+      allow read: if true;
+      
+      // Allow write (create/update/delete) only for authenticated users
+      // Validates file size (max 10MB) and content type (images only)
+      // Note: Admin-level access should be enforced at the application layer
+      allow write: if request.auth != null
+                  && request.resource.size < 10 * 1024 * 1024  // Max 10MB
+                  && request.resource.contentType.matches('image/.*');  // Only image types
+    }
+    
+    // Default rule - deny all access to other paths
+    // This ensures only explicitly allowed paths are accessible
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// Supported Image Formats:
+// - image/jpeg (JPEG photos)
+// - image/png (PNG graphics with transparency)
+// - image/gif (Animated GIFs)
+// - image/webp (WebP - recommended for best compression)
+// - image/svg+xml (SVG vector graphics)
+//
+// File Size Limits:
+// - Maximum: 10MB (enforced server-side)
+// - Recommended: < 500KB for optimal performance
+// - Client-side limit may be lower (e.g., 5MB)
+//
+// Security Notes:
+// - Authentication is required for all uploads
+// - File type validation prevents malicious uploads
+// - Public read access is necessary for website functionality
+// - Admin verification should be implemented in application code
+// - Regular security audits are recommended
+//
+// Performance Recommendations:
+// - Upload optimized/compressed images
+// - Use WebP format for best compression
+// - Resize images to appropriate dimensions before upload
+// - Product images: 800x800 to 1200x1200 pixels
+// - Background images: 1920x1080 pixels maximum
+//
+// For more information:
+// - See IMAGE_OPTIMIZATION_GUIDE.md for optimization strategies
+// - See FIREBASE_STORAGE_RULES.md for configuration instructions
+// - See FIREBASE_STORAGE_SECURITY.md for security best practices

@@ -79,7 +79,7 @@ function renderCart() {
       <tr style="border-bottom:1px solid #f0f0f0;">
         <td style="padding:1rem;">
           <div style="display:flex;align-items:center;gap:1rem;">
-            ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail">` : ''}
+            ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
             <span style="font-weight:500;color:#421e7c;">${item.name}</span>
           </div>
         </td>
