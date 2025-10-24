@@ -4,7 +4,9 @@
   "description": "A site for the sale of my mother's silk florals and to display all her work, and connect her on her socials.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node backend/index.js",
+    "lint": "eslint backend/**/*.js test/**/*.js",
+    "test": "mocha test/**/*.test.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -24,5 +26,11 @@
   },
   "engines": {
     "node": "18.x"
+  },
+  "devDependencies": {
+    "chai": "^6.2.0",
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0",
+    "mocha": "^11.7.4"
   }
 }
