@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { normalizeImageUrl } = require('../utils/media');
 
 const productSchema = new mongoose.Schema({
   name: String,
@@ -16,7 +17,6 @@ const productSchema = new mongoose.Schema({
 
 // Virtual for imageUrl that provides canonical image URL
 productSchema.virtual('imageUrl').get(function() {
-  const { normalizeImageUrl } = require('../utils/media');
   return normalizeImageUrl(this.image);
 });
 

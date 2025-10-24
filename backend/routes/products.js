@@ -220,7 +220,9 @@ const batchProductValidation = [
         if (product.price === undefined || product.price === null) {
           throw new Error(`Product at index ${i} is missing required field: price`);
         }
-        if (typeof product.price !== 'number' && isNaN(parseFloat(product.price))) {
+        // Check if price can be converted to a valid number
+        const priceNum = parseFloat(product.price);
+        if (isNaN(priceNum)) {
           throw new Error(`Product at index ${i} has invalid price: must be numeric`);
         }
       }
