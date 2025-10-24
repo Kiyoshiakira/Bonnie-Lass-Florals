@@ -263,9 +263,14 @@ function productToCard(p) {
     ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.map(escapeHtml).join(', ')}</div>` 
     : '';
   
+  // Generate responsive image markup
+  // For Firebase Storage URLs, we use the same image but with responsive attributes
+  // In the future, admins can upload multiple sizes and use URL parameters or different files
+  const responsiveImageHtml = generateResponsiveImage(imageUrl, productName);
+  
   return `
     <div class="product-card">
-      <img src="${imageUrl}" alt="${productName}" class="product-img" loading="lazy" width="300" height="300"/>
+      ${responsiveImageHtml}
       <div class="product-title">${productName}</div>
       <div class="product-price">$${productPrice}</div>
       <div class="product-stock ${stockClass}">${stockText}</div>
@@ -279,6 +284,58 @@ function productToCard(p) {
         ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
       </button>
     </div>
+  `;
+}
+
+/**
+ * Generate responsive image HTML with proper attributes for performance
+ * @param {string} imageUrl - URL of the image
+ * @param {string} altText - Alt text for accessibility
+ * @returns {string} HTML string for responsive image
+ */
+function generateResponsiveImage(imageUrl, altText) {
+  // Check if this is a WebP image (Firebase Storage or external URL)
+  const isWebP = imageUrl.toLowerCase().includes('.webp');
+  
+  // For WebP images, provide JPEG fallback if available
+  // For now, we use picture element to support WebP with fallback
+  if (isWebP) {
+    // Extract base URL without extension for potential fallback
+    const baseUrl = imageUrl.replace(/\.webp$/i, '');
+    const jpegUrl = baseUrl + '.jpg';
+    
+    return `
+      <picture>
+        <source srcset="${imageUrl}" type="image/webp">
+        <img 
+          src="${jpegUrl}" 
+          alt="${altText}" 
+          class="product-img" 
+          loading="lazy" 
+          width="400" 
+          height="400"
+          decoding="async"
+        />
+      </picture>
+    `;
+  }
+  
+  // For non-WebP images, use standard img tag with responsive attributes
+  // sizes attribute tells browser how wide the image will be at different viewport widths
+  // - Mobile (< 640px): image takes ~100% of viewport
+  // - Tablet (640px-1024px): image takes ~50% of viewport (2 columns)
+  // - Desktop (> 1024px): image takes ~33% of viewport (3 columns)
+  return `
+    <img 
+      src="${imageUrl}" 
+      alt="${altText}" 
+      class="product-img" 
+      loading="lazy" 
+      width="400" 
+      height="400"
+      decoding="async"
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+    />
   `;
 }
 

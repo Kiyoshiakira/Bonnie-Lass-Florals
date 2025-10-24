@@ -51,13 +51,23 @@ service firebase.storage {
 - **Read Access**: Public (anyone can view product images)
 - **Write Access**: Authenticated users only
 - **File Size Limit**: 10MB maximum
-- **File Type**: Images only (image/*)
+- **File Type**: All image formats supported (image/*)
+  - JPEG (image/jpeg)
+  - PNG (image/png)
+  - GIF (image/gif)
+  - WebP (image/webp) - Recommended for best compression
+  - SVG (image/svg+xml)
 
 ### Background Images (`/backgrounds/*`)
 - **Read Access**: Public (anyone can view background images)
 - **Write Access**: Authenticated users only
 - **File Size Limit**: 10MB maximum (configurable to 5MB in client-side code)
-- **File Type**: Images only (image/*)
+- **File Type**: All image formats supported (image/*)
+  - JPEG (image/jpeg)
+  - PNG (image/png)
+  - GIF (image/gif)
+  - WebP (image/webp) - Recommended for best compression
+  - SVG (image/svg+xml)
 
 ## Security Considerations
 
@@ -65,6 +75,27 @@ service firebase.storage {
 2. **File Size Limits**: Both client-side (5MB) and server-side (10MB) limits are enforced
 3. **File Type Validation**: Only image files are allowed
 4. **Public Read Access**: Images need to be publicly readable for the website to display them
+
+## Image Optimization
+
+For best performance, images should be optimized before uploading:
+
+1. **Recommended Formats**:
+   - **WebP**: Best compression ratio (25-35% smaller than JPEG)
+   - **JPEG**: Good for photos, 80-85% quality recommended
+   - **PNG**: For graphics with transparency
+
+2. **Recommended Sizes**:
+   - **Product Images**: 800x800px to 1200x1200px
+   - **Background Images**: 1920x1080px maximum
+   - **Target File Size**: Under 500KB when possible
+
+3. **Optimization Tools**:
+   - [Squoosh](https://squoosh.app/) - Online image optimizer
+   - [TinyPNG](https://tinypng.com/) - PNG/JPEG compression
+   - [ImageOptim](https://imageoptim.com/) - Mac desktop tool
+
+See `IMAGE_OPTIMIZATION_GUIDE.md` for detailed optimization strategies and responsive image implementation.
 
 ## Error Messages
 
@@ -124,8 +155,9 @@ After configuring the rules:
 - [Firebase Authentication Documentation](https://firebase.google.com/docs/auth)
 - Project Documentation: `FIREBASE_STORAGE_GUIDE.md`
 - Security Documentation: `FIREBASE_STORAGE_SECURITY.md`
+- Image Optimization: `IMAGE_OPTIMIZATION_GUIDE.md`
 
 ---
 
-**Last Updated**: 2025-10-23
-**Status**: Required for palette.html background uploads
+**Last Updated**: 2025-10-24
+**Status**: Active - supports all image formats including WebP
