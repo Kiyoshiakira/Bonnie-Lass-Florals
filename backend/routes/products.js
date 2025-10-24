@@ -11,6 +11,14 @@ const { distance } = require('fastest-levenshtein');
 const logger = require('../utils/logger');
 const { normalizeImageUrl, normalizeProduct } = require('../utils/media');
 
+// Pagination constants
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+// Cache control constants (in seconds)
+const CACHE_MAX_AGE = 300; // 5 minutes
+const STALE_WHILE_REVALIDATE = 600; // 10 minutes
+
 // Ensure upload directory exists and is writable
 const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'admin', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -111,13 +119,42 @@ function isDuplicateProduct(newProduct, existingProduct) {
   return isNameMatch || isBothMatch || isDescStrongMatch;
 }
 
-// GET /api/products - list all products
+// GET /api/products - list all products with pagination
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    // Parse pagination parameters
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_LIMIT));
+    const skip = (page - 1) * limit;
+    
+    // Get total count for pagination metadata
+    const total = await Product.countDocuments();
+    
+    // Fetch paginated products
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
     // Normalize image URLs to absolute URLs for all products
     const normalizedProducts = products.map(p => normalizeProduct(p));
-    res.json(normalizedProducts);
+    
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    
+    // Set Cache-Control headers for better performance
+    res.setHeader('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`);
+    
+    res.json({
+      products: normalizedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages
+      }
+    });
   } catch (err) {
     logger.error('GET /api/products error', err);
     res.status(500).json({ error: 'Failed to load products' });
