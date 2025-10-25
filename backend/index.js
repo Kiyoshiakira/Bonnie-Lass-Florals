@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -8,6 +10,11 @@ const path = require('path');
 const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// --- Initialize Firebase Admin early ---
+// This ensures Firebase Admin is initialized before any routes or middleware that depend on it
+require('./utils/firebaseAdmin');
+logger.info('Firebase Admin initialized');
 
 // --- CORS setup ---
 // Parse allowed origins from environment variable or use default list
@@ -55,6 +62,44 @@ app.use('/api/', globalLimiter);
 
 // --- Middleware ---
 app.use(express.json());
+
+// --- Session Configuration ---
+// Configure session with secure defaults
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret && process.env.NODE_ENV === 'production') {
+  logger.error('SESSION_SECRET environment variable is required in production');
+  process.exit(1);
+}
+
+const sessionConfig = {
+  secret: sessionSecret || 'dev-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (HTTPS)
+    httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    sameSite: 'lax' // CSRF protection
+  },
+  name: 'sessionId' // Custom session cookie name (instead of default 'connect.sid')
+};
+
+// Use MongoStore for session persistence if MONGO_URI is available
+if (process.env.MONGO_URI) {
+  sessionConfig.store = MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    touchAfter: 24 * 3600, // Lazy session update - only update session once per 24 hours unless data changed
+    crypto: {
+      secret: sessionSecret || 'dev-secret-change-in-production'
+    }
+  });
+  logger.info('Session store: MongoStore (persistent)');
+} else {
+  logger.warn('Session store: MemoryStore (not suitable for production - sessions will be lost on restart)');
+}
+
+app.use(session(sessionConfig));
+logger.info('Session middleware configured');
 
 // --- Serve static files for uploaded images ---
 // This allows images to be accessed at /admin/uploads/filename.jpg

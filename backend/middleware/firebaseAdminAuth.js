@@ -1,14 +1,12 @@
-// Firebase Admin SDK for verifying ID tokens
-const admin = require('firebase-admin');
-const { isAdminEmail } = require('../config/admins');
+/**
+ * Firebase Admin Authentication Middleware
+ * 
+ * Verifies Firebase ID tokens and checks if the user is an admin
+ * Uses centralized Firebase Admin initialization
+ */
 
-// Initialize Firebase Admin SDK only once
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault()
-    // Optionally: Add storageBucket/projectId if needed
-  });
-}
+const admin = require('../utils/firebaseAdmin');
+const { isAdminEmail } = require('../config/admins');
 
 module.exports = async function firebaseAdminAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
@@ -23,7 +21,7 @@ module.exports = async function firebaseAdminAuth(req, res, next) {
     }
     req.user = decodedToken;
     next();
-  } catch (err) {
+  } catch (error) {
     return res.status(401).json({ error: 'Invalid or expired token.' });
   }
 };
