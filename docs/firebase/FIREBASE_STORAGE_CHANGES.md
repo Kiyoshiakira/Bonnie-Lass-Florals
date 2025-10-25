@@ -67,7 +67,7 @@ product-images/{timestamp}-{filename}
 
 ### URL Format
 ```
-https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.appspot.com/o/...
+https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.firebasestorage.app/o/...
 ```
 
 ## Backward Compatibility
