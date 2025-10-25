@@ -126,7 +126,34 @@
     // Handle user login - update UI and store user info
     async function handleLogin(user) {
       // Check admin status using backend API
-      const isAdmin = await window.checkIsAdmin(user);
+      // Try global helper first, fall back to direct API call if not available
+      let isAdmin = false;
+      try {
+        if (typeof window.checkIsAdmin === 'function') {
+          isAdmin = await window.checkIsAdmin(user);
+        } else {
+          // Fallback: call API directly if ui-utils.js is not loaded
+          console.warn('window.checkIsAdmin not available (ui-utils.js may not be loaded yet), falling back to direct API call');
+          const API_BASE = window.API_BASE || (
+            (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+              ? 'http://localhost:5000'
+              : 'https://bonnie-lass-florals.onrender.com'
+          );
+          const idToken = await user.getIdToken();
+          const response = await fetch(`${API_BASE}/api/admin/check`, {
+            headers: {
+              'Authorization': `Bearer ${idToken}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            isAdmin = data.isAdmin === true;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        isAdmin = false;
+      }
       const role = isAdmin ? "Admin" : "Customer";
       
       // Update user info in dropdown
