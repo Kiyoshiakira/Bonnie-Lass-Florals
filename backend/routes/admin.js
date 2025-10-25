@@ -8,7 +8,8 @@ const logger = require('../utils/logger');
 // This endpoint requires authentication but doesn't require admin privileges
 router.get('/check', auth, async (req, res) => {
   try {
-    const email = req.session && req.session.user && req.session.user.email;
+    // Prefer req.user (set by auth middleware), fallback to req.session.user for backward compatibility
+    const email = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email);
     const isAdmin = email ? isAdminEmail(email) : false;
     
     res.json({ 

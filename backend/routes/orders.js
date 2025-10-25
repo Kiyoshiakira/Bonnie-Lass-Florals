@@ -6,10 +6,9 @@ const { isAdminEmail } = require('../config/admins');
 
 // Utility to detect admin user
 function isAdmin(req) {
-  if (req.session && req.session.user && req.session.user.email) {
-    return isAdminEmail(req.session.user.email);
-  }
-  return false;
+  // Prefer req.user (set by auth middleware), fallback to req.session.user for backward compatibility
+  const email = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email);
+  return email ? isAdminEmail(email) : false;
 }
 
 // Get all orders (admin only)
