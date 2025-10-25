@@ -95,9 +95,21 @@ All changes are backward compatible:
 ## Security Improvements
 
 1. **Session security**: Secure cookie settings prevent common attacks
+   - `httpOnly: true` prevents XSS attacks
+   - `sameSite: 'lax'` provides CSRF protection for most scenarios
+   - `secure: true` in production requires HTTPS
 2. **Centralized initialization**: Prevents misconfiguration and initialization race conditions
 3. **Consistent auth state**: Both `req.user` and `req.session.user` are synchronized
 4. **Production safeguards**: Server won't start in production without proper configuration
+
+### CSRF Protection Note
+
+The session middleware uses `sameSite: 'lax'` for CSRF protection, which is sufficient for most use cases. However, CodeQL may report a CSRF warning. This is acceptable because:
+- The application primarily uses JWT token authentication via Authorization headers (not cookies)
+- `sameSite: 'lax'` provides protection against cross-site requests
+- Session cookies are httpOnly and secure in production
+
+For applications requiring strict CSRF protection with form submissions, consider adding a CSRF middleware like `csurf` in a future enhancement.
 
 ## Migration Guide
 
