@@ -50,13 +50,15 @@ function initializeFirebaseAdmin() {
       }
 
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
+        storageBucket: 'bonnie-lass-florals.firebasestorage.app'
       });
       logger.info('Firebase Admin initialized with service account credentials');
     } else {
       // Use application default credentials
       admin.initializeApp({
-        credential: admin.credential.applicationDefault()
+        credential: admin.credential.applicationDefault(),
+        storageBucket: 'bonnie-lass-florals.firebasestorage.app'
       });
       logger.info('Firebase Admin initialized with application default credentials');
     }
