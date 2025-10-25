@@ -132,11 +132,9 @@
         if (typeof window.checkIsAdmin === 'function') {
           isAdmin = await window.checkIsAdmin(user);
         } else {
-          // Fallback: call API directly if helper is not loaded
-          console.warn('window.checkIsAdmin not available, falling back to direct API call');
-          const API_BASE = window.API_BASE || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-            ? 'http://localhost:5000'
-            : 'https://bonnie-lass-florals.onrender.com');
+          // Fallback: call API directly if ui-utils.js is not loaded
+          console.warn('window.checkIsAdmin not available (ui-utils.js may not be loaded yet), falling back to direct API call');
+          const API_BASE = window.API_BASE || 'https://bonnie-lass-florals.onrender.com';
           const idToken = await user.getIdToken();
           const response = await fetch(`${API_BASE}/api/admin/check`, {
             headers: {
