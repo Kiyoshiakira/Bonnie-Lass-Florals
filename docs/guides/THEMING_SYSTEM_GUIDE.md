@@ -209,7 +209,7 @@ Cream: #fffacd (Lemon chiffon)
 **GET /api/settings/background** (NEW)
 ```json
 {
-  "backgroundUrl": "https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.appspot.com/o/backgrounds%2F1234567890-image.jpg?alt=media"
+  "backgroundUrl": "https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.firebasestorage.app/o/backgrounds%2F1234567890-image.jpg?alt=media"
 }
 ```
 
