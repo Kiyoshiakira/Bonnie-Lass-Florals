@@ -486,8 +486,10 @@
       try {
         const res = await fetch(`${API_BASE}/api/products`);
         if (!res.ok) throw new Error('Failed to fetch products');
-        const products = await res.json();
-        allProducts = products || [];
+        const payload = await res.json();
+        // Normalize response: accept either array (legacy) or object with products array
+        const products = Array.isArray(payload) ? payload : (payload.products || []);
+        allProducts = products;
         if (currentView === 'line') renderLineView(allProducts);
         else renderPanelView(allProducts);
       } catch (err) {
@@ -677,6 +679,7 @@
     });
   </script>
 
+  <script src="/ui-utils.js"></script>
   <script src="/mobile-nav.js"></script>
   <script src="/auth.js"></script>
 </body>
