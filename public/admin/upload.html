@@ -22,20 +22,9 @@
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
+  <script src="/firebase-config.js"></script>
   <script>
-    // Firebase client config
-    // NOTE: API key is public by design - security is enforced by Firebase Storage Rules
-    // which require authentication and validate file types/sizes server-side
-    const firebaseConfig = {
-      apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
-      authDomain: "bonnie-lass-florals.firebaseapp.com",
-      projectId: "bonnie-lass-florals",
-      storageBucket: "bonnie-lass-florals.firebasestorage.app",
-      messagingSenderId: "1009091302977",
-      appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
-      measurementId: "G-DQRB98D0WY"
-    };
-    firebase.initializeApp(firebaseConfig);
+    initFirebase();
   </script>
 
   <style>
@@ -681,6 +670,7 @@
 
   <script src="/ui-utils.js"></script>
   <script src="/mobile-nav.js"></script>
+  <script src="/ui-utils.js"></script>
   <script src="/auth.js"></script>
 </body>
 </html>
