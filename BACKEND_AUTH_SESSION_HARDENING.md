@@ -109,3 +109,4 @@ For existing deployments:
 4. Verify logs show "Session middleware configured" and "Firebase Admin initialized"
 
 No code changes required in routes or other middleware.
+
