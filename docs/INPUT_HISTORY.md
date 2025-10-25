@@ -44,7 +44,7 @@ The following fields in the product upload form have input history enabled:
 ### Behavior
 - Empty or whitespace-only values are not saved
 - Arrow keys work in both input fields and textareas
-- For textareas, arrow keys only trigger history when the cursor is at the start (position 0)
+- For textareas, arrow keys only trigger history when both the selection start and end are at position 0 (cursor at the beginning with no text selected)
 - Modifier keys (Ctrl, Alt, Meta) allow normal OS shortcuts to work
 
 ### API
