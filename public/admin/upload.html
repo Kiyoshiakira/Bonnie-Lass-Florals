@@ -37,8 +37,8 @@
     header nav { display:flex; gap:1rem; margin-left:1rem; }
     #profileCircleContainer { margin-left:auto; position:relative; }
     #profileDropdown { display:none; position:absolute; right:0; top:48px; background:#fff; border:1px solid #ddd; border-radius:6px; min-width:180px; box-shadow:0 6px 18px rgba(0,0,0,0.08); z-index:50; }
-    #profileDropdown a { display:block; padding:0.5rem 0.75rem; color:#333; text-decoration:none; }
-    #profileDropdown a:hover { background:#f6f6f6; }
+    #profileDropdown a, #profileDropdown button { display:block; width:100%; padding:0.5rem 0.75rem; color:#333; text-decoration:none; background:none; border:none; text-align:left; cursor:pointer; }
+    #profileDropdown a:hover, #profileDropdown button:hover { background:#f6f6f6; }
     .admin-section { background:#f8fafc; padding:1.25rem; border-radius:8px; margin-bottom:1.25rem; }
     label { display:block; margin-top:0.75rem; font-weight:600; }
     input[type="text"], input[type="number"], textarea, select { width:100%; padding:0.5rem; margin-top:0.25rem; border-radius:6px; border:1px solid #ddd; }
@@ -72,6 +72,9 @@
         <a href="/orders.html">Orders</a>
         <a id="adminOrdersLink" href="/admin/orders.html" style="display:none;">All Orders (Admin)</a>
         <a id="uploadProductLink" href="/admin/upload.html" style="display:none;">Upload Product</a>
+        <a id="paletteLink" href="/admin/palette.html" style="display:none;">Palette Editor</a>
+        <a id="messagesLink" href="/admin/messages.html" style="display:none;">Messages</a>
+        <button id="logoutMenu">Logout</button>
       </div>
     </div>
   </header>
@@ -216,10 +219,14 @@
       const userInfo = document.getElementById('userInfoDropdown');
       const adminOrdersLink = document.getElementById('adminOrdersLink');
       const uploadProductLink = document.getElementById('uploadProductLink');
+      const paletteLink = document.getElementById('paletteLink');
+      const messagesLink = document.getElementById('messagesLink');
       if (!user) {
         userInfo.innerHTML = '<div style="color:#666;">Not signed in</div>';
         adminOrdersLink.style.display = 'none';
         uploadProductLink.style.display = 'none';
+        paletteLink.style.display = 'none';
+        messagesLink.style.display = 'none';
         return;
       }
       const token = await user.getIdToken();
@@ -237,10 +244,14 @@
         const isAdmin = response.ok ? (await response.json()).isAdmin : false;
         adminOrdersLink.style.display = isAdmin ? 'block' : 'none';
         uploadProductLink.style.display = isAdmin ? 'block' : 'none';
+        paletteLink.style.display = isAdmin ? 'block' : 'none';
+        messagesLink.style.display = isAdmin ? 'block' : 'none';
       } catch (err) {
         console.error('Error checking admin status:', err);
         adminOrdersLink.style.display = 'none';
         uploadProductLink.style.display = 'none';
+        paletteLink.style.display = 'none';
+        messagesLink.style.display = 'none';
       }
     });
 
