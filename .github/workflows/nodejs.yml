@@ -1,0 +1,7 @@
+# Update your workflow file to use Node 18
+# Add or update the existing setup-node step:
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: '18'
+    cache: 'npm'
