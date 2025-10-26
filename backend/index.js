@@ -17,31 +17,26 @@ require('./utils/firebaseAdmin');
 logger.info('Firebase Admin initialized');
 
 // --- CORS setup ---
-// Parse allowed origins from environment variable or use default list
-const allowedOrigins = process.env.FRONTEND_ORIGINS 
-  ? process.env.FRONTEND_ORIGINS.split(',').map(origin => origin.trim())
-  : [
-      'https://bonnielassflorals.com',
-      'https://bonnie-lass-florals.onrender.com',
-      'https://bonnie-lass-florals.web.app',
-      'https://bonnie-lass-florals.firebaseapp.com'
-    ];
+// Parse allowed origins from environment variable or use default
+const CLIENT_ORIGINS = (process.env.CLIENT_ORIGINS || 'https://bonnielassflorals.com')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
 
 app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      logger.warn('CORS blocked origin:', origin);
-      callback(null, false);
+    if (CLIENT_ORIGINS.indexOf(origin) !== -1) {
+      return callback(null, true);
     }
+    
+    return callback(new Error('CORS: Origin not allowed'));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false
 }));
 app.options('*', cors());
 

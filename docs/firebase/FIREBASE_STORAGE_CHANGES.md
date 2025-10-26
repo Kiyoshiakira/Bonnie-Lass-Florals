@@ -78,7 +78,15 @@ https://firebasestorage.googleapis.com/v0/b/bonnie-lass-florals.firebasestorage.
 ## Security
 ✅ Admin-only upload routes
 ✅ Firebase authentication required
+✅ CORS configured with CLIENT_ORIGINS environment variable
 ⚠️ Consider rate limiting on batch endpoint
+
+### CORS Configuration
+The backend uses the `CLIENT_ORIGINS` environment variable to configure allowed origins for CORS requests. 
+- **Default**: `https://bonnielassflorals.com`
+- **Format**: Comma-separated list of allowed origins (e.g., `https://bonnielassflorals.com,https://example.com`)
+- **Headers**: Allows Content-Type, Authorization, and X-Requested-With
+- **Methods**: GET, POST, PUT, PATCH, DELETE, OPTIONS
 
 ## Validation
 ✅ JavaScript syntax verified
