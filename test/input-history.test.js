@@ -3,13 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { expect } = require('chai');
 
-// load the input-history script into the test DOM
-const scriptPath = path.join(__dirname, '..', 'public', 'input-history.js');
-const scriptContent = fs.readFileSync(scriptPath, 'utf8');
-const scriptEl = document.createElement('script');
-scriptEl.textContent = scriptContent;
-document.body.appendChild(scriptEl);
-
 describe('Input History Feature', function() {
   let dom;
   let window;
