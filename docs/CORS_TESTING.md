@@ -8,6 +8,13 @@ The backend uses the `CLIENT_ORIGINS` environment variable to configure allowed 
 - **Default**: `https://bonnielassflorals.com`
 - **Format**: Comma-separated list (e.g., `CLIENT_ORIGINS=https://bonnielassflorals.com,https://example.com`)
 
+## Base URLs
+
+Replace `<BACKEND_URL>` in the commands below with the appropriate environment URL:
+- **Production**: `https://bonnie-lass-florals.onrender.com`
+- **Local Development**: `http://localhost:5000`
+- **Staging**: (your staging URL)
+
 ## Test Commands
 
 ### 1. Test Preflight Request (OPTIONS)
@@ -19,7 +26,7 @@ curl -i -X OPTIONS \
   -H "Origin: https://bonnielassflorals.com" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: content-type, authorization" \
-  "https://bonnie-lass-florals.onrender.com/api/admin/check"
+  "<BACKEND_URL>/api/admin/check"
 ```
 
 **Expected Response Headers:**
@@ -33,7 +40,7 @@ curl -i -X OPTIONS \
 curl -i -X GET \
   -H "Origin: https://bonnielassflorals.com" \
   -H "Content-Type: application/json" \
-  "https://bonnie-lass-florals.onrender.com/api/admin/check"
+  "<BACKEND_URL>/api/admin/check"
 ```
 
 **Expected Response Headers:**
@@ -44,18 +51,20 @@ curl -i -X GET \
 ```bash
 curl -i -X GET \
   -H "Origin: https://bonnielassflorals.com" \
-  "https://bonnie-lass-florals.onrender.com/api/settings/theme"
+  "<BACKEND_URL>/api/settings/theme"
 ```
 
 ### 4. Test Theme/Background Endpoint (PUT with Authorization)
+
+**Note**: Replace `<YOUR_TOKEN>` with a valid Firebase ID token. You can obtain this by logging in through the frontend and inspecting the Authorization header in the browser's developer tools network tab.
 
 ```bash
 curl -i -X PUT \
   -H "Origin: https://bonnielassflorals.com" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -H "Authorization: Bearer <YOUR_TOKEN>" \
   -d '{"theme":"fall"}' \
-  "https://bonnie-lass-florals.onrender.com/api/settings/theme"
+  "<BACKEND_URL>/api/settings/theme"
 ```
 
 ### 5. Test Preflight for Theme Endpoint
@@ -65,7 +74,7 @@ curl -i -X OPTIONS \
   -H "Origin: https://bonnielassflorals.com" \
   -H "Access-Control-Request-Method: PUT" \
   -H "Access-Control-Request-Headers: content-type, authorization" \
-  "https://bonnie-lass-florals.onrender.com/api/settings/theme"
+  "<BACKEND_URL>/api/settings/theme"
 ```
 
 ### 6. Test Request with No Origin (Server-to-Server)
@@ -74,7 +83,7 @@ This should be allowed per the CORS configuration:
 
 ```bash
 curl -i -X GET \
-  "https://bonnie-lass-florals.onrender.com/api/admin/check"
+  "<BACKEND_URL>/api/admin/check"
 ```
 
 ### 7. Test Blocked Origin
@@ -84,7 +93,7 @@ This should fail with a CORS error:
 ```bash
 curl -i -X GET \
   -H "Origin: https://malicious-site.com" \
-  "https://bonnie-lass-florals.onrender.com/api/admin/check"
+  "<BACKEND_URL>/api/admin/check"
 ```
 
 **Expected**: No `Access-Control-Allow-Origin` header in response.
