@@ -2,4 +2,5 @@
 node_modules/
 backend/public/admin/uploads/
 public/admin/uploads/
-/backend/keys
+/backend/keys/
+firebase-sa.json
