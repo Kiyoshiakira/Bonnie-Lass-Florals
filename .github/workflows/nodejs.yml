@@ -1,5 +1,5 @@
 # Place this at .github/workflows/nodejs.yml
-name: Node.js CI (Node 18)
+name: Node.js CI (Node 22)
 
 on:
   push:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
       - name: Display Node.js and npm versions
