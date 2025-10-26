@@ -1,6 +1,10 @@
 const { expect } = require('chai');
 
 describe('Session and Auth Configuration', function() {
+  // Give these tests more time because initializing Firebase Admin can be slow
+  this.timeout(10000);
+
+describe('Session and Auth Configuration', function() {
   describe('Firebase Admin Initialization', function() {
     it('should initialize Firebase Admin without error', function() {
       // This will throw if initialization fails
