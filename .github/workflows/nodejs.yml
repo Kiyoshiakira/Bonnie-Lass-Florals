@@ -22,8 +22,8 @@ jobs:
       - name: Authenticate to GCP via Workload Identity (OIDC)
         uses: google-github-actions/auth@v1
         with:
-          workload_identity_provider: "projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID"
-          service_account: "service-account@PROJECT_ID.iam.gserviceaccount.com"
+          workload_identity_provider: "projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider"
+          service_account: "github-actions-ci@PROJECT_ID.iam.gserviceaccount.com"
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4

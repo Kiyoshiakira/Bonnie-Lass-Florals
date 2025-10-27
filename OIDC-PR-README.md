@@ -48,7 +48,8 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
     --member="serviceAccount:${SERVICE_ACCOUNT}" \
     --role="roles/storage.objectAdmin"
 
-# For Firestore access (if needed)
+# For Firestore access (adjust based on your specific needs)
+# This may be required for Firebase Admin SDK operations that interact with Firestore
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
     --member="serviceAccount:${SERVICE_ACCOUNT}" \
     --role="roles/datastore.user"
@@ -74,6 +75,7 @@ gcloud iam workload-identity-pools create "github-actions-pool" \
 
 ```bash
 # Set your GitHub organization/user and repository name
+# These are set to this repository's values - update if forking/adapting this guide
 export GITHUB_ORG="Kiyoshiakira"
 export GITHUB_REPO="Bonnie-Lass-Florals"
 
