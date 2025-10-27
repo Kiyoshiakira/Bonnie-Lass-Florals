@@ -17,15 +17,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Authenticate to Google Cloud
+      - id: auth
+        name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
+          create_credentials_file: true
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
       
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}
+          credentials_file_path: ${{ steps.auth.outputs.credentials_file_path }}
           channelId: live
           projectId: bonnie-lass-florals
