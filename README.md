@@ -71,6 +71,10 @@ Firebase-specific documentation:
 - [Firebase Storage Rules](./docs/firebase/FIREBASE_STORAGE_RULES.md)
 - [Firebase Storage Security](./docs/firebase/FIREBASE_STORAGE_SECURITY.md)
 
+### 🔄 CI/CD
+Continuous Integration and Deployment documentation:
+- [GCP Workload Identity Setup](./docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md) - Configure OIDC authentication for GitHub Actions
+
 ### 📦 Archive
 Older documentation and version history:
 - [Bonnie Lass Florals Full Item Pages Version 4](./docs/archive/BonnieLassFlorals_FullItemPages_Version4.md)
