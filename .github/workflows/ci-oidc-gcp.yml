@@ -1,28 +1,82 @@
-name: Test GCP OIDC auth
-on:
-  workflow_dispatch:
+name: CI with GCP OIDC Auth
 
-# <- This is required so GitHub injects the OIDC token into the job
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Required for OIDC authentication to GCP
 permissions:
-  id-token: write
   contents: read
+  id-token: write
 
 jobs:
-  auth-test:
+  build-and-test:
     runs-on: ubuntu-latest
-    steps:
-      - name: Debug whether GitHub injected token env
-        run: |
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
 
-      - name: Authenticate to GCP using Workload Identity
-        uses: google-github-actions/auth@v1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Display Node.js and npm versions
+        run: |
+          node --version
+          npm --version
+
+      # Authenticate to Google Cloud using Workload Identity Federation (OIDC)
+      # This step only attempts authentication when the job runs on the main branch
+      # and both required repository secrets are set.
+      #
+      # See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for detailed setup instructions
+      - name: Authenticate to Google Cloud
+        id: auth
+        if: ${{ startsWith(github.ref, 'refs/heads/main') && secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.GCP_SERVICE_ACCOUNT != '' }}
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: 'access_token'
+          # The auth action automatically sets GOOGLE_APPLICATION_CREDENTIALS
+          # which Firebase Admin SDK will use via applicationDefault()
 
-      - name: Verify identity
+      - name: Notify if GCP auth is skipped
+        if: ${{ !startsWith(github.ref, 'refs/heads/main') || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || secrets.GCP_SERVICE_ACCOUNT == '' }}
         run: |
-          gcloud auth list || true
-          gcloud auth print-access-token || true
+          echo "⚠️  GCP authentication skipped"
+          echo " - github.ref=${GITHUB_REF}"
+          if [ "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER == '' }}" = "true" ] || [ "${{ secrets.GCP_SERVICE_ACCOUNT == '' }}" = "true" ]; then
+            echo " - Reason: repository secrets not configured"
+            echo "The workflow will continue without GCP credentials."
+            echo "To enable GCP authentication, add these repository secrets:"
+            echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER"
+            echo "  - GCP_SERVICE_ACCOUNT"
+            echo ""
+            echo "See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for setup instructions"
+          else
+            echo " - Reason: not running on main"
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+        env:
+          CI: true
+
+      # Optional: Verify GCP authentication worked (only runs if auth succeeded)
+      - name: Verify GCP authentication
+        if: steps.auth.outcome == 'success'
+        run: |
+          echo "✅ Successfully authenticated to GCP using Workload Identity Federation"
+          echo "GOOGLE_APPLICATION_CREDENTIALS is set to: $GOOGLE_APPLICATION_CREDENTIALS"
