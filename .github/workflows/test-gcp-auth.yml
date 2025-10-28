@@ -2,14 +2,20 @@ name: Test GCP OIDC auth
 on:
   workflow_dispatch:
 
+# <- This is required so GitHub injects the OIDC token into the job
 permissions:
-  id-token: write      # required so GitHub injects the OIDC token
-  contents: read       # common helper permission for checkout/actions
+  id-token: write
+  contents: read
 
 jobs:
   auth-test:
     runs-on: ubuntu-latest
     steps:
+      - name: Debug whether GitHub injected token env
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
+
       - name: Authenticate to GCP using Workload Identity
         uses: google-github-actions/auth@v1
         with:
@@ -18,4 +24,5 @@ jobs:
 
       - name: Verify identity
         run: |
-          gcloud auth list
+          gcloud auth list || true
+          gcloud auth print-access-token || true
