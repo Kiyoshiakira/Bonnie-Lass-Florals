@@ -1,3 +1,11 @@
+
+- name: Debug GitHub repo/ref
+  run: |
+    echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}"
+    echo "GITHUB_REF=${GITHUB_REF}"
+    echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME}"
+    # Show whether this run appears to be on main branch
+    if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then echo "On main: yes"; else echo "On main: no"; fi
 name: CI with GCP OIDC Auth
 
 on:
