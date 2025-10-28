@@ -79,4 +79,15 @@ jobs:
         if: steps.auth.outcome == 'success'
         run: |
           echo "✅ Successfully authenticated to GCP using Workload Identity Federation"
-          echo "GOOGLE_APPLICATION_CREDENTIALS is set to: $GOOGLE_APPLICATION_CREDENTIALS"
+
+          # Print whether the runner has GOOGLE_APPLICATION_CREDENTIALS set
+          if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
+            echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
+            echo "Listing the credentials file (if present):"
+            ls -l "${GOOGLE_APPLICATION_CREDENTIALS}" || true
+          else
+            echo "GOOGLE_APPLICATION_CREDENTIALS is not set"
+          fi
+
+          # Show which account gcloud is using (helpful verification)
+          gcloud auth list || true
