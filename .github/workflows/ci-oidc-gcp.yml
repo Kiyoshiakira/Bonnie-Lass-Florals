@@ -17,21 +17,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: "Setup Node.js"
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
 
-      - name: Display Node.js and npm versions
+      - name: "Display Node.js and npm versions"
         run: |
           node --version
           npm --version
 
-      - name: Debug: environment and event BEFORE auth (DETAILED)
+      - name: "Debug: environment and event BEFORE auth (DETAILED)"
         run: |
           echo "=== Basic GitHub vars ==="
           echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-<unset>}"
@@ -39,10 +39,8 @@ jobs:
           echo "GITHUB_SHA=${GITHUB_SHA:-<unset>}"
           echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-<unset>}"
           echo "GITHUB_ACTOR=${GITHUB_ACTOR:-<unset>}"
-          echo "github.ref (from context) won't be available here as an expression; see GITHUB_REF above"
           echo
-          echo "=== Full environment (filtered) ==="
-          # Print only lines relevant to GitHub/Actions to avoid huge output
+          echo "=== Filtered env ==="
           env | grep -E 'GITHUB_|ACTIONS_' || true
           echo
           echo "=== GITHUB_EVENT_PATH (event payload) ==="
@@ -65,7 +63,7 @@ jobs:
 
       # Authenticate to Google Cloud using Workload Identity Federation (OIDC)
       # Only attempt authentication when the workflow is running on main.
-      - name: Authenticate to Google Cloud
+      - name: "Authenticate to Google Cloud"
         id: auth
         if: ${{ startsWith(github.ref, 'refs/heads/main') }}
         uses: google-github-actions/auth@v2
@@ -74,7 +72,7 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           token_format: 'access_token'
 
-      - name: Notify if GCP auth is skipped
+      - name: "Notify if GCP auth is skipped"
         if: ${{ always() }}
         run: |
           PROVIDER='${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
@@ -92,25 +90,24 @@ jobs:
           fi
           echo "✅ Running on main and secrets present — Authenticate step will run (or ran)."
 
-      - name: Install dependencies
+      - name: "Install dependencies"
         run: npm ci
 
-      - name: Run ESLint
+      - name: "Run ESLint"
         run: npm run lint
 
-      - name: Run tests
+      - name: "Run tests"
         run: npm test
         env:
           CI: true
 
-      - name: Verify GCP authentication
+      - name: "Verify GCP authentication"
         if: steps.auth.outcome == 'success'
         run: |
           echo "✅ Successfully authenticated to GCP using Workload Identity Federation"
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
             echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
             ls -l "${GOOGLE_APPLICATION_CREDENTIALS}" || true
-            echo "Print first 500 chars of credentials file (sanity):"
             head -c 500 "${GOOGLE_APPLICATION_CREDENTIALS}" || true
           else
             echo "GOOGLE_APPLICATION_CREDENTIALS is not set"
