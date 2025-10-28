@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 # Required for OIDC authentication to GCP
 permissions:
@@ -34,7 +35,7 @@ jobs:
       # This step only attempts authentication when the job runs on the main branch
       # and both required repository secrets are set.
       #
-      # See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for detailed setup instructions
+      # See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for setup instructions (optional)
       - name: Authenticate to Google Cloud
         id: auth
         if: ${{ startsWith(github.ref, 'refs/heads/main') && secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.GCP_SERVICE_ACCOUNT != '' }}
@@ -43,8 +44,6 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           token_format: 'access_token'
-          # The auth action automatically sets GOOGLE_APPLICATION_CREDENTIALS
-          # which Firebase Admin SDK will use via applicationDefault()
 
       - name: Notify if GCP auth is skipped
         if: ${{ !startsWith(github.ref, 'refs/heads/main') || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || secrets.GCP_SERVICE_ACCOUNT == '' }}
@@ -80,7 +79,6 @@ jobs:
         run: |
           echo "✅ Successfully authenticated to GCP using Workload Identity Federation"
 
-          # Print whether the runner has GOOGLE_APPLICATION_CREDENTIALS set
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
             echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
             echo "Listing the credentials file (if present):"
@@ -89,5 +87,4 @@ jobs:
             echo "GOOGLE_APPLICATION_CREDENTIALS is not set"
           fi
 
-          # Show which account gcloud is using (helpful verification)
           gcloud auth list || true
