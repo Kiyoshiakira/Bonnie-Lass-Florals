@@ -31,16 +31,37 @@ jobs:
           node --version
           npm --version
 
-      - name: Debug: show GitHub repo/ref/event BEFORE auth
+      - name: Debug: environment and event BEFORE auth (DETAILED)
         run: |
-          echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}"
-          echo "GITHUB_REF=${GITHUB_REF}"
-          echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME}"
-          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+          echo "=== Basic GitHub vars ==="
+          echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-<unset>}"
+          echo "GITHUB_REF=${GITHUB_REF:-<unset>}"
+          echo "GITHUB_SHA=${GITHUB_SHA:-<unset>}"
+          echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-<unset>}"
+          echo "GITHUB_ACTOR=${GITHUB_ACTOR:-<unset>}"
+          echo "github.ref (from context) won't be available here as an expression; see GITHUB_REF above"
+          echo
+          echo "=== Full environment (filtered) ==="
+          # Print only lines relevant to GitHub/Actions to avoid huge output
+          env | grep -E 'GITHUB_|ACTIONS_' || true
+          echo
+          echo "=== GITHUB_EVENT_PATH (event payload) ==="
+          if [ -n "${GITHUB_EVENT_PATH:-}" ] && [ -f "${GITHUB_EVENT_PATH}" ]; then
+            echo "Event file exists at ${GITHUB_EVENT_PATH}; showing first 2000 chars:"
+            head -c 2000 "${GITHUB_EVENT_PATH}" || true
+            echo; echo "---- end event head ----"
+          else
+            echo "No GITHUB_EVENT_PATH file available"
+          fi
+          echo
+          echo "=== On-main check ==="
+          if [ "${GITHUB_REF:-}" = "refs/heads/main" ]; then
             echo "On main: yes"
           else
-            echo "On main: no"
+            echo "On main: no (GITHUB_REF=${GITHUB_REF:-<unset>})"
           fi
+          echo
+          echo "=== End debug ==="
 
       # Authenticate to Google Cloud using Workload Identity Federation (OIDC)
       # Only attempt authentication when the workflow is running on main.
@@ -53,38 +74,23 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           token_format: 'access_token'
 
-      # Notify (always run) — script decides why auth was skipped by inspecting
-      # both the branch and the secret values interpolated into the script.
       - name: Notify if GCP auth is skipped
         if: ${{ always() }}
         run: |
           PROVIDER='${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
           SA='${{ secrets.GCP_SERVICE_ACCOUNT }}'
-          echo "GitHub ref: ${GITHUB_REF}"
-          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+          echo "GitHub ref: ${GITHUB_REF:-<unset>}"
+          if [ "${GITHUB_REF:-}" != "refs/heads/main" ]; then
             echo "⚠️  GCP authentication skipped - workflow is not running on main"
             exit 0
           fi
-
-          # At this point workflow is running on main — check secrets
           if [ -z "${PROVIDER}" ] || [ -z "${SA}" ]; then
             echo "⚠️  GCP authentication skipped - repository secrets not configured"
-            echo "Missing values:"
-            if [ -z "${PROVIDER}" ]; then
-              echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER (empty)"
-            fi
-            if [ -z "${SA}" ]; then
-              echo "  - GCP_SERVICE_ACCOUNT (empty)"
-            fi
-            echo ""
-            echo "To enable GCP authentication, add these repository secrets:"
-            echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER (value: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER)"
-            echo "  - GCP_SERVICE_ACCOUNT (value: service-account@PROJECT_ID.iam.gserviceaccount.com)"
-            echo ""
-            echo "See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for setup instructions"
-          else
-            echo "✅ Running on main and secrets present — Authenticate step will run (or ran)."
+            [ -z "${PROVIDER}" ] && echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER (empty)"
+            [ -z "${SA}" ] && echo "  - GCP_SERVICE_ACCOUNT (empty)"
+            exit 0
           fi
+          echo "✅ Running on main and secrets present — Authenticate step will run (or ran)."
 
       - name: Install dependencies
         run: npm ci
@@ -97,7 +103,6 @@ jobs:
         env:
           CI: true
 
-      # Optional: Verify GCP authentication worked (only runs if auth succeeded)
       - name: Verify GCP authentication
         if: steps.auth.outcome == 'success'
         run: |
@@ -105,6 +110,8 @@ jobs:
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
             echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
             ls -l "${GOOGLE_APPLICATION_CREDENTIALS}" || true
+            echo "Print first 500 chars of credentials file (sanity):"
+            head -c 500 "${GOOGLE_APPLICATION_CREDENTIALS}" || true
           else
             echo "GOOGLE_APPLICATION_CREDENTIALS is not set"
           fi
