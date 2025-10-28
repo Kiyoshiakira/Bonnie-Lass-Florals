@@ -34,11 +34,16 @@ jobs:
           node --version
           npm --version
 
-      - name: "Debug: environment and event BEFORE auth (DETAILED)"
+      - name: "Quick debug: GitHub vars"
         run: |
           echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-<unset>}"
           echo "GITHUB_REF=${GITHUB_REF:-<unset>}"
           echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-<unset>}"
+          if [ -n "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON=<present>"
+          else
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON=<not set>"
+          fi
 
       - name: "Authenticate to Google Cloud"
         id: auth
@@ -72,6 +77,14 @@ jobs:
 
       - name: "Run ESLint"
         run: npm run lint
+
+      - name: "Check Firebase secret presence"
+        run: |
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "❌ FIREBASE_SERVICE_ACCOUNT_JSON is not set"
+            exit 1
+          fi
+          echo "✅ FIREBASE_SERVICE_ACCOUNT_JSON is present"
 
       - name: "Run tests"
         run: npm test
