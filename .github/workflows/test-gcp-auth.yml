@@ -1,0 +1,17 @@
+name: Test GCP OIDC auth
+on: [workflow_dispatch]
+
+jobs:
+  auth-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to GCP using Workload Identity
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Verify whoami
+        run: |
+          gcloud auth list
+          gcloud auth print-access-token
