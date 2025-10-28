@@ -7,7 +7,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Required for OIDC authentication to GCP
 permissions:
   contents: read
   id-token: write
@@ -15,6 +14,10 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    # Expose the secret to the job — firebaseAdmin.js prefers this env var
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
     steps:
       - name: "Checkout code"
@@ -33,36 +36,10 @@ jobs:
 
       - name: "Debug: environment and event BEFORE auth (DETAILED)"
         run: |
-          echo "=== Basic GitHub vars ==="
           echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-<unset>}"
           echo "GITHUB_REF=${GITHUB_REF:-<unset>}"
-          echo "GITHUB_SHA=${GITHUB_SHA:-<unset>}"
           echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-<unset>}"
-          echo "GITHUB_ACTOR=${GITHUB_ACTOR:-<unset>}"
-          echo
-          echo "=== Filtered env ==="
-          env | grep -E 'GITHUB_|ACTIONS_' || true
-          echo
-          echo "=== GITHUB_EVENT_PATH (event payload) ==="
-          if [ -n "${GITHUB_EVENT_PATH:-}" ] && [ -f "${GITHUB_EVENT_PATH}" ]; then
-            echo "Event file exists at ${GITHUB_EVENT_PATH}; showing first 2000 chars:"
-            head -c 2000 "${GITHUB_EVENT_PATH}" || true
-            echo; echo "---- end event head ----"
-          else
-            echo "No GITHUB_EVENT_PATH file available"
-          fi
-          echo
-          echo "=== On-main check ==="
-          if [ "${GITHUB_REF:-}" = "refs/heads/main" ]; then
-            echo "On main: yes"
-          else
-            echo "On main: no (GITHUB_REF=${GITHUB_REF:-<unset>})"
-          fi
-          echo
-          echo "=== End debug ==="
 
-      # Authenticate to Google Cloud using Workload Identity Federation (OIDC)
-      # Only attempt authentication when the workflow is running on main.
       - name: "Authenticate to Google Cloud"
         id: auth
         if: ${{ startsWith(github.ref, 'refs/heads/main') }}
