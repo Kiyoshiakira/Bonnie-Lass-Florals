@@ -1,0 +1,110 @@
+# GCP Workload Identity Federation (GitHub Actions) — Setup & Verification
+
+This document shows the exact commands and steps used in this repository to configure Workload Identity Federation (WIF) for GitHub Actions → Google Cloud. Copy/paste the commands and replace placeholders (PROJECT_ID, PROJECT_NUMBER, SERVICE_ACCOUNT, REPO_OWNER/REPO).
+
+## Recommended names used in this repo (examples)
+- Project ID: bonnie-lass-florals
+- Project number: 1009091302977
+- Workload identity pool: github-pool
+- Provider id: github-oidc-clean
+- Service account: ci-github-sa@bonnie-lass-florals.iam.gserviceaccount.com
+- GitHub repo: Kiyoshiakira/bonnie-lass-florals
+
+---
+
+## 1) Create the OIDC provider (one-time)
+Replace PROJECT_ID/POOL_ID/PROVIDER_ID/PROJECT_NUMBER accordingly.
+
+Example:
+```bash
+gcloud iam workload-identity-pools providers create-oidc github-oidc-clean \
+  --project=bonnie-lass-florals --location=global \
+  --workload-identity-pool=github-pool \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repo=assertion.repository"
+```
+
+This maps `assertion.repository` → `attribute.repo` which we use in the attribute condition.
+
+## 2) Tighten provider to require the main branch (optional, recommended)
+This maps `assertion.ref` and limits tokens to runs from the main branch:
+
+```bash
+gcloud iam workload-identity-pools providers update-oidc github-oidc-clean \
+  --workload-identity-pool=github-pool --location=global --project=bonnie-lass-florals \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repo=assertion.repository,attribute.ref=assertion.ref" \
+  --attribute-condition="attribute.repo == 'Kiyoshiakira/bonnie-lass-florals' && attribute.ref.startsWith('refs/heads/main')" --quiet
+```
+
+Adjust the repo string and branch rules as needed.
+
+## 3) Bind the GitHub principalSet to the service account
+Use the project NUMBER in the principalSet path. This grants GitHub identities permission to impersonate the service account.
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding ci-github-sa@bonnie-lass-florals.iam.gserviceaccount.com \
+  --member="principalSet://iam.googleapis.com/projects/1009091302977/locations/global/workloadIdentityPools/github-pool/attribute.repo/Kiyoshiakira/bonnie-lass-florals" \
+  --role="roles/iam.workloadIdentityUser" --project=bonnie-lass-florals
+```
+
+If you mapped attribute.ref too and want to include other attributes in the principalSet path, adjust accordingly.
+
+## 4) Add the two repository secrets (GitHub UI)
+Go to your repo → Settings → Secrets and variables → Actions → New repository secret.
+
+- Secret name: GCP_WORKLOAD_IDENTITY_PROVIDER  
+  Value: projects/1009091302977/locations/global/workloadIdentityPools/github-pool/providers/github-oidc-clean
+
+- Secret name: GCP_SERVICE_ACCOUNT  
+  Value: ci-github-sa@bonnie-lass-florals.iam.gserviceaccount.com
+
+## 5) Test with a manual workflow run (workflow_dispatch) on `main`
+- In GitHub: Actions → choose the workflow (CI with GCP OIDC Auth) → Run workflow → pick `main` → Run workflow.
+- What to look for in logs:
+  - If authentication happens, you’ll see the auth step succeed. If not injected or permissions/conditions block it, the Notify step prints why it was skipped.
+  - If you have a verify step, it prints the GOOGLE_APPLICATION_CREDENTIALS and/or `gcloud auth list` shows the service account.
+
+Optional debug step (temporary): include a step that prints whether the ACTIONS_ID_TOKEN envs are present:
+```yaml
+- name: Debug token env present
+  run: |
+    echo "ACTIONS_ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
+    echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
+```
+(Remove debug steps after verification.)
+
+## 6) Verify current provider and service account bindings
+- Describe provider:
+```bash
+gcloud iam workload-identity-pools providers describe github-oidc-clean \
+  --workload-identity-pool=github-pool --location=global --project=bonnie-lass-florals --format="yaml"
+```
+
+- Show service account policy:
+```bash
+gcloud iam service-accounts get-iam-policy ci-github-sa@bonnie-lass-florals.iam.gserviceaccount.com --project=bonnie-lass-florals --format=json
+```
+
+Look for a binding with role `roles/iam.workloadIdentityUser` and a member that starts with:
+`principalSet://iam.googleapis.com/projects/1009091302977/locations/global/workloadIdentityPools/github-pool/attribute.repo/...`
+
+## 7) Safe rollback / removal
+- Remove the IAM binding:
+```bash
+gcloud iam service-accounts remove-iam-policy-binding ci-github-sa@bonnie-lass-florals.iam.gserviceaccount.com \
+  --member="principalSet://iam.googleapis.com/projects/1009091302977/locations/global/workloadIdentityPools/github-pool/attribute.repo/Kiyoshiakira/bonnie-lass-florals" \
+  --role="roles/iam.workloadIdentityUser" --project=bonnie-lass-florals
+```
+
+- Delete the provider:
+```bash
+gcloud iam workload-identity-pools providers delete github-oidc-clean --workload-identity-pool=github-pool --location=global --project=bonnie-lass-florals --quiet
+```
+
+---
+
+## Notes & best practices
+- Use the project NUMBER in principalSet URLs; use the project ID in --project flags.
+- The attributeCondition is case‑sensitive for the repository string. Use the exact owner/repo string GitHub provides.
+- Forked pull requests will not receive id-token injection; do not expect OIDC to be available in runs from forks.
+- Keep workflows that require GCP credentials limited to trusted branches (e.g., main) or specific jobs.
