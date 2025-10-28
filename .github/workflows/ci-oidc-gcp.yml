@@ -66,6 +66,7 @@ jobs:
             exit 0
           fi
 
+          # At this point workflow is running on main — check secrets
           if [ -z "${PROVIDER}" ] || [ -z "${SA}" ]; then
             echo "⚠️  GCP authentication skipped - repository secrets not configured"
             echo "Missing values:"
