@@ -2,9 +2,9 @@ name: CI with GCP OIDC Auth
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
 
 # Required for OIDC authentication to GCP
