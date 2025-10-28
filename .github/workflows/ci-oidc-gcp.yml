@@ -32,34 +32,47 @@ jobs:
           npm --version
 
       # Authenticate to Google Cloud using Workload Identity Federation (OIDC)
-      # This step only attempts authentication when the job runs on the main branch
-      # and both required repository secrets are set.
-      #
-      # See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for setup instructions (optional)
+      # Only attempt authentication when the workflow is running on main.
       - name: Authenticate to Google Cloud
         id: auth
-        if: ${{ startsWith(github.ref, 'refs/heads/main') && secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.GCP_SERVICE_ACCOUNT != '' }}
+        if: ${{ startsWith(github.ref, 'refs/heads/main') }}
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           token_format: 'access_token'
 
+      # Notify (always run) — script decides why auth was skipped by inspecting
+      # both the branch and the secret values injected into the script via interpolation.
       - name: Notify if GCP auth is skipped
-        if: ${{ !startsWith(github.ref, 'refs/heads/main') || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || secrets.GCP_SERVICE_ACCOUNT == '' }}
+        if: ${{ always() }}
         run: |
-          echo "⚠️  GCP authentication skipped"
-          echo " - github.ref=${GITHUB_REF}"
-          if [ "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER == '' }}" = "true" ] || [ "${{ secrets.GCP_SERVICE_ACCOUNT == '' }}" = "true" ]; then
-            echo " - Reason: repository secrets not configured"
-            echo "The workflow will continue without GCP credentials."
+          PROVIDER='${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          SA='${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          echo "GitHub ref: ${GITHUB_REF}"
+          if [[ "${GITHUB_REF}" != refs/heads/main ]]; then
+            echo "⚠️  GCP authentication skipped - workflow is not running on main"
+            exit 0
+          fi
+
+          # At this point workflow is running on main — check secrets
+          if [[ -z "${PROVIDER}" || -z "${SA}" ]]; then
+            echo "⚠️  GCP authentication skipped - repository secrets not configured"
+            echo "Missing values:"
+            if [[ -z "${PROVIDER}" ]]; then
+              echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER (empty)"
+            fi
+            if [[ -z "${SA}" ]]; then
+              echo "  - GCP_SERVICE_ACCOUNT (empty)"
+            fi
+            echo ""
             echo "To enable GCP authentication, add these repository secrets:"
-            echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER"
-            echo "  - GCP_SERVICE_ACCOUNT"
+            echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER (value: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER)"
+            echo "  - GCP_SERVICE_ACCOUNT (value: service-account@PROJECT_ID.iam.gserviceaccount.com)"
             echo ""
             echo "See docs/ci/GCP_WORKLOAD_IDENTITY_SETUP.md for setup instructions"
           else
-            echo " - Reason: not running on main"
+            echo "✅ Running on main and secrets present — Authenticate step will run (or ran)."
           fi
 
       - name: Install dependencies
@@ -78,13 +91,10 @@ jobs:
         if: steps.auth.outcome == 'success'
         run: |
           echo "✅ Successfully authenticated to GCP using Workload Identity Federation"
-
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
             echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
-            echo "Listing the credentials file (if present):"
             ls -l "${GOOGLE_APPLICATION_CREDENTIALS}" || true
           else
             echo "GOOGLE_APPLICATION_CREDENTIALS is not set"
           fi
-
           gcloud auth list || true
