@@ -13,6 +13,11 @@ function showShopSection(type) {
   }
 }
 
+// API Base URL constant
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:5000'
+  : 'https://bonnie-lass-florals.onrender.com';
+
 // Global products cache
 let allProducts = [];
 let currentPage = 1;
@@ -36,7 +41,7 @@ async function loadProducts(page = 1, append = false) {
     // Note: Using limit=1000 to maintain current UX (load all products at once)
     // This can be changed to a lower limit (e.g., 20) when implementing
     // "load more" or infinite scroll functionality
-    const res = await fetch(`https://bonnie-lass-florals.onrender.com/api/products?page=${page}&limit=1000`);
+    const res = await fetch(`${API_BASE}/api/products?page=${page}&limit=1000`);
     
     if (!res.ok) {
       throw new Error('Failed to fetch products');
@@ -483,18 +488,16 @@ async function handleEditProductSubmit(e) {
     }
     
     const token = await user.getIdToken();
-    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      ? 'http://localhost:5000'
-      : 'https://bonnie-lass-florals.onrender.com';
     
     // Prepare update data
+    const optionsValue = document.getElementById('editProductOptions').value;
     const updateData = {
       name: document.getElementById('editProductName').value,
       description: document.getElementById('editProductDescription').value,
       price: parseFloat(document.getElementById('editProductPrice').value),
       type: document.getElementById('editProductType').value,
       stock: parseInt(document.getElementById('editProductStock').value),
-      options: document.getElementById('editProductOptions').value,
+      options: optionsValue ? optionsValue.split(',').map(s => s.trim()).filter(s => s.length > 0) : [],
       image: document.getElementById('editProductImage').value
     };
     
@@ -561,9 +564,6 @@ if (window.firebase && firebase.auth) {
     if (user) {
       // Check if user is admin
       try {
-        const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-          ? 'http://localhost:5000'
-          : 'https://bonnie-lass-florals.onrender.com';
         const token = await user.getIdToken();
         const response = await fetch(`${API_BASE}/api/admin/check`, {
           headers: {

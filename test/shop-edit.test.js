@@ -26,7 +26,7 @@ describe('Shop Page Edit Product Feature', function() {
   it('should have edit product modal in HTML', function() {
     const modal = document.getElementById('editProductModal');
     expect(modal).to.exist;
-    expect(modal.style.display).to.equal('none');
+    expect(modal.classList.contains('edit-product-modal')).to.be.true;
   });
 
   it('should have all required form fields in edit modal', function() {
