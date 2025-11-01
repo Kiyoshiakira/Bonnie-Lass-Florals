@@ -120,9 +120,12 @@ function closeImageModal() {
 async function checkIsAdmin(user) {
   if (!user) return false;
   
-  // Use cached admin status if available and fresh (< 5 seconds old)
+  // Cache duration for admin status checks (in milliseconds)
+  const ADMIN_STATUS_CACHE_DURATION = 5000; // 5 seconds
+  
+  // Use cached admin status if available and fresh
   const cacheAge = Date.now() - (window._cachedAdminStatusTime || 0);
-  if (window._cachedAdminStatus !== undefined && cacheAge < 5000) {
+  if (window._cachedAdminStatus !== undefined && cacheAge < ADMIN_STATUS_CACHE_DURATION) {
     return window._cachedAdminStatus;
   }
   
