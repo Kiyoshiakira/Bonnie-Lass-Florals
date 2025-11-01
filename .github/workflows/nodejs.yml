@@ -10,9 +10,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    env:
-      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
     steps:
       - name: Checkout repository
@@ -29,15 +26,11 @@ jobs:
           node --version
           npm --version
 
-      - name: Decode Firebase Service Account (if present)
-        if: env.FIREBASE_SERVICE_ACCOUNT_JSON != ''
+      - name: Setup Firebase Service Account (if present)
+        if: secrets.FIREBASE_SERVICE_ACCOUNT_JSON != ''
         run: |
-          echo "$FIREBASE_SERVICE_ACCOUNT_JSON" | base64 -d > $GITHUB_WORKSPACE/firebase-sa.json
+          printf '%s' "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" > $GITHUB_WORKSPACE/firebase-sa.json
           chmod 600 $GITHUB_WORKSPACE/firebase-sa.json
-
-      - name: Set GOOGLE_APPLICATION_CREDENTIALS
-        if: env.FIREBASE_SERVICE_ACCOUNT_JSON != ''
-        run: |
           echo "GOOGLE_APPLICATION_CREDENTIALS=$GITHUB_WORKSPACE/firebase-sa.json" >> $GITHUB_ENV
 
       - name: Install dependencies
