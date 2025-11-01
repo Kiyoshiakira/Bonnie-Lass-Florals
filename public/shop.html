@@ -197,6 +197,48 @@
       <div id="food-products"></div>
     </div>
   </section>
+
+  <!-- Edit Product Modal (Admin Only) -->
+  <div id="editProductModal" class="edit-product-modal">
+    <div class="edit-product-modal-content">
+      <h2>Edit Product</h2>
+      <form id="editProductForm">
+        <input type="hidden" id="editProductId">
+        
+        <label for="editProductName">Product Name</label>
+        <input type="text" id="editProductName" required>
+        
+        <label for="editProductDescription">Description</label>
+        <textarea id="editProductDescription" rows="4"></textarea>
+        
+        <label for="editProductPrice">Price</label>
+        <input type="number" id="editProductPrice" step="0.01" required>
+        
+        <label for="editProductType">Type</label>
+        <select id="editProductType">
+          <option value="decor">Handmade Crafts</option>
+          <option value="food">Cottage Food</option>
+        </select>
+        
+        <label for="editProductStock">Stock</label>
+        <input type="number" id="editProductStock" min="0" required>
+        
+        <label for="editProductOptions">Options (comma-separated)</label>
+        <input type="text" id="editProductOptions">
+        
+        <label for="editProductImage">Image URL</label>
+        <input type="text" id="editProductImage">
+        
+        <div class="edit-product-modal-buttons">
+          <button type="submit">Save Changes</button>
+          <button type="button" id="cancelEditProduct">Cancel</button>
+        </div>
+      </form>
+      <div id="editProductError" style="color:#ef4444;margin-top:1rem;display:none;"></div>
+      <div id="editProductSuccess" style="color:#10b981;margin-top:1rem;display:none;"></div>
+    </div>
+  </div>
+
   <script src="cart.js"></script>
   <script src="reviews.js"></script>
   <script src="shop.js"></script>

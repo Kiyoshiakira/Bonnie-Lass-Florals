@@ -2023,3 +2023,87 @@ select:focus-visible {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(45, 106, 79, 0.25);
 }
+
+/* ============================================================================
+   EDIT PRODUCT MODAL - Shop page admin edit functionality
+   ============================================================================ */
+.edit-product-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-product-modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.edit-product-modal-content h2 {
+  margin-top: 0;
+}
+
+.edit-product-modal-content label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.edit-product-modal-content input,
+.edit-product-modal-content textarea,
+.edit-product-modal-content select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-top: 0.25rem;
+}
+
+.edit-product-modal-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-product-modal-buttons button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-product-modal-buttons button[type="submit"] {
+  background: #6e33b7;
+  color: #fff;
+}
+
+.edit-product-modal-buttons button[type="button"] {
+  background: #ccc;
+  color: #333;
+}
+
+.edit-product-btn {
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, #6e33b7 0%, #9333ea 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 1em;
+  font-weight: 600;
+  font-size: 0.85em;
+  cursor: pointer;
+  width: 100%;
+}

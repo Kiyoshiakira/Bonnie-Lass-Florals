@@ -13,11 +13,17 @@ function showShopSection(type) {
   }
 }
 
+// API Base URL constant
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:5000'
+  : 'https://bonnie-lass-florals.onrender.com';
+
 // Global products cache
 let allProducts = [];
 let currentPage = 1;
 let totalPages = 1;
 let isLoading = false;
+let isAdmin = false; // Track admin status
 
 // Load products dynamically from backend with pagination
 async function loadProducts(page = 1, append = false) {
@@ -35,7 +41,7 @@ async function loadProducts(page = 1, append = false) {
     // Note: Using limit=1000 to maintain current UX (load all products at once)
     // This can be changed to a lower limit (e.g., 20) when implementing
     // "load more" or infinite scroll functionality
-    const res = await fetch(`https://bonnie-lass-florals.onrender.com/api/products?page=${page}&limit=1000`);
+    const res = await fetch(`${API_BASE}/api/products?page=${page}&limit=1000`);
     
     if (!res.ok) {
       throw new Error('Failed to fetch products');
@@ -306,6 +312,13 @@ function productToCard(p) {
         >
           View Reviews
         </button>
+        ${isAdmin ? `<button 
+          class="edit-product-btn"
+          data-id="${escapeAttr(p._id)}"
+          onclick="openEditProductModal('${escapeAttr(p._id)}')"
+        >
+          Edit Product
+        </button>` : ''}
         <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
       </div>
     </div>
@@ -421,8 +434,180 @@ async function loadProductRatings() {
   }
 }
 
+// Helper function to format options for display (array to comma-separated string)
+function formatOptionsForDisplay(options) {
+  if (!options) return '';
+  return Array.isArray(options) ? options.join(', ') : String(options);
+}
+
+// Helper function to parse options from input (comma-separated string to array)
+function parseOptionsFromInput(optionsString) {
+  if (!optionsString || !optionsString.trim()) return [];
+  return optionsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
+// Edit Product Modal Functions (Admin Only)
+function openEditProductModal(productId) {
+  const product = allProducts.find(p => p._id === productId);
+  const errorDiv = document.getElementById('editProductError');
+  
+  if (!product) {
+    errorDiv.textContent = 'Product not found';
+    errorDiv.style.display = 'block';
+    return;
+  }
+  
+  // Populate form fields
+  document.getElementById('editProductId').value = product._id;
+  document.getElementById('editProductName').value = product.name || '';
+  document.getElementById('editProductDescription').value = product.description || '';
+  document.getElementById('editProductPrice').value = product.price || '';
+  document.getElementById('editProductType').value = product.type || 'decor';
+  document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
+  document.getElementById('editProductOptions').value = formatOptionsForDisplay(product.options);
+  document.getElementById('editProductImage').value = product.image || '';
+  
+  // Clear previous messages
+  errorDiv.style.display = 'none';
+  document.getElementById('editProductSuccess').style.display = 'none';
+  
+  // Show modal
+  const modal = document.getElementById('editProductModal');
+  modal.style.display = 'flex';
+}
+
+function closeEditProductModal() {
+  const modal = document.getElementById('editProductModal');
+  modal.style.display = 'none';
+}
+
+// Handle edit form submission
+async function handleEditProductSubmit(e) {
+  e.preventDefault();
+  
+  const productId = document.getElementById('editProductId').value;
+  const errorDiv = document.getElementById('editProductError');
+  const successDiv = document.getElementById('editProductSuccess');
+  
+  errorDiv.style.display = 'none';
+  successDiv.style.display = 'none';
+  
+  try {
+    // Get Firebase auth token
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      errorDiv.textContent = 'Please login first';
+      errorDiv.style.display = 'block';
+      return;
+    }
+    
+    const token = await user.getIdToken();
+    
+    // Prepare update data
+    const updateData = {
+      name: document.getElementById('editProductName').value,
+      description: document.getElementById('editProductDescription').value,
+      price: parseFloat(document.getElementById('editProductPrice').value),
+      type: document.getElementById('editProductType').value,
+      stock: parseInt(document.getElementById('editProductStock').value),
+      options: parseOptionsFromInput(document.getElementById('editProductOptions').value),
+      image: document.getElementById('editProductImage').value
+    };
+    
+    // Send PUT request to update product
+    const response = await fetch(`${API_BASE}/api/products/${productId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updateData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update product');
+    }
+    
+    // Success - show message and reload products
+    successDiv.textContent = 'Product updated successfully!';
+    successDiv.style.display = 'block';
+    
+    // Reload products to reflect changes
+    setTimeout(async () => {
+      await loadProducts();
+      closeEditProductModal();
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Error updating product:', error);
+    errorDiv.textContent = error.message || 'Failed to update product';
+    errorDiv.style.display = 'block';
+  }
+}
+
+// Initialize edit modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Cancel button
+  const cancelBtn = document.getElementById('cancelEditProduct');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeEditProductModal);
+  }
+  
+  // Form submission
+  const editForm = document.getElementById('editProductForm');
+  if (editForm) {
+    editForm.addEventListener('submit', handleEditProductSubmit);
+  }
+  
+  // Close modal when clicking outside
+  const modal = document.getElementById('editProductModal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeEditProductModal();
+      }
+    });
+  }
+});
+
+// Check admin status on auth state change
+if (window.firebase && firebase.auth) {
+  firebase.auth().onAuthStateChanged(async function(user) {
+    if (user) {
+      // Check if user is admin
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch(`${API_BASE}/api/admin/check`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          isAdmin = data.isAdmin === true;
+          // Re-render products to show/hide edit buttons
+          if (allProducts.length > 0) {
+            renderProducts();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        isAdmin = false;
+      }
+    } else {
+      isAdmin = false;
+      // Re-render products to hide edit buttons
+      if (allProducts.length > 0) {
+        renderProducts();
+      }
+    }
+  });
+}
+
 // Expose functions to global scope for HTML onclick
 window.showShopSection = showShopSection;
 window.applyFilters = applyFilters;
 window.resetFilters = resetFilters;
 window.toggleReviews = toggleReviews;
+window.openEditProductModal = openEditProductModal;
