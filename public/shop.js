@@ -453,7 +453,7 @@ function parseOptionsFromInput(optionsString) {
  */
 async function uploadImageToFirebase(file) {
   // Validate file type
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
     throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
   }
@@ -469,11 +469,17 @@ async function uploadImageToFirebase(file) {
   const timestamp = Date.now();
   
   // Enhanced filename sanitization - remove special chars and path traversal
-  const safeName = file.name
+  let safeName = file.name
     .replace(/[^a-zA-Z0-9._-]/g, '_')  // Replace unsafe chars with underscore
     .replace(/\.{2,}/g, '_')            // Remove path traversal sequences
     .replace(/^\.+/, '')                // Remove leading dots
     .substring(0, 100);                 // Limit filename length
+  
+  // Fallback to default name if sanitization results in empty or very short name
+  if (!safeName || safeName.length < 3) {
+    const extension = file.type.split('/')[1] || 'jpg';
+    safeName = `image.${extension}`;
+  }
   
   const filename = `product-images/${timestamp}-${safeName}`;
   const imageRef = storageRef.child(filename);
