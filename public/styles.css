@@ -1107,13 +1107,16 @@ footer a:hover {
   border: 3px solid #95d5b2; /* Light sage border */
   border-radius: 20px;
   box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
-  padding: 0.8em 1em 1em 1em;
-  max-width: 200px;
-  flex: 0 1 200px;
+  padding: 1em;
+  max-width: 500px;
+  flex: 0 1 calc(50% - 0.6rem);
   text-align: left;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
 }
 
 .product-card::before {
@@ -1138,15 +1141,15 @@ footer a:hover {
 }
 
 .product-img {
-  width: 100%;
-  max-width: 160px;
-  height: auto;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 0.6em;
   cursor: zoom-in;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid #fff5e6;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .product-img:hover {
@@ -1190,6 +1193,28 @@ footer a:hover {
   margin-bottom: 0.6em;
   line-height: 1.4;
   font-size: 0.85em;
+}
+
+/* Product card top section: image on left, info on right */
+.product-top-section {
+  display: flex;
+  gap: 1em;
+  align-items: flex-start;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  min-width: 0;
+}
+
+/* Product card bottom section: description and buttons */
+.product-bottom-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
 }
 
 .product-card button {
@@ -1745,6 +1770,16 @@ footer a:hover {
   .product-card {
     flex: 0 1 100%;
     max-width: 100%;
+  }
+  
+  .product-top-section {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .product-img {
+    width: 200px;
+    height: 200px;
   }
   
   p {

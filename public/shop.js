@@ -280,28 +280,34 @@ function productToCard(p) {
   
   return `
     <div class="product-card" id="product-${escapeAttr(p._id)}">
-      ${responsiveImageHtml}
-      <div class="product-title">${productName}</div>
-      <div class="product-price">$${productPrice}</div>
-      <div class="product-stock ${stockClass}">${stockText}</div>
-      <div id="product-rating-${escapeAttr(p._id)}"></div>
-      ${optionsHtml}
-      <div class="product-desc">${productDesc}</div>
-      <button 
-        class="add-to-cart"
-        data-id="${escapeAttr(p._id)}"
-        ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
-      >
-        ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-      </button>
-      <button 
-        class="view-reviews-btn"
-        style="margin-top:0.5rem;background:linear-gradient(135deg,#52b788 0%,#40916c 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
-        onclick="toggleReviews('${escapeAttr(p._id)}')"
-      >
-        View Reviews
-      </button>
-      <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
+      <div class="product-top-section">
+        ${responsiveImageHtml}
+        <div class="product-info">
+          <div class="product-title">${productName}</div>
+          <div class="product-price">$${productPrice}</div>
+          <div class="product-stock ${stockClass}">${stockText}</div>
+          <div id="product-rating-${escapeAttr(p._id)}"></div>
+          ${optionsHtml}
+        </div>
+      </div>
+      <div class="product-bottom-section">
+        <div class="product-desc">${productDesc}</div>
+        <button 
+          class="add-to-cart"
+          data-id="${escapeAttr(p._id)}"
+          ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
+        >
+          ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </button>
+        <button 
+          class="view-reviews-btn"
+          style="margin-top:0.5rem;background:linear-gradient(135deg,#52b788 0%,#40916c 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
+          onclick="toggleReviews('${escapeAttr(p._id)}')"
+        >
+          View Reviews
+        </button>
+        <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
+      </div>
     </div>
   `;
 }
@@ -331,8 +337,8 @@ function generateResponsiveImage(imageUrl, altText) {
           alt="${altText}" 
           class="product-img" 
           loading="lazy" 
-          width="400" 
-          height="400"
+          width="150" 
+          height="150"
           decoding="async"
         />
       </picture>
@@ -350,10 +356,9 @@ function generateResponsiveImage(imageUrl, altText) {
       alt="${altText}" 
       class="product-img" 
       loading="lazy" 
-      width="400" 
-      height="400"
+      width="150" 
+      height="150"
       decoding="async"
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
     />
   `;
 }
