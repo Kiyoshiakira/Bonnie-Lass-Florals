@@ -99,6 +99,11 @@ function renderProducts() {
       }, index * 50);
     });
     initImageZoom();
+    
+    // Load ratings for all products
+    if (window.fetchReviewStats) {
+      loadProductRatings();
+    }
   }, 50);
   
   // Setup event delegation for add-to-cart buttons (only once)
@@ -155,6 +160,11 @@ function applyFilters(type) {
       }, index * 50);
     });
     initImageZoom();
+    
+    // Load ratings for filtered products
+    if (window.fetchReviewStats) {
+      loadProductRatings();
+    }
   }, 50);
   
   // Re-setup event handlers after filtering
@@ -269,11 +279,12 @@ function productToCard(p) {
   const responsiveImageHtml = generateResponsiveImage(imageUrl, productName);
   
   return `
-    <div class="product-card">
+    <div class="product-card" id="product-${escapeAttr(p._id)}">
       ${responsiveImageHtml}
       <div class="product-title">${productName}</div>
       <div class="product-price">$${productPrice}</div>
       <div class="product-stock ${stockClass}">${stockText}</div>
+      <div id="product-rating-${escapeAttr(p._id)}"></div>
       ${optionsHtml}
       <div class="product-desc">${productDesc}</div>
       <button 
@@ -283,6 +294,14 @@ function productToCard(p) {
       >
         ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
       </button>
+      <button 
+        class="view-reviews-btn"
+        style="margin-top:0.5rem;background:linear-gradient(135deg,#52b788 0%,#40916c 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
+        onclick="toggleReviews('${escapeAttr(p._id)}')"
+      >
+        View Reviews
+      </button>
+      <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
     </div>
   `;
 }
@@ -342,7 +361,63 @@ function generateResponsiveImage(imageUrl, altText) {
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', loadProducts);
 
+// Function to toggle reviews display
+async function toggleReviews(productId) {
+  const container = document.getElementById(`reviews-container-${productId}`);
+  const button = container.previousElementSibling;
+  
+  if (container.style.display === 'none') {
+    // Show reviews
+    container.style.display = 'block';
+    button.textContent = 'Hide Reviews';
+    
+    // Load reviews if not already loaded
+    if (!container.dataset.loaded) {
+      try {
+        const reviewData = await window.initProductReviews(productId);
+        container.innerHTML = reviewData.html;
+        container.dataset.loaded = 'true';
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        container.innerHTML = '<div class="review-error">Failed to load reviews</div>';
+      }
+    }
+  } else {
+    // Hide reviews
+    container.style.display = 'none';
+    button.textContent = 'View Reviews';
+  }
+}
+
+// Function to load rating stars for all products
+async function loadProductRatings() {
+  const productCards = document.querySelectorAll('.product-card');
+  
+  for (const card of productCards) {
+    const productId = card.id.replace('product-', '');
+    if (!productId) continue;
+    
+    const ratingContainer = document.getElementById(`product-rating-${productId}`);
+    if (!ratingContainer) continue;
+    
+    try {
+      const stats = await window.fetchReviewStats(productId);
+      if (stats.totalReviews > 0) {
+        ratingContainer.innerHTML = `
+          <div class="product-rating">
+            <span class="stars">${window.renderStars(stats.averageRating)}</span>
+            <span class="rating-count">${stats.averageRating.toFixed(1)} (${stats.totalReviews})</span>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('Error loading rating for product:', productId, error);
+    }
+  }
+}
+
 // Expose functions to global scope for HTML onclick
 window.showShopSection = showShopSection;
 window.applyFilters = applyFilters;
 window.resetFilters = resetFilters;
+window.toggleReviews = toggleReviews;
