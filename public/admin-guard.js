@@ -9,7 +9,8 @@
   // Check if user is admin using backend API
   async function checkAdminStatus(user) {
     try {
-      const idToken = await user.getIdToken();
+      // Force token refresh to get latest custom claims
+      const idToken = await user.getIdToken(true);
       const response = await fetch(`${API_BASE}/api/admin/check`, {
         headers: {
           'Authorization': `Bearer ${idToken}`

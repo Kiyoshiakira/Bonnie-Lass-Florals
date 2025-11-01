@@ -230,7 +230,8 @@
         messagesLink.style.display = 'none';
         return;
       }
-      const token = await user.getIdToken();
+      // Force token refresh to get latest custom claims
+      const token = await user.getIdToken(true);
       const email = user.email || '';
       userInfo.innerHTML = `<strong style="display:block;">${email}</strong>`;
       

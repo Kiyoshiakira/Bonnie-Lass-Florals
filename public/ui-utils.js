@@ -120,10 +120,17 @@ function closeImageModal() {
 async function checkIsAdmin(user) {
   if (!user) return false;
   
+  // Use cached admin status if available and fresh (< 5 seconds old)
+  const cacheAge = Date.now() - (window._cachedAdminStatusTime || 0);
+  if (window._cachedAdminStatus !== undefined && cacheAge < 5000) {
+    return window._cachedAdminStatus;
+  }
+  
   const API_BASE = window.API_BASE || 'https://bonnie-lass-florals.onrender.com';
   
   try {
-    const idToken = await user.getIdToken();
+    // Force token refresh to get latest custom claims
+    const idToken = await user.getIdToken(true);
     const response = await fetch(`${API_BASE}/api/admin/check`, {
       headers: {
         'Authorization': `Bearer ${idToken}`
@@ -136,7 +143,13 @@ async function checkIsAdmin(user) {
     }
 
     const data = await response.json();
-    return data.isAdmin === true;
+    const isAdmin = data.isAdmin === true;
+    
+    // Cache the result
+    window._cachedAdminStatus = isAdmin;
+    window._cachedAdminStatusTime = Date.now();
+    
+    return isAdmin;
   } catch (error) {
     console.error('Error checking admin status:', error);
     return false;
