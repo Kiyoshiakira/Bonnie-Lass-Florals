@@ -1940,7 +1940,11 @@ footer a:hover {
 /* ============================================================================
    ACCESSIBILITY IMPROVEMENTS - Focus states and skip links
    ============================================================================ */
-*:focus-visible {
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: 3px solid var(--floral-accent, #ff8c42);
   outline-offset: 2px;
 }
@@ -1969,6 +1973,7 @@ footer a:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: var(--floral-primary, #1b4332); /* Fallback color */
 }
 
 .shadow-glow {

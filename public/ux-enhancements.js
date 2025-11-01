@@ -34,7 +34,7 @@
           }, 300);
         }
       }, 100);
-    });
+    }, { passive: true });
 
     // Scroll to top when clicked
     backToTop.addEventListener('click', function() {
@@ -47,6 +47,16 @@
 
   // Add fade-in animation to elements as they come into view
   function initScrollAnimations() {
+    // Check for IntersectionObserver support
+    if (!('IntersectionObserver' in window)) {
+      // Fallback: just add the animate-in class to all elements immediately
+      const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
+      elementsToAnimate.forEach(el => {
+        el.classList.add('animate-in');
+      });
+      return;
+    }
+
     const observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -50px 0px'
@@ -78,6 +88,10 @@
     
     buttons.forEach(button => {
       button.addEventListener('click', function(e) {
+        // Remove any existing ripples
+        const existingRipples = this.querySelectorAll('.ripple');
+        existingRipples.forEach(r => r.remove());
+
         const ripple = document.createElement('span');
         const rect = this.getBoundingClientRect();
         const size = Math.max(rect.width, rect.height);
