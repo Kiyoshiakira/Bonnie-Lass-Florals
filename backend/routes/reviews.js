@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
@@ -16,7 +17,10 @@ router.get('/product/:productId', async (req, res) => {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
     
-    const reviews = await Review.find({ product: productId })
+    // Sanitize by converting to ObjectId
+    const sanitizedProductId = new mongoose.Types.ObjectId(productId);
+    
+    const reviews = await Review.find({ product: sanitizedProductId })
       .sort({ createdAt: -1 });
     
     res.json(reviews);
@@ -36,7 +40,10 @@ router.get('/product/:productId/stats', async (req, res) => {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
     
-    const reviews = await Review.find({ product: productId });
+    // Sanitize by converting to ObjectId
+    const sanitizedProductId = new mongoose.Types.ObjectId(productId);
+    
+    const reviews = await Review.find({ product: sanitizedProductId });
     
     if (reviews.length === 0) {
       return res.json({
@@ -94,15 +101,18 @@ router.post(
       const userName = req.user.name || 'Anonymous';
       const userEmail = req.user.email || '';
       
+      // Sanitize productId by converting to ObjectId (validation already ensures it's valid format)
+      const sanitizedProductId = new mongoose.Types.ObjectId(productId);
+      
       // Check if product exists
-      const product = await Product.findById(productId);
+      const product = await Product.findById(sanitizedProductId);
       if (!product) {
         return res.status(404).json({ error: 'Product not found' });
       }
       
       // Check if user already reviewed this product
       const existingReview = await Review.findOne({
-        product: productId,
+        product: sanitizedProductId,
         user: userId
       });
       
@@ -112,7 +122,7 @@ router.post(
       
       // Create new review
       const review = new Review({
-        product: productId,
+        product: sanitizedProductId,
         user: userId,
         userName,
         userEmail,
