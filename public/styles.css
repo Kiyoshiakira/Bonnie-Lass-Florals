@@ -2094,3 +2094,16 @@ select:focus-visible {
   background: #ccc;
   color: #333;
 }
+
+.edit-product-btn {
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, #6e33b7 0%, #9333ea 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 1em;
+  font-weight: 600;
+  font-size: 0.85em;
+  cursor: pointer;
+  width: 100%;
+}

@@ -315,7 +315,6 @@ function productToCard(p) {
         ${isAdmin ? `<button 
           class="edit-product-btn"
           data-id="${escapeAttr(p._id)}"
-          style="margin-top:0.5rem;background:linear-gradient(135deg,#6e33b7 0%,#9333ea 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
           onclick="openEditProductModal('${escapeAttr(p._id)}')"
         >
           Edit Product
@@ -435,11 +434,26 @@ async function loadProductRatings() {
   }
 }
 
+// Helper function to format options for display (array to comma-separated string)
+function formatOptionsForDisplay(options) {
+  if (!options) return '';
+  return Array.isArray(options) ? options.join(', ') : String(options);
+}
+
+// Helper function to parse options from input (comma-separated string to array)
+function parseOptionsFromInput(optionsString) {
+  if (!optionsString || !optionsString.trim()) return [];
+  return optionsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
 // Edit Product Modal Functions (Admin Only)
 function openEditProductModal(productId) {
   const product = allProducts.find(p => p._id === productId);
+  const errorDiv = document.getElementById('editProductError');
+  
   if (!product) {
-    alert('Product not found');
+    errorDiv.textContent = 'Product not found';
+    errorDiv.style.display = 'block';
     return;
   }
   
@@ -450,11 +464,11 @@ function openEditProductModal(productId) {
   document.getElementById('editProductPrice').value = product.price || '';
   document.getElementById('editProductType').value = product.type || 'decor';
   document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
-  document.getElementById('editProductOptions').value = (product.options && Array.isArray(product.options)) ? product.options.join(', ') : (product.options || '');
+  document.getElementById('editProductOptions').value = formatOptionsForDisplay(product.options);
   document.getElementById('editProductImage').value = product.image || '';
   
   // Clear previous messages
-  document.getElementById('editProductError').style.display = 'none';
+  errorDiv.style.display = 'none';
   document.getElementById('editProductSuccess').style.display = 'none';
   
   // Show modal
@@ -490,14 +504,13 @@ async function handleEditProductSubmit(e) {
     const token = await user.getIdToken();
     
     // Prepare update data
-    const optionsValue = document.getElementById('editProductOptions').value;
     const updateData = {
       name: document.getElementById('editProductName').value,
       description: document.getElementById('editProductDescription').value,
       price: parseFloat(document.getElementById('editProductPrice').value),
       type: document.getElementById('editProductType').value,
       stock: parseInt(document.getElementById('editProductStock').value),
-      options: optionsValue ? optionsValue.split(',').map(s => s.trim()).filter(s => s.length > 0) : [],
+      options: parseOptionsFromInput(document.getElementById('editProductOptions').value),
       image: document.getElementById('editProductImage').value
     };
     
