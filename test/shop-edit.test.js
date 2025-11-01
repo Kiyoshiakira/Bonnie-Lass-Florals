@@ -38,6 +38,8 @@ describe('Shop Page Edit Product Feature', function() {
     const productStock = document.getElementById('editProductStock');
     const productOptions = document.getElementById('editProductOptions');
     const productImage = document.getElementById('editProductImage');
+    const productImageFile = document.getElementById('editProductImageFile');
+    const currentImagePreview = document.getElementById('editCurrentImagePreview');
 
     expect(productId).to.exist;
     expect(productName).to.exist;
@@ -50,6 +52,10 @@ describe('Shop Page Edit Product Feature', function() {
     expect(productStock.required).to.be.true;
     expect(productOptions).to.exist;
     expect(productImage).to.exist;
+    expect(productImageFile).to.exist;
+    expect(productImageFile.type).to.equal('file');
+    expect(productImageFile.accept).to.equal('image/*');
+    expect(currentImagePreview).to.exist;
   });
 
   it('should have cancel button in edit modal', function() {

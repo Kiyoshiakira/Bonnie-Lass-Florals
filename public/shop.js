@@ -446,6 +446,63 @@ function parseOptionsFromInput(optionsString) {
   return optionsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
 }
 
+/**
+ * Upload image file to Firebase Storage
+ * @param {File} file - Image file to upload
+ * @returns {Promise<string>} Download URL from Firebase Storage
+ */
+async function uploadImageToFirebase(file) {
+  // Constants for validation
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MIN_FILENAME_LENGTH = 3;
+  const MAX_FILENAME_LENGTH = 100;
+  
+  // Validate file type
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+  }
+  
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds 10MB limit.');
+  }
+  
+  const storage = firebase.storage();
+  const storageRef = storage.ref();
+  const timestamp = Date.now();
+  
+  // Enhanced filename sanitization - remove special chars and path traversal
+  let safeName = file.name
+    .replace(/[^a-zA-Z0-9._-]/g, '_')  // Replace unsafe chars with underscore
+    .replace(/\.{2,}/g, '_')            // Remove path traversal sequences
+    .replace(/^\.+/, '')                // Remove leading dots
+    .substring(0, MAX_FILENAME_LENGTH); // Limit filename length
+  
+  // Fallback to default name if sanitization results in empty or very short name
+  if (!safeName || safeName.length < MIN_FILENAME_LENGTH) {
+    const extension = file.type.split('/')[1] || 'jpg';
+    safeName = `image.${extension}`;
+  }
+  
+  const filename = `product-images/${timestamp}-${safeName}`;
+  const imageRef = storageRef.child(filename);
+  
+  // Upload file to Firebase Storage with metadata
+  const metadata = {
+    contentType: file.type,
+    customMetadata: {
+      uploadedAt: new Date().toISOString()
+    }
+  };
+  
+  const snapshot = await imageRef.put(file, metadata);
+  
+  // Get the download URL
+  const downloadURL = await snapshot.ref.getDownloadURL();
+  return downloadURL;
+}
+
 // Edit Product Modal Functions (Admin Only)
 function openEditProductModal(productId) {
   const product = allProducts.find(p => p._id === productId);
@@ -466,6 +523,20 @@ function openEditProductModal(productId) {
   document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
   document.getElementById('editProductOptions').value = formatOptionsForDisplay(product.options);
   document.getElementById('editProductImage').value = product.image || '';
+  
+  // Display current image preview
+  const imagePreviewDiv = document.getElementById('editCurrentImagePreview');
+  if (imagePreviewDiv) {
+    imagePreviewDiv.innerHTML = product.image 
+      ? `<img src="${escapeAttr(product.image)}" style="max-width:200px;border-radius:4px;" alt="Current product image">` 
+      : '<div style="color:#999;">No image</div>';
+  }
+  
+  // Clear file input
+  const fileInput = document.getElementById('editProductImageFile');
+  if (fileInput) {
+    fileInput.value = '';
+  }
   
   // Clear previous messages
   errorDiv.style.display = 'none';
@@ -488,6 +559,7 @@ async function handleEditProductSubmit(e) {
   const productId = document.getElementById('editProductId').value;
   const errorDiv = document.getElementById('editProductError');
   const successDiv = document.getElementById('editProductSuccess');
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   
   errorDiv.style.display = 'none';
   successDiv.style.display = 'none';
@@ -510,9 +582,38 @@ async function handleEditProductSubmit(e) {
       price: parseFloat(document.getElementById('editProductPrice').value),
       type: document.getElementById('editProductType').value,
       stock: parseInt(document.getElementById('editProductStock').value),
-      options: parseOptionsFromInput(document.getElementById('editProductOptions').value),
-      image: document.getElementById('editProductImage').value
+      options: parseOptionsFromInput(document.getElementById('editProductOptions').value)
     };
+    
+    // Handle image upload if a file was selected
+    const fileInput = document.getElementById('editProductImageFile');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uploading image...';
+      }
+      
+      try {
+        const imageUrl = await uploadImageToFirebase(fileInput.files[0]);
+        updateData.image = imageUrl;
+      } catch (uploadErr) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Changes';
+        }
+        throw new Error('Failed to upload image to storage: ' + uploadErr.message);
+      }
+      
+      if (submitBtn) {
+        submitBtn.textContent = 'Saving changes...';
+      }
+    } else {
+      // Use the URL provided in the text field
+      const imageUrl = document.getElementById('editProductImage').value;
+      if (imageUrl) {
+        updateData.image = imageUrl;
+      }
+    }
     
     // Send PUT request to update product
     const response = await fetch(`${API_BASE}/api/products/${productId}`, {
@@ -543,6 +644,12 @@ async function handleEditProductSubmit(e) {
     console.error('Error updating product:', error);
     errorDiv.textContent = error.message || 'Failed to update product';
     errorDiv.style.display = 'block';
+  } finally {
+    // Reset button state
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Changes';
+    }
   }
 }
 
@@ -577,7 +684,8 @@ if (window.firebase && firebase.auth) {
     if (user) {
       // Check if user is admin
       try {
-        const token = await user.getIdToken();
+        // Force token refresh to get latest custom claims
+        const token = await user.getIdToken(true);
         const response = await fetch(`${API_BASE}/api/admin/check`, {
           headers: {
             'Authorization': `Bearer ${token}`

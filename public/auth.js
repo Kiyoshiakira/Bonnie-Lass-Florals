@@ -125,36 +125,39 @@
 
     // Handle user login - update UI and store user info
     async function handleLogin(user) {
-      // Check admin status using backend API
-      // Try global helper first, fall back to direct API call if not available
+      // Force token refresh to get latest custom claims (including admin status)
+      // This ensures we get the most up-to-date admin status immediately
       let isAdmin = false;
       try {
-        if (typeof window.checkIsAdmin === 'function') {
-          isAdmin = await window.checkIsAdmin(user);
-        } else {
-          // Fallback: call API directly if ui-utils.js is not loaded
-          console.warn('window.checkIsAdmin not available (ui-utils.js may not be loaded yet), falling back to direct API call');
-          const API_BASE = window.API_BASE || (
-            (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-              ? 'http://localhost:5000'
-              : 'https://bonnie-lass-florals.onrender.com'
-          );
-          const idToken = await user.getIdToken();
-          const response = await fetch(`${API_BASE}/api/admin/check`, {
-            headers: {
-              'Authorization': `Bearer ${idToken}`
-            }
-          });
-          if (response.ok) {
-            const data = await response.json();
-            isAdmin = data.isAdmin === true;
+        // Force refresh the token to get latest custom claims
+        const idToken = await user.getIdToken(true);
+        
+        const API_BASE = window.API_BASE || (
+          (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'http://localhost:5000'
+            : 'https://bonnie-lass-florals.onrender.com'
+        );
+        
+        const response = await fetch(`${API_BASE}/api/admin/check`, {
+          headers: {
+            'Authorization': `Bearer ${idToken}`
           }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          isAdmin = data.isAdmin === true;
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
         isAdmin = false;
       }
+      
       const role = isAdmin ? "Admin" : "Customer";
+      
+      // Cache admin status to avoid repeated API calls
+      window._cachedAdminStatus = isAdmin;
+      window._cachedAdminStatusTime = Date.now();
       
       // Update user info in dropdown
       if (userInfoDropdown) {
@@ -213,6 +216,10 @@
     if (window.firebase && firebase.auth) {
       firebase.auth().onAuthStateChanged(function(user) {
         if (user) {
+          // User is signed in - close login modal if it's open
+          if (loginModal) {
+            loginModal.classList.remove('active');
+          }
           handleLogin(user);
         } else {
           handleLogout();
