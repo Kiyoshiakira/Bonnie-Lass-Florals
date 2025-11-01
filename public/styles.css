@@ -51,11 +51,34 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: var(--floral-cream, #f1faee) url('img/fall-background.svg') center/cover fixed; /* Light cream with fall leaves pattern */
   color: #081c15; /* Dark text for contrast */
+  transition: background-color 0.3s ease;
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Loading animation for initial page load */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle pulse animation for CTA elements */
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }
 
 /* OPTIONAL: Custom Canva Background Support
@@ -110,14 +133,30 @@ nav a {
   text-decoration: none;
   font-weight: 600;
   font-size: 1.05rem;
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 4px 0;
   border-bottom: 2px solid transparent;
+  position: relative;
+}
+
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: #ffd700;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+nav a:hover::after {
+  width: 100%;
 }
 
 nav a:hover {
   color: #ffd700; /* Golden yellow on hover */
-  border-bottom: 2px solid #ffd700;
   transform: translateY(-2px);
 }
 
@@ -140,6 +179,26 @@ nav a:hover {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border: 2px solid #40916c; /* Forest green border for depth */
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.cta-btn:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .cta-btn:hover {
@@ -331,6 +390,7 @@ section {
   box-shadow: 0 8px 30px rgba(27, 67, 50, 0.15);
   padding: 54px 34px;
   border-top: 4px solid #40916c; /* Forest green border */
+  animation: fadeInUp 0.6s ease-out;
 }
 
 section h1 {
@@ -394,6 +454,96 @@ p {
 }
 
 /* ============================================================================
+   HERO SECTION - Enhanced homepage hero with better visual hierarchy
+   ============================================================================ */
+.hero-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-section h1 {
+  font-size: 3.2rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 1.35rem;
+  max-width: 700px;
+  margin: 0 auto 2.5rem auto;
+  color: #2d6a4f;
+  line-height: 1.8;
+  font-weight: 500;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.hero-cta .cta-btn {
+  margin: 0;
+  min-width: 200px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.hero-cta .primary-cta {
+  background: linear-gradient(135deg, var(--floral-primary, #1b4332) 0%, var(--floral-primary-2, #2d6a4f) 100%);
+  color: #fff;
+  border-color: var(--floral-primary-2, #2d6a4f);
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+.hero-cta .primary-cta:hover {
+  background: linear-gradient(135deg, #0d2419 0%, var(--floral-primary, #1b4332) 100%);
+  animation: none;
+}
+
+.hero-cta .secondary-cta {
+  background: transparent;
+  color: var(--floral-primary-2, #2d6a4f);
+  border: 2px solid var(--floral-primary-2, #2d6a4f);
+  box-shadow: none;
+}
+
+.hero-cta .secondary-cta:hover {
+  background: var(--floral-primary-2, #2d6a4f);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(45, 106, 79, 0.3);
+}
+
+/* Scroll indicator animation */
+.scroll-indicator {
+  margin-top: 2rem;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.scroll-indicator span {
+  font-size: 2rem;
+  color: var(--floral-primary-2, #2d6a4f);
+  display: inline-block;
+  opacity: 0.7;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ============================================================================
    FEATURE CARDS - Fall-inspired leaf cards with proper contrast
    ============================================================================ */
 .features {
@@ -411,23 +561,30 @@ p {
   border-radius: 24px;
   padding: 28px 22px;
   box-shadow: 0 6px 20px rgba(45, 106, 79, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 220px;
   border: 3px solid var(--floral-green, #52b788); /* Sage border for leaf effect */
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.feature-card:nth-child(1) {
+  animation-delay: 0.1s;
 }
 
 .feature-card:nth-child(2) {
   background: linear-gradient(135deg, var(--floral-accent, #ff8c42) 0%, #d4692d 100%); /* Fall orange */
+  animation-delay: 0.2s;
 }
 
 .feature-card:nth-child(3) {
   background: linear-gradient(135deg, var(--floral-green, #52b788) 0%, #95d5b2 100%); /* Light sage */
   color: #081c15; /* Dark text on light green */
+  animation-delay: 0.3s;
 }
 
 .feature-card:hover {
-  transform: translateY(-8px) scale(1.04);
-  box-shadow: 0 12px 30px rgba(45, 106, 79, 0.4);
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 14px 35px rgba(45, 106, 79, 0.45);
 }
 
 .feature-card i {
@@ -854,14 +1011,16 @@ footer a:hover {
   border-radius: 12px;
   font-size: 1rem;
   font-family: 'Segoe UI', Arial, sans-serif;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
 }
 
 #contactForm input:focus,
 #contactForm textarea:focus {
   outline: none;
   border-color: #2d6a4f; /* Emerald green */
-  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+  box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.15);
+  transform: translateY(-2px);
 }
 
 #contactForm button {
@@ -952,7 +1111,7 @@ footer a:hover {
   max-width: 200px;
   flex: 0 1 200px;
   text-align: left;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
@@ -965,11 +1124,16 @@ footer a:hover {
   right: 0;
   height: 4px;
   background: linear-gradient(90deg, #2d6a4f, #40916c, #52b788);
+  transition: height 0.3s ease;
+}
+
+.product-card:hover::before {
+  height: 6px;
 }
 
 .product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 25px rgba(45, 106, 79, 0.25);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(45, 106, 79, 0.3);
   border-color: #52b788;
 }
 
@@ -980,12 +1144,14 @@ footer a:hover {
   border-radius: 12px;
   margin-bottom: 0.6em;
   cursor: zoom-in;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid #fff5e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .product-img:hover {
-  transform: scale(1.04);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .product-title {
@@ -1035,27 +1201,48 @@ footer a:hover {
   font-weight: bold;
   font-size: 0.9em;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.product-card button:hover:not(:disabled)::before {
+  width: 300px;
+  height: 300px;
 }
 
 .product-card button:hover:not(:disabled) {
   background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 6px 16px rgba(27, 67, 50, 0.4);
 }
 
 .product-card button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
 
 .product-card button:disabled {
   background: #ccc;
   cursor: not-allowed;
   box-shadow: none;
+  opacity: 0.6;
 }
 
 /* ============================================================================
@@ -1675,4 +1862,124 @@ footer a:hover {
   table {
     font-size: 0.9rem;
   }
+}
+
+/* ============================================================================
+   BACK TO TOP BUTTON - Smooth scroll navigation
+   ============================================================================ */
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--floral-primary, #1b4332) 0%, var(--floral-primary-2, #2d6a4f) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(27, 67, 50, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: linear-gradient(135deg, #0d2419 0%, var(--floral-primary, #1b4332) 100%);
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(27, 67, 50, 0.5);
+}
+
+.back-to-top:active {
+  transform: translateY(-2px);
+}
+
+/* ============================================================================
+   SCROLL ANIMATIONS - Fade in elements on scroll
+   ============================================================================ */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================================
+   RIPPLE EFFECT - Interactive button feedback
+   ============================================================================ */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-animation 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY IMPROVEMENTS - Focus states and skip links
+   ============================================================================ */
+*:focus-visible {
+  outline: 3px solid var(--floral-accent, #ff8c42);
+  outline-offset: 2px;
+}
+
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--floral-primary-2, #2d6a4f);
+  color: #fff;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 100000;
+  border-radius: 0 0 8px 0;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* ============================================================================
+   UTILITY CLASSES - Reusable visual enhancements
+   ============================================================================ */
+.text-gradient {
+  background: linear-gradient(135deg, var(--floral-primary-2, #2d6a4f), var(--floral-primary, #1b4332));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(45, 106, 79, 0.3);
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(45, 106, 79, 0.25);
 }
