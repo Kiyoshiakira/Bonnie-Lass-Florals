@@ -132,6 +132,9 @@ app.use('/api/settings', require('./routes/settings'));
 logger.info('Loading router: /api/admin');
 app.use('/api/admin', require('./routes/admin'));
 
+logger.info('Loading router: /api/reviews');
+app.use('/api/reviews', require('./routes/reviews'));
+
 // --- Optional: Add gallery/socials routes if you have them ---
 // app.use('/api/gallery', require('./routes/gallery'));
 // app.use('/api/socials', require('./routes/socials'));
