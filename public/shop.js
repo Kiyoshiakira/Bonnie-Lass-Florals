@@ -407,29 +407,58 @@ async function toggleReviews(productId) {
   }
 }
 
-// Function to load rating stars for all products
+// Fix: Throttle review stats requests to avoid overwhelming the API (prevents 429 errors)
+// Maximum number of parallel requests to the reviews API
+const MAX_PARALLEL_REVIEW_REQUESTS = 6;
+
+// Delay between batches (in milliseconds)
+const BATCH_DELAY_MS = 200;
+
+// Function to load rating stars for all products with batching to prevent API overload
 async function loadProductRatings() {
   const productCards = document.querySelectorAll('.product-card');
   
+  // Collect all product IDs that need ratings
+  const productIds = [];
   for (const card of productCards) {
     const productId = card.id.replace('product-', '');
-    if (!productId) continue;
+    if (productId) {
+      productIds.push(productId);
+    }
+  }
+  
+  // Fix: Process product IDs in chunks to limit parallel requests
+  // This prevents overwhelming the reviews API and reduces 429 rate limit errors
+  for (let i = 0; i < productIds.length; i += MAX_PARALLEL_REVIEW_REQUESTS) {
+    const chunk = productIds.slice(i, i + MAX_PARALLEL_REVIEW_REQUESTS);
     
-    const ratingContainer = document.getElementById(`product-rating-${productId}`);
-    if (!ratingContainer) continue;
+    // Process this chunk in parallel (up to MAX_PARALLEL requests)
+    await Promise.all(
+      chunk.map(async (productId) => {
+        const ratingContainer = document.getElementById(`product-rating-${productId}`);
+        if (!ratingContainer) return;
+        
+        try {
+          // Keep existing fetchReviewStats function unchanged
+          const stats = await window.fetchReviewStats(productId);
+          if (stats.totalReviews > 0) {
+            ratingContainer.innerHTML = `
+              <div class="product-rating">
+                <span class="stars">${window.renderStars(stats.averageRating)}</span>
+                <span class="rating-count">${stats.averageRating.toFixed(1)} (${stats.totalReviews})</span>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('Error loading rating for product:', productId, error);
+        }
+      })
+    );
     
-    try {
-      const stats = await window.fetchReviewStats(productId);
-      if (stats.totalReviews > 0) {
-        ratingContainer.innerHTML = `
-          <div class="product-rating">
-            <span class="stars">${window.renderStars(stats.averageRating)}</span>
-            <span class="rating-count">${stats.averageRating.toFixed(1)} (${stats.totalReviews})</span>
-          </div>
-        `;
-      }
-    } catch (error) {
-      console.error('Error loading rating for product:', productId, error);
+    // Fix: Add delay between chunks to prevent API rate limiting
+    // Only add delay if there are more chunks to process
+    if (i + MAX_PARALLEL_REVIEW_REQUESTS < productIds.length) {
+      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
     }
   }
 }
@@ -458,6 +487,13 @@ async function uploadImageToFirebase(file) {
   const MIN_FILENAME_LENGTH = 3;
   const MAX_FILENAME_LENGTH = 100;
   
+  // Fix: Check authentication before attempting upload to prevent runtime errors
+  if (!firebase.auth().currentUser) {
+    const errorMsg = 'Authentication required: You must be logged in to upload images.';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
   // Validate file type
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
@@ -468,39 +504,54 @@ async function uploadImageToFirebase(file) {
     throw new Error('File size exceeds 10MB limit.');
   }
   
-  const storage = firebase.storage();
-  const storageRef = storage.ref();
-  const timestamp = Date.now();
-  
-  // Enhanced filename sanitization - remove special chars and path traversal
-  let safeName = file.name
-    .replace(/[^a-zA-Z0-9._-]/g, '_')  // Replace unsafe chars with underscore
-    .replace(/\.{2,}/g, '_')            // Remove path traversal sequences
-    .replace(/^\.+/, '')                // Remove leading dots
-    .substring(0, MAX_FILENAME_LENGTH); // Limit filename length
-  
-  // Fallback to default name if sanitization results in empty or very short name
-  if (!safeName || safeName.length < MIN_FILENAME_LENGTH) {
-    const extension = file.type.split('/')[1] || 'jpg';
-    safeName = `image.${extension}`;
-  }
-  
-  const filename = `product-images/${timestamp}-${safeName}`;
-  const imageRef = storageRef.child(filename);
-  
-  // Upload file to Firebase Storage with metadata
-  const metadata = {
-    contentType: file.type,
-    customMetadata: {
-      uploadedAt: new Date().toISOString()
+  // Fix: Wrap upload logic in try/catch for better error handling
+  try {
+    const storage = firebase.storage();
+    // Fix: Use template literal for storage path to ensure proper string interpolation
+    const timestamp = Date.now();
+    
+    // Enhanced filename sanitization - remove special chars and path traversal
+    let safeName = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, '_')  // Replace unsafe chars with underscore
+      .replace(/\.{2,}/g, '_')            // Remove path traversal sequences
+      .replace(/^\.+/, '')                // Remove leading dots
+      .substring(0, MAX_FILENAME_LENGTH); // Limit filename length
+    
+    // Fallback to default name if sanitization results in empty or very short name
+    if (!safeName || safeName.length < MIN_FILENAME_LENGTH) {
+      const extension = file.type.split('/')[1] || 'jpg';
+      safeName = `image.${extension}`;
     }
-  };
-  
-  const snapshot = await imageRef.put(file, metadata);
-  
-  // Get the download URL
-  const downloadURL = await snapshot.ref.getDownloadURL();
-  return downloadURL;
+    
+    const filename = `${timestamp}-${safeName}`;
+    // Fix: Use template literal for storage reference path
+    const imageRef = storage.ref(`product-images/${filename}`);
+    
+    // Upload file to Firebase Storage with metadata
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        uploadedAt: new Date().toISOString()
+      }
+    };
+    
+    const snapshot = await imageRef.put(file, metadata);
+    
+    // Get the download URL
+    const downloadURL = await snapshot.ref.getDownloadURL();
+    return downloadURL;
+  } catch (error) {
+    // Fix: Enhanced error handling with detailed logging
+    const errorMsg = `Image upload failed: ${error.message || 'Unknown error'}`;
+    console.error(errorMsg, error);
+    
+    // Fix: Show user-friendly notification if available
+    if (typeof showNotification === 'function') {
+      showNotification(errorMsg, 'error');
+    }
+    
+    throw new Error(errorMsg);
+  }
 }
 
 // Edit Product Modal Functions (Admin Only)
