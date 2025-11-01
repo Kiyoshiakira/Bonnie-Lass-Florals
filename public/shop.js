@@ -18,6 +18,7 @@ let allProducts = [];
 let currentPage = 1;
 let totalPages = 1;
 let isLoading = false;
+let isAdmin = false; // Track admin status
 
 // Load products dynamically from backend with pagination
 async function loadProducts(page = 1, append = false) {
@@ -306,6 +307,14 @@ function productToCard(p) {
         >
           View Reviews
         </button>
+        ${isAdmin ? `<button 
+          class="edit-product-btn"
+          data-id="${escapeAttr(p._id)}"
+          style="margin-top:0.5rem;background:linear-gradient(135deg,#6e33b7 0%,#9333ea 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
+          onclick="openEditProductModal('${escapeAttr(p._id)}')"
+        >
+          Edit Product
+        </button>` : ''}
         <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
       </div>
     </div>
@@ -421,8 +430,171 @@ async function loadProductRatings() {
   }
 }
 
+// Edit Product Modal Functions (Admin Only)
+function openEditProductModal(productId) {
+  const product = allProducts.find(p => p._id === productId);
+  if (!product) {
+    alert('Product not found');
+    return;
+  }
+  
+  // Populate form fields
+  document.getElementById('editProductId').value = product._id;
+  document.getElementById('editProductName').value = product.name || '';
+  document.getElementById('editProductDescription').value = product.description || '';
+  document.getElementById('editProductPrice').value = product.price || '';
+  document.getElementById('editProductType').value = product.type || 'decor';
+  document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
+  document.getElementById('editProductOptions').value = (product.options && Array.isArray(product.options)) ? product.options.join(', ') : (product.options || '');
+  document.getElementById('editProductImage').value = product.image || '';
+  
+  // Clear previous messages
+  document.getElementById('editProductError').style.display = 'none';
+  document.getElementById('editProductSuccess').style.display = 'none';
+  
+  // Show modal
+  const modal = document.getElementById('editProductModal');
+  modal.style.display = 'flex';
+}
+
+function closeEditProductModal() {
+  const modal = document.getElementById('editProductModal');
+  modal.style.display = 'none';
+}
+
+// Handle edit form submission
+async function handleEditProductSubmit(e) {
+  e.preventDefault();
+  
+  const productId = document.getElementById('editProductId').value;
+  const errorDiv = document.getElementById('editProductError');
+  const successDiv = document.getElementById('editProductSuccess');
+  
+  errorDiv.style.display = 'none';
+  successDiv.style.display = 'none';
+  
+  try {
+    // Get Firebase auth token
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      errorDiv.textContent = 'Please login first';
+      errorDiv.style.display = 'block';
+      return;
+    }
+    
+    const token = await user.getIdToken();
+    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:5000'
+      : 'https://bonnie-lass-florals.onrender.com';
+    
+    // Prepare update data
+    const updateData = {
+      name: document.getElementById('editProductName').value,
+      description: document.getElementById('editProductDescription').value,
+      price: parseFloat(document.getElementById('editProductPrice').value),
+      type: document.getElementById('editProductType').value,
+      stock: parseInt(document.getElementById('editProductStock').value),
+      options: document.getElementById('editProductOptions').value,
+      image: document.getElementById('editProductImage').value
+    };
+    
+    // Send PUT request to update product
+    const response = await fetch(`${API_BASE}/api/products/${productId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updateData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update product');
+    }
+    
+    // Success - show message and reload products
+    successDiv.textContent = 'Product updated successfully!';
+    successDiv.style.display = 'block';
+    
+    // Reload products to reflect changes
+    setTimeout(async () => {
+      await loadProducts();
+      closeEditProductModal();
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Error updating product:', error);
+    errorDiv.textContent = error.message || 'Failed to update product';
+    errorDiv.style.display = 'block';
+  }
+}
+
+// Initialize edit modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Cancel button
+  const cancelBtn = document.getElementById('cancelEditProduct');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeEditProductModal);
+  }
+  
+  // Form submission
+  const editForm = document.getElementById('editProductForm');
+  if (editForm) {
+    editForm.addEventListener('submit', handleEditProductSubmit);
+  }
+  
+  // Close modal when clicking outside
+  const modal = document.getElementById('editProductModal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeEditProductModal();
+      }
+    });
+  }
+});
+
+// Check admin status on auth state change
+if (window.firebase && firebase.auth) {
+  firebase.auth().onAuthStateChanged(async function(user) {
+    if (user) {
+      // Check if user is admin
+      try {
+        const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+          ? 'http://localhost:5000'
+          : 'https://bonnie-lass-florals.onrender.com';
+        const token = await user.getIdToken();
+        const response = await fetch(`${API_BASE}/api/admin/check`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          isAdmin = data.isAdmin === true;
+          // Re-render products to show/hide edit buttons
+          if (allProducts.length > 0) {
+            renderProducts();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        isAdmin = false;
+      }
+    } else {
+      isAdmin = false;
+      // Re-render products to hide edit buttons
+      if (allProducts.length > 0) {
+        renderProducts();
+      }
+    }
+  });
+}
+
 // Expose functions to global scope for HTML onclick
 window.showShopSection = showShopSection;
 window.applyFilters = applyFilters;
 window.resetFilters = resetFilters;
 window.toggleReviews = toggleReviews;
+window.openEditProductModal = openEditProductModal;
