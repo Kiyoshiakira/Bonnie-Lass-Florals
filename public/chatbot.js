@@ -140,9 +140,9 @@
         width: 64px;
         height: 64px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%);
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 50%, #62f4f2 100%);
         border: none;
-        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 8px 24px rgba(133, 255, 133, 0.4);
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
@@ -155,7 +155,7 @@
 
       .chatbot-toggle:hover {
         transform: translateY(-4px) scale(1.05);
-        box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
+        box-shadow: 0 12px 32px rgba(133, 255, 133, 0.5);
       }
 
       .chatbot-toggle:active {
@@ -175,7 +175,7 @@
       .chatbot-icon {
         width: 32px;
         height: 32px;
-        color: white;
+        color: #1f2937;
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
       }
 
@@ -187,7 +187,7 @@
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%);
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 50%, #62f4f2 100%);
         opacity: 0.6;
         animation: pulse 2s ease-in-out infinite;
       }
@@ -258,13 +258,13 @@
       }
 
       .chatbot-header {
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%);
-        color: white;
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 50%, #62f4f2 100%);
+        color: #1f2937;
         padding: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        box-shadow: 0 4px 12px rgba(133, 255, 133, 0.2);
       }
 
       .chatbot-header-content {
@@ -277,19 +277,19 @@
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(31, 41, 55, 0.15);
         backdrop-filter: blur(10px);
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(31, 41, 55, 0.2);
       }
 
       .chatbot-avatar svg {
         width: 28px;
         height: 28px;
-        color: white;
+        color: #1f2937;
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
       }
 
@@ -330,7 +330,7 @@
       .chatbot-close {
         background: transparent;
         border: none;
-        color: white;
+        color: #1f2937;
         cursor: pointer;
         padding: 0;
         width: 36px;
@@ -348,7 +348,7 @@
       }
 
       .chatbot-close:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(31, 41, 55, 0.1);
         transform: rotate(90deg);
       }
 
@@ -452,17 +452,17 @@
         height: 32px;
         min-width: 32px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 2px 8px rgba(133, 255, 133, 0.3);
       }
 
       .chatbot-avatar-small svg {
         width: 20px;
         height: 20px;
-        color: white;
+        color: #1f2937;
       }
 
       .chatbot-message-content {
@@ -481,10 +481,10 @@
       }
 
       .chatbot-message.user .chatbot-message-content {
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
-        color: white;
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 100%);
+        color: #1f2937;
         border-radius: 16px 16px 4px 16px;
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(133, 255, 133, 0.3);
       }
 
       .chatbot-message-content p {
@@ -508,9 +508,9 @@
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 100%);
         animation: bounce 1.4s infinite ease-in-out both;
-        box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 2px 4px rgba(133, 255, 133, 0.3);
       }
 
       .chatbot-loading-dot:nth-child(1) {
@@ -555,8 +555,8 @@
 
       .chatbot-input:focus {
         outline: none;
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        border-color: #85ff85;
+        box-shadow: 0 0 0 4px rgba(133, 255, 133, 0.1);
       }
 
       .chatbot-input::placeholder {
@@ -564,10 +564,10 @@
       }
 
       .chatbot-send-button {
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #85ff85 0%, #a3ffc6 100%);
         border: none;
         border-radius: 12px;
-        color: white;
+        color: #1f2937;
         min-width: 44px;
         height: 44px;
         cursor: pointer;
@@ -575,17 +575,17 @@
         align-items: center;
         justify-content: center;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(133, 255, 133, 0.3);
       }
 
       .chatbot-send-button:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 6px 16px rgba(133, 255, 133, 0.4);
       }
 
       .chatbot-send-button:active:not(:disabled) {
         transform: translateY(0);
-        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 2px 8px rgba(133, 255, 133, 0.3);
       }
 
       .chatbot-send-button:disabled {
@@ -618,7 +618,7 @@
       .gemini-logo {
         width: 16px;
         height: 16px;
-        color: #8b5cf6;
+        color: #85ff85;
       }
 
       .chatbot-footer small {
