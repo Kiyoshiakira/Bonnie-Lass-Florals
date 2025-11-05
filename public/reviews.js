@@ -3,7 +3,11 @@
  * Handles displaying, creating, editing, and deleting product reviews
  */
 
-const API_BASE_URL = 'https://bonnie-lass-florals.onrender.com/api';
+// Determine API base URL (consistent with other files)
+const hostname = window.location.hostname;
+const API_BASE_URL = (hostname === 'localhost' || hostname === '127.0.0.1')
+  ? 'http://localhost:5000/api'
+  : 'https://bonnie-lass-florals.onrender.com/api';
 
 /**
  * Get authentication token from Firebase

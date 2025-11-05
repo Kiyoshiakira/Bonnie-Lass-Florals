@@ -486,7 +486,7 @@ function initCarousels() {
 }
 
 // Initialize on DOMContentLoaded
-document.addEventListener('DOMContentLoaded', loadProducts);
+document.addEventListener('DOMContentLoaded', () => loadProducts());
 
 // Function to toggle reviews display
 async function toggleReviews(productId) {
