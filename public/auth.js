@@ -26,6 +26,39 @@
 
     let isSignup = false;
 
+    // Optimistically show profile from localStorage if user was previously logged in
+    // This provides instant UI update while Firebase confirms auth state
+    const cachedUserEmail = localStorage.getItem('userEmail');
+    const cachedUserName = localStorage.getItem('userName');
+    const cachedUserPhoto = localStorage.getItem('userPhoto');
+    const cachedUserRole = localStorage.getItem('userRole');
+    
+    if (cachedUserEmail) {
+      // Show profile immediately based on cached data
+      if (loginBtn) loginBtn.style.display = "none";
+      if (profileCircleContainer) profileCircleContainer.style.display = "flex";
+      if (profileCircle) profileCircle.src = cachedUserPhoto || "img/default-avatar.png";
+      
+      // Update user info dropdown with cached data
+      if (userInfoDropdown) {
+        userInfoDropdown.innerHTML = `
+          <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
+            <div style="font-weight: bold; color: #2563eb;">${cachedUserName || cachedUserEmail}</div>
+            <div style="font-size: 0.85em; color: #666;">${cachedUserEmail}</div>
+            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${cachedUserRole || 'Customer'}</div>
+          </div>
+        `;
+      }
+      
+      // Show admin links if cached role is Admin
+      if (cachedUserRole === "Admin") {
+        if (uploadProductLink) uploadProductLink.style.display = "";
+        if (adminOrdersLink) adminOrdersLink.style.display = "";
+        if (paletteLink) paletteLink.style.display = "";
+        if (messagesLink) messagesLink.style.display = "";
+      }
+    }
+
     // Modal open/close handlers
     if (loginBtn) {
       loginBtn.onclick = () => { 
