@@ -105,6 +105,7 @@ function renderProducts() {
       }, index * 50);
     });
     initImageZoom();
+    initCarousels(); // Initialize image carousels
     
     // Load ratings for all products
     if (window.fetchReviewStats) {
@@ -166,6 +167,7 @@ function applyFilters(type) {
       }, index * 50);
     });
     initImageZoom();
+    initCarousels(); // Initialize image carousels
     
     // Load ratings for filtered products
     if (window.fetchReviewStats) {
@@ -268,8 +270,11 @@ function productToCard(p) {
   
   const isOutOfStock = stock === 0;
   
-  // Use default placeholder if image is missing or empty
-  const imageUrl = p.image && p.image.trim() ? escapeAttr(p.image) : '/img/default-product.png';
+  // Get all images for the product
+  const images = (p.images && p.images.length > 0) 
+    ? p.images 
+    : (p.image ? [p.image] : ['/img/default-product.png']);
+  
   const productName = escapeHtml(p.name);
   const productDesc = escapeHtml(p.description || '');
   const productPrice = p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A';
@@ -279,15 +284,36 @@ function productToCard(p) {
     ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.map(escapeHtml).join(', ')}</div>` 
     : '';
   
-  // Generate responsive image markup
-  // For Firebase Storage URLs, we use the same image but with responsive attributes
-  // In the future, admins can upload multiple sizes and use URL parameters or different files
-  const responsiveImageHtml = generateResponsiveImage(imageUrl, productName);
+  // Generate image carousel or single image
+  let imageHtml;
+  if (images.length > 1) {
+    // Multi-image carousel
+    const carouselId = `carousel-${escapeAttr(p._id)}`;
+    imageHtml = `
+      <div class="product-image-carousel" id="${carouselId}" style="position:relative;width:100%;height:150px;overflow:hidden;">
+        ${images.map((img, idx) => {
+          const imageUrl = img && img.trim() ? escapeAttr(img) : '/img/default-product.png';
+          return generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`);
+        }).join('')}
+        ${images.length > 1 ? `
+          <button class="carousel-prev" onclick="prevImage('${carouselId}')" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1.2em;line-height:1;padding:0;">‹</button>
+          <button class="carousel-next" onclick="nextImage('${carouselId}')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1.2em;line-height:1;padding:0;">›</button>
+          <div class="carousel-indicators" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;">
+            ${images.map((_, idx) => `<span class="indicator ${idx === 0 ? 'active' : ''}" style="width:8px;height:8px;border-radius:50%;background:${idx === 0 ? '#fff' : 'rgba(255,255,255,0.5)'};cursor:pointer;" onclick="goToImage('${carouselId}', ${idx})"></span>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    // Single image
+    const imageUrl = images[0] && images[0].trim() ? escapeAttr(images[0]) : '/img/default-product.png';
+    imageHtml = generateResponsiveImage(imageUrl, productName);
+  }
   
   return `
     <div class="product-card" id="product-${escapeAttr(p._id)}">
       <div class="product-top-section">
-        ${responsiveImageHtml}
+        ${imageHtml}
         <div class="product-info">
           <div class="product-title">${productName}</div>
           <div class="product-price">$${productPrice}</div>
@@ -374,6 +400,95 @@ function generateResponsiveImage(imageUrl, altText) {
       decoding="async"
     />
   `;
+}
+
+// Carousel navigation functions
+function nextImage(carouselId) {
+  const carousel = document.getElementById(carouselId);
+  if (!carousel) return;
+  
+  const images = carousel.querySelectorAll('.product-img');
+  const indicators = carousel.querySelectorAll('.indicator');
+  let currentIndex = -1;
+  
+  // Find current visible image
+  images.forEach((img, idx) => {
+    if (img.style.display !== 'none') {
+      currentIndex = idx;
+    }
+  });
+  
+  if (currentIndex === -1) currentIndex = 0;
+  
+  // Hide current, show next
+  images[currentIndex].style.display = 'none';
+  indicators[currentIndex]?.classList.remove('active');
+  indicators[currentIndex].style.background = 'rgba(255,255,255,0.5)';
+  
+  const nextIndex = (currentIndex + 1) % images.length;
+  images[nextIndex].style.display = 'block';
+  indicators[nextIndex]?.classList.add('active');
+  indicators[nextIndex].style.background = '#fff';
+}
+
+function prevImage(carouselId) {
+  const carousel = document.getElementById(carouselId);
+  if (!carousel) return;
+  
+  const images = carousel.querySelectorAll('.product-img');
+  const indicators = carousel.querySelectorAll('.indicator');
+  let currentIndex = -1;
+  
+  // Find current visible image
+  images.forEach((img, idx) => {
+    if (img.style.display !== 'none') {
+      currentIndex = idx;
+    }
+  });
+  
+  if (currentIndex === -1) currentIndex = 0;
+  
+  // Hide current, show previous
+  images[currentIndex].style.display = 'none';
+  indicators[currentIndex]?.classList.remove('active');
+  indicators[currentIndex].style.background = 'rgba(255,255,255,0.5)';
+  
+  const prevIndex = (currentIndex - 1 + images.length) % images.length;
+  images[prevIndex].style.display = 'block';
+  indicators[prevIndex]?.classList.add('active');
+  indicators[prevIndex].style.background = '#fff';
+}
+
+function goToImage(carouselId, targetIndex) {
+  const carousel = document.getElementById(carouselId);
+  if (!carousel) return;
+  
+  const images = carousel.querySelectorAll('.product-img');
+  const indicators = carousel.querySelectorAll('.indicator');
+  
+  // Hide all images and deactivate all indicators
+  images.forEach((img, idx) => {
+    img.style.display = idx === targetIndex ? 'block' : 'none';
+    if (indicators[idx]) {
+      if (idx === targetIndex) {
+        indicators[idx].classList.add('active');
+        indicators[idx].style.background = '#fff';
+      } else {
+        indicators[idx].classList.remove('active');
+        indicators[idx].style.background = 'rgba(255,255,255,0.5)';
+      }
+    }
+  });
+}
+
+// Initialize carousel images (hide all except first)
+function initCarousels() {
+  document.querySelectorAll('.product-image-carousel').forEach(carousel => {
+    const images = carousel.querySelectorAll('.product-img');
+    images.forEach((img, idx) => {
+      img.style.display = idx === 0 ? 'block' : 'none';
+    });
+  });
 }
 
 // Initialize on DOMContentLoaded
