@@ -28,14 +28,22 @@
 
     // Helper function to safely escape HTML to prevent XSS attacks
     function escapeHtml(text) {
+      if (!text) return '';
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
 
+    // Helper function to validate image URLs
+    function isValidImageUrl(url) {
+      if (!url) return false;
+      // Allow only http/https URLs or relative paths
+      return /^(https?:\/\/|\/|img\/)/.test(url);
+    }
+
     // Helper function to update user info dropdown (shared between cache and auth)
     function updateUserInfoDropdown(name, email, role) {
-      if (userInfoDropdown) {
+      if (userInfoDropdown && email) {
         // Escape all user data to prevent XSS
         const safeName = escapeHtml(name || email);
         const safeEmail = escapeHtml(email);
@@ -63,7 +71,12 @@
       // Show profile immediately based on cached data
       if (loginBtn) loginBtn.style.display = "none";
       if (profileCircleContainer) profileCircleContainer.style.display = "flex";
-      if (profileCircle) profileCircle.src = cachedUserPhoto || "img/default-avatar.png";
+      
+      // Validate photo URL before using it to prevent malicious URLs
+      if (profileCircle) {
+        const photoUrl = isValidImageUrl(cachedUserPhoto) ? cachedUserPhoto : "img/default-avatar.png";
+        profileCircle.src = photoUrl;
+      }
       
       // Update user info dropdown with cached data (XSS-safe)
       updateUserInfoDropdown(cachedUserName, cachedUserEmail, cachedUserRole);
