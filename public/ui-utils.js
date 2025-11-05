@@ -79,12 +79,12 @@ function initImageZoom() {
     modal.id = 'imageModal';
     modal.className = 'image-modal';
     modal.innerHTML = `
-      <button class="image-modal-close" onclick="closeImageModal()">×</button>
-      <button class="image-modal-prev" onclick="prevModalImage()">‹</button>
-      <button class="image-modal-next" onclick="nextModalImage()">›</button>
+      <button class="image-modal-close" onclick="closeImageModal()" aria-label="Close image modal">×</button>
+      <button class="image-modal-prev" onclick="prevModalImage()" aria-label="Previous image">‹</button>
+      <button class="image-modal-next" onclick="nextModalImage()" aria-label="Next image">›</button>
       <img class="image-modal-content" id="modalImage" alt="Zoomed image">
-      <div class="image-modal-indicators" id="modalIndicators"></div>
-      <div class="image-modal-counter" id="modalCounter"></div>
+      <div class="image-modal-indicators" id="modalIndicators" role="tablist" aria-label="Image navigation"></div>
+      <div class="image-modal-counter" id="modalCounter" aria-live="polite"></div>
     `;
     document.body.appendChild(modal);
     
@@ -160,7 +160,12 @@ function openImageModal(images, startIndex = 0) {
     // Create indicators
     if (indicators && modalImages.length > 1) {
       indicators.innerHTML = modalImages.map((_, idx) => 
-        `<span class="modal-indicator ${idx === currentModalImageIndex ? 'active' : ''}" onclick="goToModalImage(${idx})"></span>`
+        `<span class="modal-indicator ${idx === currentModalImageIndex ? 'active' : ''}" 
+               role="tab" 
+               aria-label="Go to image ${idx + 1}" 
+               aria-selected="${idx === currentModalImageIndex}" 
+               tabindex="${idx === currentModalImageIndex ? 0 : -1}"
+               onclick="goToModalImage(${idx})"></span>`
       ).join('');
       indicators.style.display = 'flex';
     } else if (indicators) {
@@ -194,8 +199,12 @@ function updateModalImage() {
       allIndicators.forEach((indicator, idx) => {
         if (idx === currentModalImageIndex) {
           indicator.classList.add('active');
+          indicator.setAttribute('aria-selected', 'true');
+          indicator.setAttribute('tabindex', '0');
         } else {
           indicator.classList.remove('active');
+          indicator.setAttribute('aria-selected', 'false');
+          indicator.setAttribute('tabindex', '-1');
         }
       });
     }

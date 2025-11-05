@@ -791,11 +791,12 @@ async function handleEditProductSubmit(e) {
       const totalFiles = fileInput.files.length;
       for (let i = 0; i < totalFiles; i++) {
         const file = fileInput.files[i];
+        const progressMsg = `Uploading image ${i + 1} of ${totalFiles}...`;
         if (submitBtn) {
-          submitBtn.textContent = `Uploading image ${i + 1}/${totalFiles}...`;
+          submitBtn.textContent = progressMsg;
         }
         if (progressDiv) {
-          progressDiv.textContent = `Uploading image ${i + 1} of ${totalFiles}...`;
+          progressDiv.textContent = progressMsg;
         }
         
         try {
@@ -803,10 +804,12 @@ async function handleEditProductSubmit(e) {
           imageUrls.push(imageUrl);
         } catch (uploadErr) {
           console.error(`Failed to upload image ${i + 1}:`, uploadErr);
+          const errorMsg = `Warning: Failed to upload image ${i + 1} (${uploadErr.message}). Continuing...`;
           if (progressDiv) {
-            progressDiv.textContent = `Warning: Failed to upload image ${i + 1}. Continuing...`;
+            progressDiv.textContent = errorMsg;
           }
           // Continue with other images
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Brief pause to show error
         }
       }
     }
