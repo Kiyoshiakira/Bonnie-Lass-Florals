@@ -2107,3 +2107,79 @@ select:focus-visible {
   cursor: pointer;
   width: 100%;
 }
+
+/* ============================================================================
+   PRODUCT IMAGE CAROUSEL STYLES
+   ============================================================================ */
+:root {
+  --carousel-height: 150px;
+  --carousel-button-size: 30px;
+  --carousel-indicator-size: 8px;
+}
+
+.product-image-carousel {
+  position: relative;
+  width: 100%;
+  height: var(--carousel-height);
+  overflow: hidden;
+}
+
+.carousel-prev,
+.carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: var(--carousel-button-size);
+  height: var(--carousel-button-size);
+  cursor: pointer;
+  font-size: 1.2em;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.2s ease;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.carousel-prev {
+  left: 8px;
+}
+
+.carousel-next {
+  right: 8px;
+}
+
+.carousel-indicators {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.carousel-indicators .indicator {
+  width: var(--carousel-indicator-size);
+  height: var(--carousel-indicator-size);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.carousel-indicators .indicator.active {
+  background: #fff;
+}
+
+.carousel-indicators .indicator:not(.active) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.carousel-indicators .indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+}

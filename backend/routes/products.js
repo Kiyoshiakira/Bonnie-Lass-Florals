@@ -228,14 +228,36 @@ router.post('/', firebaseAdminAuth, adminMutationLimiter, optionalUpload, create
       occasion: body.occasion || ''
     };
 
+    // Handle images array (new multi-image support)
+    let imageUrls = [];
+    if (body.images && Array.isArray(body.images)) {
+      imageUrls = body.images.filter(img => img && typeof img === 'string' && img.trim()).map(img => img.trim());
+    } else if (body.images && typeof body.images === 'string') {
+      // Support comma-separated string
+      imageUrls = body.images.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    
+    // Handle legacy single image field
     if (req.file) {
       // Store relative path in DB for portability
-      productData.image = `/admin/uploads/${req.file.filename}`;
+      const imagePath = `/admin/uploads/${req.file.filename}`;
+      productData.image = imagePath;
+      if (!imageUrls.includes(imagePath)) {
+        imageUrls.unshift(imagePath); // Add to beginning
+      }
     } else if (body.image) {
       productData.image = body.image;
+      if (!imageUrls.includes(body.image)) {
+        imageUrls.unshift(body.image);
+      }
+    } else if (imageUrls.length > 0) {
+      productData.image = imageUrls[0]; // Use first image as primary
     } else {
       productData.image = '';
     }
+    
+    // Set images array
+    productData.images = imageUrls;
 
     const product = new Product(productData);
     await product.save();
@@ -315,6 +337,28 @@ router.post('/batch', firebaseAdminAuth, adminMutationLimiter, batchProductValid
           continue;
         }
         
+        // Collect all image URLs from Etsy-style CSV (image1, image2, ... image10)
+        const imageUrls = [];
+        for (let j = 1; j <= 10; j++) {
+          const imgKey = `image${j}`;
+          if (productData[imgKey] && typeof productData[imgKey] === 'string') {
+            const trimmed = productData[imgKey].trim();
+            if (trimmed) imageUrls.push(trimmed);
+          }
+        }
+        
+        // Also support direct 'images' array field
+        if (productData.images && Array.isArray(productData.images)) {
+          productData.images.forEach(img => {
+            if (img && typeof img === 'string') {
+              const trimmed = img.trim();
+              if (trimmed && !imageUrls.includes(trimmed)) {
+                imageUrls.push(trimmed);
+              }
+            }
+          });
+        }
+        
         const newProduct = {
           name: productData.name,
           description: productData.description || '',
@@ -325,7 +369,8 @@ router.post('/batch', firebaseAdminAuth, adminMutationLimiter, batchProductValid
           options: productData.options
             ? (Array.isArray(productData.options) ? productData.options : String(productData.options).split(',').map(s => s.trim()).filter(Boolean))
             : [],
-          image: productData.image || '',
+          image: imageUrls.length > 0 ? imageUrls[0] : (productData.image || ''), // First image as primary
+          images: imageUrls.length > 0 ? imageUrls : [], // All images in array
           featured: productData.featured === 'true' || productData.featured === true || false,
           collection: productData.collection || '',
           occasion: productData.occasion || ''
@@ -441,12 +486,46 @@ router.put('/:id', firebaseAdminAuth, adminMutationLimiter, optionalUpload, upda
     if (typeof body.collection !== 'undefined') updates.collection = body.collection;
     if (typeof body.occasion !== 'undefined') updates.occasion = body.occasion;
 
+    // Handle images array (new multi-image support)
+    if (typeof body.images !== 'undefined') {
+      if (Array.isArray(body.images)) {
+        updates.images = body.images.filter(img => img && typeof img === 'string' && img.trim()).map(img => img.trim());
+      } else if (typeof body.images === 'string') {
+        // Support comma-separated string
+        updates.images = body.images.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      // Update primary image to first in array if images were provided
+      if (updates.images && updates.images.length > 0 && !req.file && !body.image) {
+        updates.image = updates.images[0];
+      }
+    }
+
+    // Fetch existing product once if we need to preserve images array
+    let existingProduct = null;
+    if ((req.file || body.image) && !updates.images) {
+      existingProduct = await Product.findById(id);
+      if (existingProduct && existingProduct.images) {
+        updates.images = [...existingProduct.images];
+      } else {
+        updates.images = [];
+      }
+    }
+    
     // If an image file was uploaded via multipart/form-data, set image path (relative for DB)
     if (req.file) {
-      updates.image = `/admin/uploads/${req.file.filename}`;
+      const imagePath = `/admin/uploads/${req.file.filename}`;
+      updates.image = imagePath;
+      // Add to images array if not already present
+      if (!updates.images.includes(imagePath)) {
+        updates.images.unshift(imagePath);
+      }
     } else if (body.image) {
       // allow explicit image URL in JSON body
       updates.image = body.image;
+      // Add to images array if not already present
+      if (updates.images && !updates.images.includes(body.image)) {
+        updates.images.unshift(body.image);
+      }
     }
 
     // Update document
