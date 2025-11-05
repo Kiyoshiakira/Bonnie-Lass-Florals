@@ -26,8 +26,34 @@
 
     let isSignup = false;
 
+    // Helper function to safely escape HTML to prevent XSS attacks
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Helper function to update user info dropdown (shared between cache and auth)
+    function updateUserInfoDropdown(name, email, role) {
+      if (userInfoDropdown) {
+        // Escape all user data to prevent XSS
+        const safeName = escapeHtml(name || email);
+        const safeEmail = escapeHtml(email);
+        const safeRole = escapeHtml(role || 'Customer');
+        
+        userInfoDropdown.innerHTML = `
+          <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
+            <div style="font-weight: bold; color: #2563eb;">${safeName}</div>
+            <div style="font-size: 0.85em; color: #666;">${safeEmail}</div>
+            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${safeRole}</div>
+          </div>
+        `;
+      }
+    }
+
     // Optimistically show profile from localStorage if user was previously logged in
     // This provides instant UI update while Firebase confirms auth state
+    // Note: Admin links are NOT shown from cache for security - only after Firebase validation
     const cachedUserEmail = localStorage.getItem('userEmail');
     const cachedUserName = localStorage.getItem('userName');
     const cachedUserPhoto = localStorage.getItem('userPhoto');
@@ -39,24 +65,11 @@
       if (profileCircleContainer) profileCircleContainer.style.display = "flex";
       if (profileCircle) profileCircle.src = cachedUserPhoto || "img/default-avatar.png";
       
-      // Update user info dropdown with cached data
-      if (userInfoDropdown) {
-        userInfoDropdown.innerHTML = `
-          <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
-            <div style="font-weight: bold; color: #2563eb;">${cachedUserName || cachedUserEmail}</div>
-            <div style="font-size: 0.85em; color: #666;">${cachedUserEmail}</div>
-            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${cachedUserRole || 'Customer'}</div>
-          </div>
-        `;
-      }
+      // Update user info dropdown with cached data (XSS-safe)
+      updateUserInfoDropdown(cachedUserName, cachedUserEmail, cachedUserRole);
       
-      // Show admin links if cached role is Admin
-      if (cachedUserRole === "Admin") {
-        if (uploadProductLink) uploadProductLink.style.display = "";
-        if (adminOrdersLink) adminOrdersLink.style.display = "";
-        if (paletteLink) paletteLink.style.display = "";
-        if (messagesLink) messagesLink.style.display = "";
-      }
+      // Do NOT show admin links from cache - wait for Firebase to validate
+      // This prevents privilege escalation via localStorage manipulation
     }
 
     // Modal open/close handlers
@@ -192,16 +205,8 @@
       window._cachedAdminStatus = isAdmin;
       window._cachedAdminStatusTime = Date.now();
       
-      // Update user info in dropdown
-      if (userInfoDropdown) {
-        userInfoDropdown.innerHTML = `
-          <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
-            <div style="font-weight: bold; color: #2563eb;">${user.displayName || user.email}</div>
-            <div style="font-size: 0.85em; color: #666;">${user.email}</div>
-            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${role}</div>
-          </div>
-        `;
-      }
+      // Update user info in dropdown using shared helper (XSS-safe)
+      updateUserInfoDropdown(user.displayName, user.email, role);
 
       // Show admin-only links for admins only
       if (uploadProductLink) {
