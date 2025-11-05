@@ -17,15 +17,43 @@
         }
       });
 
-      if (!response.ok) {
-        console.error('Admin guard: API check failed with status', response.status);
+      if (response.ok) {
+        const data = await response.json();
+        return data.isAdmin === true;
+      }
+      
+      // If unauthorized (401), user is definitely not admin
+      if (response.status === 401) {
+        console.error('Admin guard: User is not authorized');
         return false;
       }
-
-      const data = await response.json();
-      return data.isAdmin === true;
+      
+      // For other errors (500, 503, etc.), check cached role as fallback
+      // This prevents temporary server issues from kicking out admins
+      console.warn('Admin guard: API check failed with status', response.status, '- checking cache');
+      const cachedRole = localStorage.getItem('userRole');
+      const cachedEmail = localStorage.getItem('userEmail');
+      
+      // Only trust cached admin role if it's for the same email
+      if (cachedEmail === user.email && cachedRole === 'Admin') {
+        console.warn('Admin guard: Using cached admin status for', user.email);
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('Admin guard: Error checking admin status', error);
+      
+      // Network error - check cached role as fallback
+      const cachedRole = localStorage.getItem('userRole');
+      const cachedEmail = localStorage.getItem('userEmail');
+      
+      // Only trust cached admin role if it's for the same email
+      if (cachedEmail === user.email && cachedRole === 'Admin') {
+        console.warn('Admin guard: Network error, using cached admin status for', user.email);
+        return true;
+      }
+      
       return false;
     }
   }

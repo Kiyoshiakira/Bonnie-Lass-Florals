@@ -209,6 +209,8 @@
       // Force token refresh to get latest custom claims (including admin status)
       // This ensures we get the most up-to-date admin status immediately
       let isAdmin = false;
+      let adminCheckSucceeded = false;
+      
       try {
         // Force refresh the token to get latest custom claims
         const idToken = await user.getIdToken(true);
@@ -228,10 +230,33 @@
         if (response.ok) {
           const data = await response.json();
           isAdmin = data.isAdmin === true;
+          adminCheckSucceeded = true;
+        } else if (response.status === 401) {
+          // Unauthorized - definitely not admin
+          isAdmin = false;
+          adminCheckSucceeded = true;
         }
+        // For other status codes (500, etc.), adminCheckSucceeded stays false
       } catch (error) {
         console.error('Error checking admin status:', error);
-        isAdmin = false;
+        // Network error or other failure - try to use cached role as fallback
+        adminCheckSucceeded = false;
+      }
+      
+      // If admin check failed (network error, server error), use cached role as fallback
+      // This prevents temporary errors from downgrading admins to customers
+      if (!adminCheckSucceeded) {
+        const cachedRole = localStorage.getItem('userRole');
+        const cachedEmail = localStorage.getItem('userEmail');
+        
+        // Only trust cached role if it's for the same email address
+        if (cachedEmail === user.email && cachedRole === 'Admin') {
+          console.warn('Admin check failed, using cached admin status for', user.email);
+          isAdmin = true;
+        } else {
+          // If we can't verify and have no valid cache, default to customer
+          isAdmin = false;
+        }
       }
       
       const role = isAdmin ? "Admin" : "Customer";
