@@ -13,6 +13,8 @@ All documentation has been organized into the `docs/` directory for easy navigat
 ### 📖 Guides
 User and developer guides for various features:
 - [Admin Image Upload Guide](./docs/guides/ADMIN_IMAGE_UPLOAD_GUIDE.md)
+- [Chatbot Guide](./docs/guides/CHATBOT_GUIDE.md) - AI chatbot implementation
+- [Chatbot Setup](./docs/guides/CHATBOT_SETUP.md) - Chatbot configuration instructions
 - [CSV Upload Guide](./docs/guides/CSV_UPLOAD_GUIDE.md)
 - [Duplicate Detection Guide](./docs/guides/DUPLICATE_DETECTION_GUIDE.md)
 - [Image Optimization Guide](./docs/guides/IMAGE_OPTIMIZATION_GUIDE.md)
@@ -103,6 +105,7 @@ Bonnie-Lass-Florals/
 ## 🌟 Key Features
 
 - **E-commerce Platform**: Full shopping cart and checkout functionality
+- **AI Chatbot**: Gemini 2.5 Flash powered customer service assistant
 - **Admin Panel**: Product management, order tracking, and CSV batch upload
 - **Firebase Integration**: Authentication, storage, and hosting
 - **Image Management**: Optimization, lazy loading, and Firebase Storage integration
