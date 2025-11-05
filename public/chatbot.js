@@ -758,17 +758,6 @@
           height: 24px;
         }
       }
-
-      /* Desktop: Floating window (>768px) */
-      @media (min-width: 769px) {
-        .chatbot-window {
-          /* Constrained size for desktop */
-          width: 375px;
-          max-width: 375px;
-          height: 550px;
-          max-height: 550px;
-        }
-      }
     `;
     document.head.appendChild(style);
   }
@@ -788,10 +777,6 @@
       setTimeout(() => {
         const input = document.getElementById('chatbot-input');
         input.focus();
-        // On mobile, this should trigger the keyboard
-        if ('ontouchstart' in window) {
-          input.click();
-        }
       }, 100);
     } else {
       chatbotWindow.style.display = 'none';
