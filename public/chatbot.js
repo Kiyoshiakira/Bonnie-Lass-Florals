@@ -838,6 +838,29 @@
   }
 
   /**
+   * Show admin mode indicator
+   */
+  function showAdminModeIndicator() {
+    const statusElement = document.getElementById('chatbot-status');
+    if (statusElement) {
+      statusElement.innerHTML = `
+        <span class="status-indicator" style="background: #f59e0b;"></span>
+        Admin Mode
+      `;
+    }
+    
+    // Add admin badge to welcome section
+    const welcomeSection = document.querySelector('.chatbot-welcome');
+    if (welcomeSection && !document.getElementById('admin-mode-badge')) {
+      const adminBadge = document.createElement('div');
+      adminBadge.id = 'admin-mode-badge';
+      adminBadge.style.cssText = 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 8px 12px; border-radius: 8px; margin-top: 12px; text-align: center; font-size: 13px; font-weight: 600;';
+      adminBadge.innerHTML = '🛡️ Admin Mode Active - Product management enabled';
+      welcomeSection.appendChild(adminBadge);
+    }
+  }
+
+  /**
    * Send message to chatbot API
    */
   async function sendMessage(message, isRetry = false) {
@@ -850,11 +873,29 @@
       // Add user message to history
       chatHistory.push({ role: 'user', content: message });
       
+      // Get Firebase auth token if user is logged in
+      let authToken = null;
+      try {
+        if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+          authToken = await firebase.auth().currentUser.getIdToken();
+        }
+      } catch (authError) {
+        console.log('Could not get auth token:', authError);
+      }
+      
+      // Build headers
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add auth token if available
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
       const response = await fetch(`${CHATBOT_API}/message`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
           message,
           chatHistory: chatHistory.slice(0, -1) // Don't include the current message
@@ -885,6 +926,12 @@
         // Add assistant response to history
         chatHistory.push({ role: 'assistant', content: data.response });
         addMessage(data.response, 'assistant');
+        
+        // If admin mode is detected, show a notice
+        if (data.isAdmin && chatHistory.length <= 2) {
+          // Show admin mode indicator on first message
+          showAdminModeIndicator();
+        }
         
         // Clear any connection status
         showConnectionStatus('', false);
