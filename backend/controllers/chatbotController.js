@@ -165,7 +165,13 @@ async function checkIsAdmin(req) {
     // Check for Firebase token in Authorization header
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
+      const parts = authHeader.split(' ');
+      // Validate header format: must be exactly "Bearer <token>"
+      if (parts.length !== 2 || !parts[1]) {
+        logger.warn('Malformed Authorization header');
+        return false;
+      }
+      const token = parts[1];
       const decoded = await admin.auth().verifyIdToken(token);
       return isAdminEmail(decoded.email);
     }
@@ -214,13 +220,28 @@ async function executeAdminAction(actionData) {
           return { success: false, error: 'Missing required fields: name and price' };
         }
         
+        // Validate price
+        const price = parseFloat(productData.price);
+        if (isNaN(price) || price < 0) {
+          return { success: false, error: 'Price must be a valid positive number' };
+        }
+        
+        // Validate stock
+        let stock = 1;
+        if (productData.stock !== undefined) {
+          stock = parseInt(productData.stock, 10);
+          if (isNaN(stock) || stock < 0) {
+            return { success: false, error: 'Stock must be a valid non-negative integer' };
+          }
+        }
+        
         const newProduct = new Product({
           name: productData.name,
           description: productData.description || '',
-          price: parseFloat(productData.price),
+          price: price,
           type: productData.type || 'decor',
           subcategory: productData.subcategory || '',
-          stock: productData.stock !== undefined ? parseInt(productData.stock, 10) : 1,
+          stock: stock,
           options: productData.options || [],
           image: productData.image || '',
           images: productData.images || (productData.image ? [productData.image] : []),
@@ -244,18 +265,59 @@ async function executeAdminAction(actionData) {
         if (productId) {
           productToUpdate = await Product.findById(productId);
         } else if (productName) {
-          productToUpdate = await Product.findOne({ name: { $regex: new RegExp(productName, 'i') } });
+          // Use exact match first, then fallback to case-insensitive search
+          productToUpdate = await Product.findOne({ name: productName });
+          if (!productToUpdate) {
+            productToUpdate = await Product.findOne({ name: { $regex: new RegExp(`^${productName}$`, 'i') } });
+          }
         }
         
         if (!productToUpdate) {
           return { success: false, error: 'Product not found' };
         }
         
-        // Apply updates
+        // Validate and apply updates with type checking
         const allowedUpdates = ['name', 'description', 'price', 'type', 'subcategory', 'stock', 'options', 'image', 'images', 'featured', 'collection', 'occasion'];
         Object.keys(updates || {}).forEach(key => {
-          if (allowedUpdates.includes(key)) {
-            productToUpdate[key] = updates[key];
+          if (!allowedUpdates.includes(key)) {
+            return; // Skip unknown fields
+          }
+          
+          const value = updates[key];
+          
+          // Type validation for specific fields
+          if (key === 'price') {
+            const priceVal = parseFloat(value);
+            if (isNaN(priceVal) || priceVal < 0) {
+              logger.warn(`Invalid price value in update: ${value}`);
+              return;
+            }
+            productToUpdate[key] = priceVal;
+          } else if (key === 'stock') {
+            const stockVal = parseInt(value, 10);
+            if (isNaN(stockVal) || stockVal < 0) {
+              logger.warn(`Invalid stock value in update: ${value}`);
+              return;
+            }
+            productToUpdate[key] = stockVal;
+          } else if (key === 'type') {
+            if (value !== 'decor' && value !== 'food') {
+              logger.warn(`Invalid type value in update: ${value}`);
+              return;
+            }
+            productToUpdate[key] = value;
+          } else if (key === 'featured') {
+            productToUpdate[key] = Boolean(value);
+          } else if (key === 'options' || key === 'images') {
+            if (!Array.isArray(value)) {
+              logger.warn(`Invalid array value for ${key}: ${value}`);
+              return;
+            }
+            productToUpdate[key] = value;
+          } else if (typeof value === 'string' || value === '') {
+            productToUpdate[key] = value;
+          } else {
+            logger.warn(`Invalid value type for ${key}: ${typeof value}`);
           }
         });
         
