@@ -26,6 +26,87 @@
 
     let isSignup = false;
 
+    // Helper function to safely escape HTML to prevent XSS attacks
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Helper function to validate image URLs
+    function isValidImageUrl(url) {
+      if (!url) return false;
+      try {
+        // Allow only:
+        // 1. Relative paths starting with img/ (our default avatar path)
+        // 2. HTTPS URLs from trusted domains (Firebase Storage, Google)
+        if (/^img\//.test(url)) {
+          return true;
+        }
+        
+        // For absolute URLs, use URL constructor for robust validation
+        const urlObj = new URL(url);
+        const trustedDomains = [
+          'firebasestorage.googleapis.com',
+          'lh3.googleusercontent.com',  // Google profile photos
+          'storage.googleapis.com'
+        ];
+        
+        // Must be HTTPS and from a trusted domain
+        return urlObj.protocol === 'https:' && 
+               trustedDomains.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain));
+      } catch (e) {
+        // Invalid URL
+        return false;
+      }
+    }
+
+    // Helper function to update user info dropdown (shared between cache and auth)
+    function updateUserInfoDropdown(name, email, role) {
+      if (userInfoDropdown && email) {
+        // Escape all user data to prevent XSS
+        const safeName = escapeHtml(name || email);
+        const safeEmail = escapeHtml(email);
+        const safeRole = escapeHtml(role || 'Customer');
+        
+        userInfoDropdown.innerHTML = `
+          <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
+            <div style="font-weight: bold; color: #2563eb;">${safeName}</div>
+            <div style="font-size: 0.85em; color: #666;">${safeEmail}</div>
+            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${safeRole}</div>
+          </div>
+        `;
+      }
+    }
+
+    // Optimistically show profile from localStorage if user was previously logged in
+    // This provides instant UI update while Firebase confirms auth state
+    // Note: Admin links are NOT shown from cache for security - only after Firebase validation
+    const cachedUserEmail = localStorage.getItem('userEmail');
+    const cachedUserName = localStorage.getItem('userName');
+    const cachedUserPhoto = localStorage.getItem('userPhoto');
+    const cachedUserRole = localStorage.getItem('userRole');
+    
+    if (cachedUserEmail) {
+      // Show profile immediately based on cached data
+      if (loginBtn) loginBtn.style.display = "none";
+      if (profileCircleContainer) profileCircleContainer.style.display = "flex";
+      
+      // Validate photo URL before using it to prevent malicious URLs
+      if (profileCircle) {
+        const photoUrl = isValidImageUrl(cachedUserPhoto) ? cachedUserPhoto : "img/default-avatar.png";
+        // Use setAttribute for additional safety against XSS
+        profileCircle.setAttribute('src', photoUrl);
+      }
+      
+      // Update user info dropdown with cached data (XSS-safe)
+      updateUserInfoDropdown(cachedUserName, cachedUserEmail, cachedUserRole);
+      
+      // Do NOT show admin links from cache - wait for Firebase to validate
+      // This prevents privilege escalation via localStorage manipulation
+    }
+
     // Modal open/close handlers
     if (loginBtn) {
       loginBtn.onclick = () => { 
@@ -159,16 +240,8 @@
       window._cachedAdminStatus = isAdmin;
       window._cachedAdminStatusTime = Date.now();
       
-      // Update user info in dropdown
-      if (userInfoDropdown) {
-        userInfoDropdown.innerHTML = `
-          <div style="padding: 0.8em 1.2em; border-bottom: 1px solid #eee; background: #f9f9f9;">
-            <div style="font-weight: bold; color: #2563eb;">${user.displayName || user.email}</div>
-            <div style="font-size: 0.85em; color: #666;">${user.email}</div>
-            <div style="font-size: 0.85em; color: #60a5fa; margin-top: 0.3em;">Role: ${role}</div>
-          </div>
-        `;
-      }
+      // Update user info in dropdown using shared helper (XSS-safe)
+      updateUserInfoDropdown(user.displayName, user.email, role);
 
       // Show admin-only links for admins only
       if (uploadProductLink) {
@@ -186,7 +259,12 @@
 
       if (loginBtn) loginBtn.style.display = "none";
       if (profileCircleContainer) profileCircleContainer.style.display = "flex";
-      if (profileCircle) profileCircle.src = user.photoURL || "img/default-avatar.png";
+      if (profileCircle) {
+        // Validate photo URL even from Firebase for defense in depth
+        const photoUrl = isValidImageUrl(user.photoURL) ? user.photoURL : "img/default-avatar.png";
+        // Use setAttribute for consistency and safety
+        profileCircle.setAttribute('src', photoUrl);
+      }
       
       // Store user info in localStorage
       localStorage.setItem('userRole', role);
