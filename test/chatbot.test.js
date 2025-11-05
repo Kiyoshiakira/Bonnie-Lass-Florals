@@ -191,7 +191,7 @@ describe('Chatbot Integration Tests', function() {
       const chatbotPath = path.join(__dirname, '..', 'public', 'chatbot.js');
       const chatbotContent = fs.readFileSync(chatbotPath, 'utf8');
       expect(chatbotContent).to.include('@media');
-      expect(chatbotContent).to.include('max-width: 480px');
+      expect(chatbotContent).to.include('max-width: 768px');
     });
   });
 
