@@ -3,7 +3,19 @@ const Product = require('../models/Product');
 const logger = require('../utils/logger');
 
 // Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyBURtCjIIHKkAn--N8eoFQYrBCzxyR3vhg');
+// Require API key from environment variable
+let genAI = null;
+try {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    logger.warn('GEMINI_API_KEY environment variable is not set. Chatbot will not function.');
+  } else {
+    genAI = new GoogleGenerativeAI(apiKey);
+    logger.info('Gemini AI initialized successfully');
+  }
+} catch (error) {
+  logger.error('Failed to initialize Gemini AI:', error);
+}
 
 /**
  * Get product information to use as context for the chatbot
@@ -85,6 +97,14 @@ Note: Since this is a small family business, detailed ingredient lists and pH le
  */
 exports.sendMessage = async (req, res) => {
   try {
+    // Check if Gemini AI is initialized
+    if (!genAI) {
+      return res.status(503).json({ 
+        error: 'Chatbot service is not available. Please contact support.',
+        success: false
+      });
+    }
+    
     const { message, chatHistory = [] } = req.body;
     
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -163,8 +183,9 @@ exports.getStatus = async (req, res) => {
     const productCount = await Product.countDocuments();
     
     res.json({
-      status: 'active',
+      status: genAI ? 'active' : 'unavailable',
       model: 'gemini-2.5-flash',
+      configured: !!genAI,
       productCount,
       features: [
         'Product information',

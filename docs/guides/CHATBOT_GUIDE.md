@@ -83,16 +83,19 @@ The chatbot is configured with:
 
 ### Environment Variables
 
-The chatbot uses the following configuration:
+The chatbot requires the Gemini API key to be set as an environment variable:
 
-```javascript
-// In backend/controllers/chatbotController.js
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY || 'AIzaSyBURtCjIIHKkAn--N8eoFQYrBCzxyR3vhg'
-);
+```bash
+# In your .env file
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
-**Note:** While a default API key is provided, it's recommended to set `GEMINI_API_KEY` in your `.env` file for production use.
+**Security Note:** Never commit API keys to version control. The chatbot controller will throw an error on startup if the `GEMINI_API_KEY` environment variable is not set.
+
+To obtain a Gemini API key:
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add it to your `.env` file
 
 ### Model Configuration
 
