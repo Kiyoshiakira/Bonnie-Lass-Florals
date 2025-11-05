@@ -500,37 +500,30 @@ router.put('/:id', firebaseAdminAuth, adminMutationLimiter, optionalUpload, upda
       }
     }
 
+    // Fetch existing product once if we need to preserve images array
+    let existingProduct = null;
+    if ((req.file || body.image) && !updates.images) {
+      existingProduct = await Product.findById(id);
+      if (existingProduct && existingProduct.images) {
+        updates.images = [...existingProduct.images];
+      } else {
+        updates.images = [];
+      }
+    }
+    
     // If an image file was uploaded via multipart/form-data, set image path (relative for DB)
     if (req.file) {
       const imagePath = `/admin/uploads/${req.file.filename}`;
       updates.image = imagePath;
-      // Also add to images array if not already present
-      if (!updates.images) {
-        // Get existing product to preserve images array
-        const existingProduct = await Product.findById(id);
-        if (existingProduct && existingProduct.images) {
-          updates.images = [...existingProduct.images];
-        } else {
-          updates.images = [];
-        }
-      }
+      // Add to images array if not already present
       if (!updates.images.includes(imagePath)) {
         updates.images.unshift(imagePath);
       }
     } else if (body.image) {
       // allow explicit image URL in JSON body
       updates.image = body.image;
-      // Also add to images array if not already present
-      if (!updates.images) {
-        // Get existing product to preserve images array
-        const existingProduct = await Product.findById(id);
-        if (existingProduct && existingProduct.images) {
-          updates.images = [...existingProduct.images];
-        } else {
-          updates.images = [];
-        }
-      }
-      if (!updates.images.includes(body.image)) {
+      // Add to images array if not already present
+      if (updates.images && !updates.images.includes(body.image)) {
         updates.images.unshift(body.image);
       }
     }

@@ -290,16 +290,16 @@ function productToCard(p) {
     // Multi-image carousel
     const carouselId = `carousel-${escapeAttr(p._id)}`;
     imageHtml = `
-      <div class="product-image-carousel" id="${carouselId}" style="position:relative;width:100%;height:150px;overflow:hidden;">
+      <div class="product-image-carousel" id="${carouselId}">
         ${images.map((img, idx) => {
           const imageUrl = img && img.trim() ? escapeAttr(img) : '/img/default-product.png';
           return generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`);
         }).join('')}
         ${images.length > 1 ? `
-          <button class="carousel-prev" onclick="prevImage('${carouselId}')" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1.2em;line-height:1;padding:0;">‹</button>
-          <button class="carousel-next" onclick="nextImage('${carouselId}')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1.2em;line-height:1;padding:0;">›</button>
-          <div class="carousel-indicators" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;">
-            ${images.map((_, idx) => `<span class="indicator ${idx === 0 ? 'active' : ''}" style="width:8px;height:8px;border-radius:50%;background:${idx === 0 ? '#fff' : 'rgba(255,255,255,0.5)'};cursor:pointer;" onclick="goToImage('${carouselId}', ${idx})"></span>`).join('')}
+          <button class="carousel-prev" onclick="prevImage('${carouselId}')">‹</button>
+          <button class="carousel-next" onclick="nextImage('${carouselId}')">›</button>
+          <div class="carousel-indicators">
+            ${images.map((_, idx) => `<span class="indicator ${idx === 0 ? 'active' : ''}" onclick="goToImage('${carouselId}', ${idx})"></span>`).join('')}
           </div>
         ` : ''}
       </div>
@@ -423,12 +423,10 @@ function nextImage(carouselId) {
   // Hide current, show next
   images[currentIndex].style.display = 'none';
   indicators[currentIndex]?.classList.remove('active');
-  indicators[currentIndex].style.background = 'rgba(255,255,255,0.5)';
   
   const nextIndex = (currentIndex + 1) % images.length;
   images[nextIndex].style.display = 'block';
   indicators[nextIndex]?.classList.add('active');
-  indicators[nextIndex].style.background = '#fff';
 }
 
 function prevImage(carouselId) {
@@ -451,12 +449,10 @@ function prevImage(carouselId) {
   // Hide current, show previous
   images[currentIndex].style.display = 'none';
   indicators[currentIndex]?.classList.remove('active');
-  indicators[currentIndex].style.background = 'rgba(255,255,255,0.5)';
   
   const prevIndex = (currentIndex - 1 + images.length) % images.length;
   images[prevIndex].style.display = 'block';
   indicators[prevIndex]?.classList.add('active');
-  indicators[prevIndex].style.background = '#fff';
 }
 
 function goToImage(carouselId, targetIndex) {
@@ -472,10 +468,8 @@ function goToImage(carouselId, targetIndex) {
     if (indicators[idx]) {
       if (idx === targetIndex) {
         indicators[idx].classList.add('active');
-        indicators[idx].style.background = '#fff';
       } else {
         indicators[idx].classList.remove('active');
-        indicators[idx].style.background = 'rgba(255,255,255,0.5)';
       }
     }
   });
