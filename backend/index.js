@@ -135,6 +135,9 @@ app.use('/api/admin', require('./routes/admin'));
 logger.info('Loading router: /api/reviews');
 app.use('/api/reviews', require('./routes/reviews'));
 
+logger.info('Loading router: /api/chatbot');
+app.use('/api/chatbot', require('./routes/chatbot'));
+
 // --- Optional: Add gallery/socials routes if you have them ---
 // app.use('/api/gallery', require('./routes/gallery'));
 // app.use('/api/socials', require('./routes/socials'));
