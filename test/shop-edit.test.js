@@ -37,8 +37,8 @@ describe('Shop Page Edit Product Feature', function() {
     const productType = document.getElementById('editProductType');
     const productStock = document.getElementById('editProductStock');
     const productOptions = document.getElementById('editProductOptions');
-    const productImage = document.getElementById('editProductImage');
-    const productImageFile = document.getElementById('editProductImageFile');
+    const productImageUrls = document.getElementById('editProductImageUrls');
+    const productImageFiles = document.getElementById('editProductImageFiles');
     const currentImagePreview = document.getElementById('editCurrentImagePreview');
 
     expect(productId).to.exist;
@@ -51,10 +51,11 @@ describe('Shop Page Edit Product Feature', function() {
     expect(productStock).to.exist;
     expect(productStock.required).to.be.true;
     expect(productOptions).to.exist;
-    expect(productImage).to.exist;
-    expect(productImageFile).to.exist;
-    expect(productImageFile.type).to.equal('file');
-    expect(productImageFile.accept).to.equal('image/*');
+    expect(productImageUrls).to.exist;
+    expect(productImageFiles).to.exist;
+    expect(productImageFiles.type).to.equal('file');
+    expect(productImageFiles.accept).to.equal('image/*');
+    expect(productImageFiles.multiple).to.be.true;
     expect(currentImagePreview).to.exist;
   });
 

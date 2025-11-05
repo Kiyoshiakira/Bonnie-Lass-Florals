@@ -682,20 +682,41 @@ function openEditProductModal(productId) {
   document.getElementById('editProductType').value = product.type || 'decor';
   document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
   document.getElementById('editProductOptions').value = formatOptionsForDisplay(product.options);
-  document.getElementById('editProductImage').value = product.image || '';
   
-  // Display current image preview
+  // Get all images for this product
+  const images = product.images || (product.image ? [product.image] : []);
+  
+  // Display all current images
   const imagePreviewDiv = document.getElementById('editCurrentImagePreview');
   if (imagePreviewDiv) {
-    imagePreviewDiv.innerHTML = product.image 
-      ? `<img src="${escapeAttr(product.image)}" style="max-width:200px;border-radius:4px;" alt="Current product image">` 
-      : '<div style="color:#999;">No image</div>';
+    if (images.length > 0) {
+      imagePreviewDiv.innerHTML = images.map((img, idx) => 
+        `<div style="position:relative;">
+          <img src="${escapeAttr(img)}" style="max-width:120px;max-height:120px;object-fit:cover;border-radius:4px;border:1px solid #ddd;" alt="Product image ${idx + 1}">
+          <div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;padding:2px 6px;border-radius:3px;font-size:0.75rem;">${idx + 1}</div>
+        </div>`
+      ).join('');
+    } else {
+      imagePreviewDiv.innerHTML = '<div style="color:#999;">No images</div>';
+    }
+  }
+  
+  // Set image URLs textarea
+  const imageUrlsField = document.getElementById('editProductImageUrls');
+  if (imageUrlsField) {
+    imageUrlsField.value = images.join('\n');
   }
   
   // Clear file input
-  const fileInput = document.getElementById('editProductImageFile');
+  const fileInput = document.getElementById('editProductImageFiles');
   if (fileInput) {
     fileInput.value = '';
+  }
+  
+  // Clear progress message
+  const progressDiv = document.getElementById('editImageUploadProgress');
+  if (progressDiv) {
+    progressDiv.textContent = '';
   }
   
   // Clear previous messages
@@ -720,9 +741,11 @@ async function handleEditProductSubmit(e) {
   const errorDiv = document.getElementById('editProductError');
   const successDiv = document.getElementById('editProductSuccess');
   const submitBtn = e.target.querySelector('button[type="submit"]');
+  const progressDiv = document.getElementById('editImageUploadProgress');
   
   errorDiv.style.display = 'none';
   successDiv.style.display = 'none';
+  if (progressDiv) progressDiv.textContent = '';
   
   try {
     // Get Firebase auth token
@@ -745,34 +768,63 @@ async function handleEditProductSubmit(e) {
       options: parseOptionsFromInput(document.getElementById('editProductOptions').value)
     };
     
-    // Handle image upload if a file was selected
-    const fileInput = document.getElementById('editProductImageFile');
-    if (fileInput && fileInput.files && fileInput.files[0]) {
+    // Collect image URLs
+    const imageUrls = [];
+    
+    // Get image URLs from textarea
+    const imageUrlsText = document.getElementById('editProductImageUrls');
+    if (imageUrlsText && imageUrlsText.value) {
+      const urls = imageUrlsText.value
+        .split(/[\n,]/)
+        .map(url => url.trim())
+        .filter(url => url && url.startsWith('http'));
+      imageUrls.push(...urls);
+    }
+    
+    // Upload new image files if provided
+    const fileInput = document.getElementById('editProductImageFiles');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Uploading image...';
       }
       
-      try {
-        const imageUrl = await uploadImageToFirebase(fileInput.files[0]);
-        updateData.image = imageUrl;
-      } catch (uploadErr) {
+      const totalFiles = fileInput.files.length;
+      for (let i = 0; i < totalFiles; i++) {
+        const file = fileInput.files[i];
+        const progressMsg = `Uploading image ${i + 1} of ${totalFiles}...`;
         if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Save Changes';
+          submitBtn.textContent = progressMsg;
         }
-        throw new Error('Failed to upload image to storage: ' + uploadErr.message);
+        if (progressDiv) {
+          progressDiv.textContent = progressMsg;
+        }
+        
+        try {
+          const imageUrl = await uploadImageToFirebase(file);
+          imageUrls.push(imageUrl);
+        } catch (uploadErr) {
+          console.error(`Failed to upload image ${i + 1}:`, uploadErr);
+          const errorMsg = `Warning: Failed to upload image ${i + 1} (${uploadErr.message}). Continuing...`;
+          if (progressDiv) {
+            progressDiv.textContent = errorMsg;
+          }
+          // Continue with other images
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Brief pause to show error
+        }
       }
-      
-      if (submitBtn) {
-        submitBtn.textContent = 'Saving changes...';
-      }
-    } else {
-      // Use the URL provided in the text field
-      const imageUrl = document.getElementById('editProductImage').value;
-      if (imageUrl) {
-        updateData.image = imageUrl;
-      }
+    }
+    
+    // Set images array in update data
+    if (imageUrls.length > 0) {
+      updateData.images = imageUrls;
+    }
+    
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving changes...';
+    }
+    if (progressDiv) {
+      progressDiv.textContent = 'Saving changes...';
     }
     
     // Send PUT request to update product
