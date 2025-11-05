@@ -44,10 +44,11 @@ app.options('*', cors());
 app.use(helmet());
 
 // --- Rate Limiting ---
-// Global rate limiter for all API routes (60 requests per minute per IP)
+// Global rate limiter for all API routes (150 requests per minute per IP)
+// Increased from 60 to accommodate page loads with multiple products and review stats
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 60, // limit each IP to 60 requests per windowMs
+  max: 150, // limit each IP to 150 requests per windowMs
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
