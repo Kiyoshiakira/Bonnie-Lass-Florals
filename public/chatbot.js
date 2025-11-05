@@ -790,23 +790,30 @@
     const errorDiv = document.createElement('div');
     errorDiv.className = 'chatbot-error';
     
-    let errorHTML = `
-      <span class="chatbot-error-icon">⚠️</span>
-      <div style="flex: 1;">
-        <strong>Error:</strong> ${escapeHtml(message)}
-    `;
+    const errorIcon = document.createElement('span');
+    errorIcon.className = 'chatbot-error-icon';
+    errorIcon.textContent = '⚠️';
+    
+    const errorContent = document.createElement('div');
+    errorContent.style.flex = '1';
+    
+    const errorText = document.createElement('div');
+    errorText.innerHTML = `<strong>Error:</strong> ${escapeHtml(message)}`;
+    errorContent.appendChild(errorText);
     
     if (canRetry && retryCallback) {
-      errorHTML += `
-        <button onclick="this.parentElement.parentElement.remove(); (${retryCallback.toString()})();" 
-                style="margin-top: 8px; padding: 6px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
-          Retry
-        </button>
-      `;
+      const retryButton = document.createElement('button');
+      retryButton.textContent = 'Retry';
+      retryButton.style.cssText = 'margin-top: 8px; padding: 6px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;';
+      retryButton.addEventListener('click', () => {
+        errorDiv.remove();
+        retryCallback();
+      });
+      errorContent.appendChild(retryButton);
     }
     
-    errorHTML += `</div>`;
-    errorDiv.innerHTML = errorHTML;
+    errorDiv.appendChild(errorIcon);
+    errorDiv.appendChild(errorContent);
     messagesContainer.appendChild(errorDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
@@ -903,9 +910,8 @@
       
       showErrorMessage(errorMessage, true, function() {
         const input = document.getElementById('chatbot-input');
-        const lastMessage = message;
-        input.value = lastMessage;
-        sendMessage(lastMessage, true);
+        input.value = message;
+        sendMessage(message, true);
       });
     } finally {
       isLoading = false;
