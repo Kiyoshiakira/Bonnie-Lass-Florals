@@ -6,7 +6,11 @@
 (function() {
   'use strict';
 
-  const BACKEND_URL = window.BACKEND_URL || '';
+  // Determine API base URL (consistent with other files)
+  const hostname = window.location.hostname;
+  const BACKEND_URL = (hostname === 'localhost' || hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : 'https://bonnie-lass-florals.onrender.com';
   const CHATBOT_API = `${BACKEND_URL}/api/chatbot`;
   
   // Chat history to maintain conversation context
