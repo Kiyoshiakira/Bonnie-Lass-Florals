@@ -40,10 +40,24 @@
       try {
         // Allow only:
         // 1. Relative paths starting with img/ (our default avatar path)
-        // 2. Absolute URLs from https only (Firebase Storage, Google, etc.)
-        // 3. Reject data URIs, javascript:, and other dangerous schemes
-        return /^(https:\/\/[a-zA-Z0-9.-]+\.[a-z]{2,}\/|img\/)/.test(url);
+        // 2. HTTPS URLs from trusted domains (Firebase Storage, Google)
+        if (/^img\//.test(url)) {
+          return true;
+        }
+        
+        // For absolute URLs, use URL constructor for robust validation
+        const urlObj = new URL(url);
+        const trustedDomains = [
+          'firebasestorage.googleapis.com',
+          'lh3.googleusercontent.com',  // Google profile photos
+          'storage.googleapis.com'
+        ];
+        
+        // Must be HTTPS and from a trusted domain
+        return urlObj.protocol === 'https:' && 
+               trustedDomains.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain));
       } catch (e) {
+        // Invalid URL
         return false;
       }
     }
@@ -246,7 +260,8 @@
       if (loginBtn) loginBtn.style.display = "none";
       if (profileCircleContainer) profileCircleContainer.style.display = "flex";
       if (profileCircle) {
-        const photoUrl = user.photoURL || "img/default-avatar.png";
+        // Validate photo URL even from Firebase for defense in depth
+        const photoUrl = isValidImageUrl(user.photoURL) ? user.photoURL : "img/default-avatar.png";
         // Use setAttribute for consistency and safety
         profileCircle.setAttribute('src', photoUrl);
       }
