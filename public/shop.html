@@ -226,14 +226,15 @@
         <label for="editProductOptions">Options (comma-separated)</label>
         <input type="text" id="editProductOptions">
         
-        <label>Current Image</label>
-        <div id="editCurrentImagePreview" style="margin-bottom:1rem;"></div>
+        <label>Current Images</label>
+        <div id="editCurrentImagePreview" style="margin-bottom:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
         
-        <label for="editProductImage">Image URL</label>
-        <input type="text" id="editProductImage">
+        <label for="editProductImageUrls">Image URLs (one per line or comma-separated)</label>
+        <textarea id="editProductImageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
         
-        <label for="editProductImageFile">Or upload new image file</label>
-        <input type="file" id="editProductImageFile" accept="image/*">
+        <label for="editProductImageFiles">Or upload new image files</label>
+        <input type="file" id="editProductImageFiles" accept="image/*" multiple>
+        <div id="editImageUploadProgress" style="margin-top:0.5rem;color:#666;"></div>
         
         <div class="edit-product-modal-buttons">
           <button type="submit">Save Changes</button>
