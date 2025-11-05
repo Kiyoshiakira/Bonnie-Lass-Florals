@@ -10,11 +10,22 @@ function showNotification(message, type = 'info', duration = 5000) {
 
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
-  notification.innerHTML = `
-    <div class="notification-message">${message}</div>
-    <button class="notification-close" onclick="this.parentElement.remove()">×</button>
-  `;
   
+  // Create message div and set textContent to prevent XSS
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'notification-message';
+  messageDiv.textContent = message;
+  
+  // Create close button
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'notification-close';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = function() {
+    this.parentElement.remove();
+  };
+  
+  notification.appendChild(messageDiv);
+  notification.appendChild(closeBtn);
   document.body.appendChild(notification);
 
   // Auto-remove after duration
