@@ -44,6 +44,21 @@ function normalizeImageUrl(image) {
 function normalizeProduct(product) {
   const normalized = product.toObject ? product.toObject() : { ...product };
   normalized.image = normalizeImageUrl(normalized.image);
+  
+  // Normalize images array if present
+  if (normalized.images && Array.isArray(normalized.images)) {
+    normalized.images = normalized.images.map(img => normalizeImageUrl(img));
+  } else if (!normalized.images || normalized.images.length === 0) {
+    // Ensure images array exists - use imageUrls virtual if available, or create from single image
+    if (normalized.imageUrls) {
+      normalized.images = normalized.imageUrls;
+    } else if (normalized.image) {
+      normalized.images = [normalized.image];
+    } else {
+      normalized.images = [];
+    }
+  }
+  
   return normalized;
 }
 
