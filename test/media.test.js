@@ -90,6 +90,44 @@ describe('Media Utils - Image URL Normalization', function() {
       const normalized = normalizeProduct(product);
       expect(normalized.image).to.equal('');
     });
+    
+    it('should normalize product with multiple images', function() {
+      process.env.BACKEND_URL = 'https://bonnie-lass-florals.onrender.com';
+      const product = {
+        _id: '123',
+        name: 'Test Product',
+        image: '/admin/uploads/image1.jpg',
+        images: [
+          '/admin/uploads/image1.jpg',
+          'https://firebasestorage.googleapis.com/v0/b/bucket/o/image2.jpg',
+          '/admin/uploads/image3.jpg'
+        ],
+        price: 25.99
+      };
+      
+      const normalized = normalizeProduct(product);
+      expect(normalized.images).to.be.an('array');
+      expect(normalized.images).to.have.lengthOf(3);
+      expect(normalized.images[0]).to.equal('https://bonnie-lass-florals.onrender.com/admin/uploads/image1.jpg');
+      expect(normalized.images[1]).to.equal('https://firebasestorage.googleapis.com/v0/b/bucket/o/image2.jpg');
+      expect(normalized.images[2]).to.equal('https://bonnie-lass-florals.onrender.com/admin/uploads/image3.jpg');
+    });
+    
+    it('should create images array from single image when images array is empty', function() {
+      process.env.BACKEND_URL = 'https://bonnie-lass-florals.onrender.com';
+      const product = {
+        _id: '123',
+        name: 'Test Product',
+        image: '/admin/uploads/image.jpg',
+        images: [],
+        price: 25.99
+      };
+      
+      const normalized = normalizeProduct(product);
+      expect(normalized.images).to.be.an('array');
+      expect(normalized.images).to.have.lengthOf(1);
+      expect(normalized.images[0]).to.equal('https://bonnie-lass-florals.onrender.com/admin/uploads/image.jpg');
+    });
 
     it('should handle Mongoose document with toObject method', function() {
       process.env.BACKEND_URL = 'https://bonnie-lass-florals.onrender.com';
