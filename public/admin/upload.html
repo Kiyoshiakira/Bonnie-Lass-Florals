@@ -128,11 +128,18 @@
         <label for="options">Options (comma-separated)</label>
         <input type="text" id="options" name="options" data-history="product_options">
 
-        <label for="image">Image URL</label>
+        <label for="image">Primary Image URL</label>
         <input type="text" id="image" name="image" data-history="product_image_url">
 
-        <label for="imageFile">Or upload image file</label>
+        <label for="imageFile">Or upload primary image file</label>
         <input type="file" id="imageFile" name="imageFile" accept="image/*">
+        
+        <label for="additionalImages">Additional Image URLs (one per line or comma-separated)</label>
+        <textarea id="additionalImages" name="additionalImages" rows="3" placeholder="https://example.com/image2.jpg&#10;https://example.com/image3.jpg"></textarea>
+        
+        <label for="additionalImageFiles">Or upload multiple image files</label>
+        <input type="file" id="additionalImageFiles" name="additionalImageFiles" accept="image/*" multiple>
+        <div id="imageUploadProgress" style="margin-top:0.5rem;color:#666;"></div>
 
         <div style="margin-top:1rem;">
           <button type="submit" id="uploadBtn" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;">Upload Product</button>
@@ -181,12 +188,13 @@
           <input id="editStock" name="stock" type="number" min="0">
           <label for="editOptions">Options</label>
           <input id="editOptions" name="options" type="text" data-history="product_options">
-          <label>Current Image</label>
-          <div id="currentImagePreview" style="margin-bottom:1rem;"></div>
-          <label for="editImage">Image URL</label>
-          <input id="editImage" name="image" type="text" data-history="product_image_url">
-          <label for="editImageFile">Or upload new image file</label>
-          <input id="editImageFile" name="imageFile" type="file" accept="image/*">
+          <label>Current Images</label>
+          <div id="currentImagesPreview" style="margin-bottom:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+          <label for="editImageUrls">Image URLs (one per line or comma-separated)</label>
+          <textarea id="editImageUrls" name="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" data-history="product_image_urls"></textarea>
+          <label for="editImageFiles">Or upload new image files</label>
+          <input id="editImageFiles" name="imageFiles" type="file" accept="image/*" multiple>
+          <div id="editImageUploadProgress" style="margin-top:0.5rem;color:#666;"></div>
 
           <div style="margin-top:1rem;display:flex;gap:0.5rem;">
             <button type="submit" style="background:#6e33b7;color:#fff;padding:0.6rem 1rem;border-radius:8px;border:none;">Save Changes</button>
@@ -327,32 +335,71 @@
       const token = await user.getIdToken();
 
       const form = e.target;
+      const uploadBtn = document.getElementById('uploadBtn');
+      const progressEl = document.getElementById('imageUploadProgress');
       
       // Hide previous messages
       document.getElementById('upload-success').style.display = 'none';
       document.getElementById('upload-error').style.display = 'none';
+      progressEl.textContent = '';
       
       try {
-        let imageUrl = form.image.value || '';
+        const imageUrls = [];
         
-        // If a file was selected, upload it to Firebase Storage first
+        // Upload primary image file if provided
         if (form.imageFile.files && form.imageFile.files[0]) {
-          const uploadBtn = document.getElementById('uploadBtn');
           uploadBtn.disabled = true;
-          uploadBtn.textContent = 'Uploading image...';
+          uploadBtn.textContent = 'Uploading primary image...';
+          progressEl.textContent = 'Uploading primary image...';
           
           try {
-            imageUrl = await uploadImageToFirebase(form.imageFile.files[0]);
+            const primaryImageUrl = await uploadImageToFirebase(form.imageFile.files[0]);
+            imageUrls.push(primaryImageUrl);
           } catch (uploadErr) {
             uploadBtn.disabled = false;
             uploadBtn.textContent = 'Upload Product';
-            throw new Error('Failed to upload image to storage: ' + uploadErr.message);
+            progressEl.textContent = '';
+            throw new Error('Failed to upload primary image: ' + uploadErr.message);
           }
-          
-          uploadBtn.textContent = 'Saving product...';
+        } else if (form.image.value) {
+          // Use primary image URL if provided
+          imageUrls.push(form.image.value);
         }
         
-        // Send product data as JSON with image URL
+        // Add additional image URLs from textarea
+        if (form.additionalImages.value) {
+          const additionalUrls = form.additionalImages.value
+            .split(/[\n,]/)
+            .map(url => url.trim())
+            .filter(url => url && url.startsWith('http'));
+          imageUrls.push(...additionalUrls);
+        }
+        
+        // Upload additional image files if provided
+        if (form.additionalImageFiles.files && form.additionalImageFiles.files.length > 0) {
+          uploadBtn.disabled = true;
+          const totalFiles = form.additionalImageFiles.files.length;
+          
+          for (let i = 0; i < totalFiles; i++) {
+            const file = form.additionalImageFiles.files[i];
+            uploadBtn.textContent = `Uploading image ${i + 1}/${totalFiles}...`;
+            progressEl.textContent = `Uploading image ${i + 1} of ${totalFiles}...`;
+            
+            try {
+              const imageUrl = await uploadImageToFirebase(file);
+              imageUrls.push(imageUrl);
+            } catch (uploadErr) {
+              console.error(`Failed to upload image ${i + 1}:`, uploadErr);
+              progressEl.textContent = `Warning: Failed to upload image ${i + 1}. Continuing...`;
+              // Continue with other images
+            }
+          }
+        }
+        
+        uploadBtn.textContent = 'Saving product...';
+        progressEl.textContent = 'Saving product...';
+        
+        // Send product data as JSON with all image URLs
         const productData = {
           name: form.name.value,
           description: form.description.value,
@@ -361,7 +408,7 @@
           subcategory: form.subcategory.value || '',
           stock: form.stock.value || 1,
           options: form.options.value || '',
-          image: imageUrl
+          images: imageUrls // Send all images
         };
 
         const res = await fetch(`${API_BASE}/api/products`, {
@@ -377,10 +424,12 @@
         if (res.ok) {
           document.getElementById('upload-success').style.display = 'block';
           document.getElementById('upload-error').style.display = 'none';
+          progressEl.textContent = '';
           form.reset();
         } else {
           document.getElementById('upload-error').textContent = data.error || 'Upload failed.';
           document.getElementById('upload-error').style.display = 'block';
+          progressEl.textContent = '';
         }
       } catch (err) {
         document.getElementById('upload-error').textContent = 'Upload error: ' + err.message;
@@ -418,16 +467,28 @@
           console.warn('CSV parse warnings:', parseResult.errors);
         }
 
-        const products = (parseResult.data || []).map(row => ({
-          name: row.name || row.title || '',
-          description: row.description || '',
-          price: row.price || row.priceusd || '',
-          type: row.type || 'decor',
-          subcategory: row.subcategory || '',
-          stock: row.stock || row.quantity || '1',
-          options: row.options || '',
-          image: row.image || row.image1 || ''
-        })).filter(p => p.name && p.price);
+        const products = (parseResult.data || []).map(row => {
+          // Collect all Etsy image URLs (image1 through image10)
+          const images = [];
+          for (let i = 1; i <= 10; i++) {
+            const imgKey = `image${i}`;
+            if (row[imgKey] && row[imgKey].trim()) {
+              images.push(row[imgKey].trim());
+            }
+          }
+          
+          return {
+            name: row.name || row.title || '',
+            description: row.description || '',
+            price: row.price || row.priceusd || '',
+            type: row.type || 'decor',
+            subcategory: row.subcategory || '',
+            stock: row.stock || row.quantity || '1',
+            options: row.options || '',
+            image: images.length > 0 ? images[0] : (row.image || ''),
+            images: images // Send all images to backend
+          };
+        }).filter(p => p.name && p.price);
 
         if (!products.length) {
           resultEl.innerHTML = '<p style="color:red;">No valid products to upload. Check CSV headers (name & price required).</p>';
@@ -535,9 +596,15 @@
     function renderPanelView(products) {
       let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">';
       products.forEach(p => {
-        const imageUrl = p.image || '/img/default-product.png';
+        const imageUrl = (p.images && p.images.length > 0) ? p.images[0] : (p.image || '/img/default-product.png');
+        const imageCount = (p.images && p.images.length) || 0;
         html += `<div style="border:1px solid #ddd;border-radius:8px;padding:1rem;background:#fff;">`;
+        html += `<div style="position:relative;">`;
         html += `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(p.name||'')}" style="width:100%;height:200px;object-fit:cover;border-radius:4px;margin-bottom:0.75rem;" onerror="this.src='/img/default-product.png'">`;
+        if (imageCount > 1) {
+          html += `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.85rem;font-weight:600;">${imageCount} images</div>`;
+        }
+        html += `</div>`;
         html += `<div style="font-weight:700;margin-bottom:0.25rem;">${escapeHtml(p.name || '')}</div>`;
         html += `<div style="color:#666;margin-bottom:0.5rem;">$${(p.price || 0).toFixed ? Number(p.price).toFixed(2) : escapeHtml(String(p.price||''))}</div>`;
         html += `<div style="display:flex;gap:0.5rem;">`;
@@ -591,8 +658,23 @@
       document.getElementById('editType').value = product.type || 'decor';
       document.getElementById('editStock').value = product.stock || 1;
       document.getElementById('editOptions').value = (product.options && product.options.join) ? product.options.join(',') : (product.options || '');
-      document.getElementById('editImage').value = product.image || '';
-      document.getElementById('currentImagePreview').innerHTML = product.image ? `<img src="${escapeAttr(product.image)}" style="max-width:200px;">` : '<div style="color:#999;">No image</div>';
+      
+      // Display all current images
+      const images = product.images || (product.image ? [product.image] : []);
+      const previewEl = document.getElementById('currentImagesPreview');
+      if (images.length > 0) {
+        previewEl.innerHTML = images.map((img, idx) => 
+          `<div style="position:relative;">
+            <img src="${escapeAttr(img)}" style="max-width:120px;max-height:120px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">
+            <div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;padding:2px 6px;border-radius:3px;font-size:0.75rem;">${idx + 1}</div>
+          </div>`
+        ).join('');
+      } else {
+        previewEl.innerHTML = '<div style="color:#999;">No images</div>';
+      }
+      
+      // Set image URLs textarea
+      document.getElementById('editImageUrls').value = images.join('\n');
       document.getElementById('editModal').style.display = 'flex';
       document.getElementById('editModal').setAttribute('aria-hidden', 'false');
     }
@@ -610,6 +692,9 @@
     document.getElementById('editForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const id = document.getElementById('editProductId').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const progressEl = document.getElementById('editImageUploadProgress');
+      
       const body = {
         name: document.getElementById('editName').value,
         description: document.getElementById('editDescription').value,
@@ -624,29 +709,51 @@
         if (!user) { alert('Please login first'); return; }
         const token = await user.getIdToken();
 
-        // If a file was provided, upload to Firebase Storage first
-        const fileInput = document.getElementById('editImageFile');
-        if (fileInput.files && fileInput.files[0]) {
-          const submitBtn = e.target.querySelector('button[type="submit"]');
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Uploading image...';
-          
-          try {
-            const imageUrl = await uploadImageToFirebase(fileInput.files[0]);
-            body.image = imageUrl;
-          } catch (uploadErr) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Changes';
-            throw new Error('Failed to upload image to storage: ' + uploadErr.message);
-          }
-          
-          submitBtn.textContent = 'Saving changes...';
-        } else if (document.getElementById('editImage').value) {
-          // Use the URL provided in the text field
-          body.image = document.getElementById('editImage').value;
+        progressEl.textContent = '';
+        const imageUrls = [];
+        
+        // Get image URLs from textarea
+        const imageUrlsText = document.getElementById('editImageUrls').value;
+        if (imageUrlsText) {
+          const urls = imageUrlsText
+            .split(/[\n,]/)
+            .map(url => url.trim())
+            .filter(url => url && url.startsWith('http'));
+          imageUrls.push(...urls);
         }
+        
+        // Upload new image files if provided
+        const fileInput = document.getElementById('editImageFiles');
+        if (fileInput.files && fileInput.files.length > 0) {
+          submitBtn.disabled = true;
+          const totalFiles = fileInput.files.length;
+          
+          for (let i = 0; i < totalFiles; i++) {
+            const file = fileInput.files[i];
+            submitBtn.textContent = `Uploading image ${i + 1}/${totalFiles}...`;
+            progressEl.textContent = `Uploading image ${i + 1} of ${totalFiles}...`;
+            
+            try {
+              const imageUrl = await uploadImageToFirebase(file);
+              imageUrls.push(imageUrl);
+            } catch (uploadErr) {
+              console.error(`Failed to upload image ${i + 1}:`, uploadErr);
+              progressEl.textContent = `Warning: Failed to upload image ${i + 1}. Continuing...`;
+              // Continue with other images
+            }
+          }
+        }
+        
+        // Set images array in body
+        if (imageUrls.length > 0) {
+          body.images = imageUrls;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving changes...';
+        progressEl.textContent = 'Saving changes...';
 
-        // Send as JSON with image URL
+        // Send as JSON with image URLs
         const res = await fetch(`${API_BASE}/api/products/${id}`, {
           method: 'PUT',
           headers: {
@@ -658,12 +765,15 @@
         
         const data = await res.json();
         if (res.ok) {
+          progressEl.textContent = '';
           closeEditModal();
           document.getElementById('loadProductsBtn').click();
         } else {
+          progressEl.textContent = '';
           alert('Update failed: ' + (data.error || JSON.stringify(data)));
         }
       } catch (err) {
+        progressEl.textContent = '';
         alert('Error: ' + err.message);
       } finally {
         const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -671,6 +781,8 @@
           submitBtn.disabled = false;
           submitBtn.textContent = 'Save Changes';
         }
+        progressEl.textContent = '';
+      }
       }
     });
 
