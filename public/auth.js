@@ -37,8 +37,15 @@
     // Helper function to validate image URLs
     function isValidImageUrl(url) {
       if (!url) return false;
-      // Allow only http/https URLs or relative paths
-      return /^(https?:\/\/|\/|img\/)/.test(url);
+      try {
+        // Allow only:
+        // 1. Relative paths starting with img/ (our default avatar path)
+        // 2. Absolute URLs from https only (Firebase Storage, Google, etc.)
+        // 3. Reject data URIs, javascript:, and other dangerous schemes
+        return /^(https:\/\/[a-zA-Z0-9.-]+\.[a-z]{2,}\/|img\/)/.test(url);
+      } catch (e) {
+        return false;
+      }
     }
 
     // Helper function to update user info dropdown (shared between cache and auth)
@@ -75,7 +82,8 @@
       // Validate photo URL before using it to prevent malicious URLs
       if (profileCircle) {
         const photoUrl = isValidImageUrl(cachedUserPhoto) ? cachedUserPhoto : "img/default-avatar.png";
-        profileCircle.src = photoUrl;
+        // Use setAttribute for additional safety against XSS
+        profileCircle.setAttribute('src', photoUrl);
       }
       
       // Update user info dropdown with cached data (XSS-safe)
@@ -237,7 +245,11 @@
 
       if (loginBtn) loginBtn.style.display = "none";
       if (profileCircleContainer) profileCircleContainer.style.display = "flex";
-      if (profileCircle) profileCircle.src = user.photoURL || "img/default-avatar.png";
+      if (profileCircle) {
+        const photoUrl = user.photoURL || "img/default-avatar.png";
+        // Use setAttribute for consistency and safety
+        profileCircle.setAttribute('src', photoUrl);
+      }
       
       // Store user info in localStorage
       localStorage.setItem('userRole', role);
