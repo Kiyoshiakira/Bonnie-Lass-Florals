@@ -52,10 +52,12 @@ describe('Chatbot Integration Tests', function() {
       expect(chatbotContent).to.include('Powered by Google Gemini');
     });
 
-    it('should use the logo image', function() {
+    it('should use SVG icons for chatbot interface', function() {
       const chatbotPath = path.join(__dirname, '..', 'public', 'chatbot.js');
       const chatbotContent = fs.readFileSync(chatbotPath, 'utf8');
-      expect(chatbotContent).to.include('/img/logo.png');
+      expect(chatbotContent).to.include('chatbot-icon');
+      expect(chatbotContent).to.include('chatbot-avatar');
+      expect(chatbotContent).to.include('<svg');
     });
 
     it('should have sendMessage function', function() {
@@ -206,7 +208,8 @@ describe('Chatbot Integration Tests', function() {
       const chatbotPath = path.join(__dirname, '..', 'public', 'chatbot.js');
       const chatbotContent = fs.readFileSync(chatbotPath, 'utf8');
       expect(chatbotContent).to.include('catch (error)');
-      expect(chatbotContent).to.include('encountered an error');
+      expect(chatbotContent).to.include('showErrorMessage');
+      expect(chatbotContent).to.include('chatbot-error');
     });
   });
 
