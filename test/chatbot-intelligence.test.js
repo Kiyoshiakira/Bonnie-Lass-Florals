@@ -215,6 +215,26 @@ describe('Chatbot Intelligence Enhancements Tests', function() {
       const controllerContent = fs.readFileSync(controllerPath, 'utf8');
       expect(controllerContent).to.include('actionData = enhanceActionData(actionData)');
     });
+
+    it('should have helper function extractExtendedDetailsFromDescription', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      expect(controllerContent).to.include('function extractExtendedDetailsFromDescription');
+    });
+
+    it('should process updates field in enhanceActionData for update actions', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      expect(controllerContent).to.include("actionData.action === 'update' && actionData.updates");
+      expect(controllerContent).to.include('extractExtendedDetailsFromDescription(actionData.updates)');
+    });
+
+    it('should process productData field in enhanceActionData for create actions', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      expect(controllerContent).to.include("actionData.action === 'create' && actionData.productData");
+      expect(controllerContent).to.include('extractExtendedDetailsFromDescription(actionData.productData)');
+    });
   });
 
   describe('Intelligent Understanding Examples', function() {

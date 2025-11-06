@@ -375,106 +375,122 @@ const COMMON_ALLERGENS = ['wheat', 'dairy', 'nut', 'egg', 'soy', 'fish', 'shellf
 const STORAGE_KEYWORDS = ['cool', 'refrigerat', 'room temp', 'airtight', 'freezer', 'dry'];
 
 /**
+ * Helper function to extract extended details from description field
+ * Used by enhanceActionData to process both productData and updates
+ */
+function extractExtendedDetailsFromDescription(data) {
+  // Initialize extendedDetails if it doesn't exist
+  if (!data.extendedDetails) {
+    data.extendedDetails = {};
+  }
+  
+  // Intelligent field mapping based on keywords and patterns
+  // This catches cases where the AI might have put information in wrong fields
+  
+  if (data.description) {
+    const desc = data.description.toLowerCase();
+    
+    // Extract ingredients if mentioned in description (for food items)
+    if ((data.type === 'food' || !data.type) && !data.extendedDetails.ingredients) {
+      const ingredientsMatch = desc.match(/(?:made with|contains|ingredients?:|includes?)\s*([^.;]+)/i);
+      if (ingredientsMatch) {
+        data.extendedDetails.ingredients = ingredientsMatch[1].trim();
+      }
+    }
+    
+    // Extract materials if mentioned in description (for decor items)
+    if ((data.type === 'decor' || !data.type) && !data.extendedDetails.materials) {
+      const materialsMatch = desc.match(/(?:made (?:with|from|of)|materials?:|crafted (?:with|from))\s*([^.;]+)/i);
+      if (materialsMatch) {
+        data.extendedDetails.materials = materialsMatch[1].trim();
+      }
+    }
+    
+    // Extract allergens
+    if (!data.extendedDetails.allergens) {
+      const allergensMatch = desc.match(/(?:allergen|contains?|may contain)\s*:?\s*([^.;]+)/i);
+      if (allergensMatch) {
+        const allergenText = allergensMatch[1].toLowerCase();
+        // Check if text contains common allergen keywords
+        if (COMMON_ALLERGENS.some(allergen => allergenText.includes(allergen))) {
+          data.extendedDetails.allergens = allergensMatch[1].trim();
+        }
+      }
+    }
+    
+    // Extract dimensions - using simpler patterns for better readability
+    if (!data.extendedDetails.dimensions) {
+      // Pattern 1: Measurements with units (e.g., "12 inches", "30cm")
+      const measurementPattern = /(\d+(?:\.\d+)?)\s*(?:x\s*\d+(?:\.\d+)?)?(?:\s*(?:inches?|in|cm|ft|feet|"|'))/i;
+      // Pattern 2: Explicit size/dimension statements
+      const dimensionPattern = /(?:size|dimension|measure)s?\s*:?\s*([^.;]+)/i;
+      
+      const measurementMatch = desc.match(measurementPattern);
+      const dimensionMatch = desc.match(dimensionPattern);
+      
+      if (measurementMatch) {
+        data.extendedDetails.dimensions = measurementMatch[0].trim();
+      } else if (dimensionMatch) {
+        data.extendedDetails.dimensions = dimensionMatch[1].trim();
+      }
+    }
+    
+    // Extract weight
+    if (!data.extendedDetails.weight) {
+      const weightMatch = desc.match(/(\d+(?:\.\d+)?)\s*(?:lb|lbs|oz|ounce|g|gram|kg|kilogram)s?|weight\s*:?\s*([^.;]+)/i);
+      if (weightMatch) {
+        data.extendedDetails.weight = (weightMatch[1] || weightMatch[2]).trim();
+      }
+    }
+    
+    // Extract storage instructions
+    if (!data.extendedDetails.storageInstructions) {
+      const storageMatch = desc.match(/(?:store|storage|keep)\s+(?:in|at)?\s*([^.;]+)/i);
+      if (storageMatch) {
+        const storageText = storageMatch[1].toLowerCase();
+        // Validate that it contains storage-related keywords
+        if (STORAGE_KEYWORDS.some(keyword => storageText.includes(keyword))) {
+          data.extendedDetails.storageInstructions = storageMatch[1].trim();
+        }
+      }
+    }
+    
+    // Extract care instructions
+    if (!data.extendedDetails.careInstructions) {
+      const careMatch = desc.match(/(?:care|clean|maintain|dust)\s*:?\s*([^.;]+)/i);
+      if (careMatch && (careMatch[1].includes('dust') || careMatch[1].includes('avoid') || 
+          careMatch[1].includes('wipe') || careMatch[1].includes('clean'))) {
+        data.extendedDetails.careInstructions = careMatch[1].trim();
+      }
+    }
+  }
+  
+  // Clean up: Remove empty extendedDetails
+  if (Object.keys(data.extendedDetails).length === 0) {
+    delete data.extendedDetails;
+  }
+}
+
+/**
  * Enhance parsed action data with intelligent field mapping
  * This adds an extra layer of field detection in case the AI missed something
  */
 function enhanceActionData(actionData) {
   if (!actionData) return actionData;
   
-  // For create/update actions with productData, enhance field mapping
-  if ((actionData.action === 'create' || actionData.action === 'update') && actionData.productData) {
-    const data = actionData.productData;
-    
-    // Initialize extendedDetails if it doesn't exist
-    if (!data.extendedDetails) {
-      data.extendedDetails = {};
-    }
-    
-    // Intelligent field mapping based on keywords and patterns
-    // This catches cases where the AI might have put information in wrong fields
-    
-    if (data.description) {
-      const desc = data.description.toLowerCase();
-      
-      // Extract ingredients if mentioned in description (for food items)
-      if ((data.type === 'food' || !data.type) && !data.extendedDetails.ingredients) {
-        const ingredientsMatch = desc.match(/(?:made with|contains|ingredients?:|includes?)\s*([^.;]+)/i);
-        if (ingredientsMatch) {
-          data.extendedDetails.ingredients = ingredientsMatch[1].trim();
-        }
-      }
-      
-      // Extract materials if mentioned in description (for decor items)
-      if ((data.type === 'decor' || !data.type) && !data.extendedDetails.materials) {
-        const materialsMatch = desc.match(/(?:made (?:with|from|of)|materials?:|crafted (?:with|from))\s*([^.;]+)/i);
-        if (materialsMatch) {
-          data.extendedDetails.materials = materialsMatch[1].trim();
-        }
-      }
-      
-      // Extract allergens
-      if (!data.extendedDetails.allergens) {
-        const allergensMatch = desc.match(/(?:allergen|contains?|may contain)\s*:?\s*([^.;]+)/i);
-        if (allergensMatch) {
-          const allergenText = allergensMatch[1].toLowerCase();
-          // Check if text contains common allergen keywords
-          if (COMMON_ALLERGENS.some(allergen => allergenText.includes(allergen))) {
-            data.extendedDetails.allergens = allergensMatch[1].trim();
-          }
-        }
-      }
-      
-      // Extract dimensions - using simpler patterns for better readability
-      if (!data.extendedDetails.dimensions) {
-        // Pattern 1: Measurements with units (e.g., "12 inches", "30cm")
-        const measurementPattern = /(\d+(?:\.\d+)?)\s*(?:x\s*\d+(?:\.\d+)?)?(?:\s*(?:inches?|in|cm|ft|feet|"|'))/i;
-        // Pattern 2: Explicit size/dimension statements
-        const dimensionPattern = /(?:size|dimension|measure)s?\s*:?\s*([^.;]+)/i;
-        
-        const measurementMatch = desc.match(measurementPattern);
-        const dimensionMatch = desc.match(dimensionPattern);
-        
-        if (measurementMatch) {
-          data.extendedDetails.dimensions = measurementMatch[0].trim();
-        } else if (dimensionMatch) {
-          data.extendedDetails.dimensions = dimensionMatch[1].trim();
-        }
-      }
-      
-      // Extract weight
-      if (!data.extendedDetails.weight) {
-        const weightMatch = desc.match(/(\d+(?:\.\d+)?)\s*(?:lb|lbs|oz|ounce|g|gram|kg|kilogram)s?|weight\s*:?\s*([^.;]+)/i);
-        if (weightMatch) {
-          data.extendedDetails.weight = (weightMatch[1] || weightMatch[2]).trim();
-        }
-      }
-      
-      // Extract storage instructions
-      if (!data.extendedDetails.storageInstructions) {
-        const storageMatch = desc.match(/(?:store|storage|keep)\s+(?:in|at)?\s*([^.;]+)/i);
-        if (storageMatch) {
-          const storageText = storageMatch[1].toLowerCase();
-          // Validate that it contains storage-related keywords
-          if (STORAGE_KEYWORDS.some(keyword => storageText.includes(keyword))) {
-            data.extendedDetails.storageInstructions = storageMatch[1].trim();
-          }
-        }
-      }
-      
-      // Extract care instructions
-      if (!data.extendedDetails.careInstructions) {
-        const careMatch = desc.match(/(?:care|clean|maintain|dust)\s*:?\s*([^.;]+)/i);
-        if (careMatch && (careMatch[1].includes('dust') || careMatch[1].includes('avoid') || 
-            careMatch[1].includes('wipe') || careMatch[1].includes('clean'))) {
-          data.extendedDetails.careInstructions = careMatch[1].trim();
-        }
-      }
-    }
-    
-    // Clean up: Remove empty extendedDetails
-    if (Object.keys(data.extendedDetails).length === 0) {
-      delete data.extendedDetails;
-    }
+  // For create actions with productData, enhance field mapping
+  if (actionData.action === 'create' && actionData.productData) {
+    extractExtendedDetailsFromDescription(actionData.productData);
+  }
+  
+  // For update actions with productData, enhance field mapping
+  if (actionData.action === 'update' && actionData.productData) {
+    extractExtendedDetailsFromDescription(actionData.productData);
+  }
+  
+  // For update actions with updates field, also enhance field mapping
+  if (actionData.action === 'update' && actionData.updates) {
+    extractExtendedDetailsFromDescription(actionData.updates);
   }
   
   return actionData;
