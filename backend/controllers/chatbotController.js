@@ -911,7 +911,61 @@ exports.sendMessage = async (req, res) => {
     // Send message and get response
     const result = await chat.sendMessage(message);
     const response = result.response;
-    let text = response.text();
+    
+    // Check if response was blocked or filtered
+    if (response.promptFeedback && response.promptFeedback.blockReason) {
+      logger.warn('Gemini response blocked', { 
+        blockReason: response.promptFeedback.blockReason,
+        message: message.substring(0, 100)
+      });
+      return res.status(400).json({ 
+        error: 'Unable to process your request. Please rephrase and try again.',
+        success: false
+      });
+    }
+    
+    // Get response text with error handling
+    let text = '';
+    try {
+      text = response.text();
+    } catch (error) {
+      logger.error('Error extracting text from Gemini response:', error);
+      // Check if there are candidates with finish reason
+      if (response.candidates && response.candidates.length > 0) {
+        const candidate = response.candidates[0];
+        logger.warn('Response candidate finish reason:', candidate.finishReason);
+        
+        // If response was blocked by safety filters
+        if (candidate.finishReason === 'SAFETY') {
+          return res.status(400).json({ 
+            error: 'Unable to process your request due to content restrictions. Please rephrase and try again.',
+            success: false
+          });
+        }
+      }
+      
+      // Generic error for other text extraction failures
+      return res.status(500).json({ 
+        error: 'Failed to generate response. Please try again.',
+        success: false
+      });
+    }
+    
+    // Check if response is empty
+    if (!text || text.trim().length === 0) {
+      logger.warn('Gemini returned empty response', {
+        messageLength: message.length,
+        hasResult: !!result,
+        hasResponse: !!response,
+        hasCandidates: response.candidates && response.candidates.length > 0,
+        finishReason: response.candidates && response.candidates.length > 0 ? response.candidates[0].finishReason : 'unknown'
+      });
+      
+      return res.status(500).json({ 
+        error: 'Failed to generate response. Please try rephrasing your message or try again later.',
+        success: false
+      });
+    }
     
     // If admin, check for and execute admin actions
     let actionResult = null;
