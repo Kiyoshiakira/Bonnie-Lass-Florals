@@ -4,6 +4,13 @@ const logger = require('../utils/logger');
 const { isAdminEmail } = require('../config/admins');
 const admin = require('../utils/firebaseAdmin');
 
+// Allowed fields for product updates
+const ALLOWED_UPDATE_FIELDS = [
+  'name', 'description', 'price', 'type', 'subcategory', 
+  'stock', 'options', 'image', 'images', 'featured', 
+  'collection', 'occasion', 'extendedDetails'
+];
+
 // Initialize Gemini API
 // Require API key from environment variable
 let genAI = null;
@@ -335,7 +342,7 @@ async function executeAdminAction(actionData) {
         }
         
         // Validate and apply updates with type checking
-        const allowedUpdates = ['name', 'description', 'price', 'type', 'subcategory', 'stock', 'options', 'image', 'images', 'featured', 'collection', 'occasion', 'extendedDetails'];
+        const allowedUpdates = ALLOWED_UPDATE_FIELDS;
         Object.keys(updates || {}).forEach(key => {
           if (!allowedUpdates.includes(key)) {
             return; // Skip unknown fields
@@ -375,9 +382,9 @@ async function executeAdminAction(actionData) {
           } else if (key === 'extendedDetails') {
             // Handle extended details object
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-              // Merge with existing extended details
+              // Merge with existing extended details (initialize if null/undefined)
               productToUpdate.extendedDetails = {
-                ...productToUpdate.extendedDetails,
+                ...(productToUpdate.extendedDetails || {}),
                 ...value
               };
             } else {
@@ -483,7 +490,7 @@ async function executeAdminAction(actionData) {
         let updateCount = 0;
         for (const product of productsToUpdate) {
           // Apply updates similar to single product update
-          const allowedUpdates = ['name', 'description', 'price', 'type', 'subcategory', 'stock', 'options', 'image', 'images', 'featured', 'collection', 'occasion', 'extendedDetails'];
+          const allowedUpdates = ALLOWED_UPDATE_FIELDS;
           Object.keys(bulkUpdates || {}).forEach(key => {
             if (!allowedUpdates.includes(key)) {
               return;
@@ -513,8 +520,9 @@ async function executeAdminAction(actionData) {
               }
             } else if (key === 'extendedDetails') {
               if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                // Initialize extendedDetails if it doesn't exist
                 product.extendedDetails = {
-                  ...product.extendedDetails,
+                  ...(product.extendedDetails || {}),
                   ...value
                 };
               }
@@ -555,7 +563,8 @@ async function executeAdminAction(actionData) {
           deleteQuery.stock = { $gt: 0, $lt: 5 };
         }
         
-        // Find and delete products
+        // Find products first to include names in response, then delete
+        // This is intentional - we need product names before deletion for user feedback
         const productsToDelete = await Product.find(deleteQuery).select('name _id');
         const deleteResult = await Product.deleteMany(deleteQuery);
         

@@ -4,6 +4,31 @@ const path = require('path');
 
 describe('Enhanced Admin Chatbot Functionality Tests', function() {
   
+  describe('Code Organization', function() {
+    it('should define ALLOWED_UPDATE_FIELDS constant', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      expect(controllerContent).to.include('const ALLOWED_UPDATE_FIELDS');
+      expect(controllerContent).to.include('extendedDetails');
+    });
+
+    it('should use ALLOWED_UPDATE_FIELDS in single update', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      const updateSection = controllerContent.match(/case 'update':[\s\S]*?(?=case '|default:)/);
+      expect(updateSection).to.not.be.null;
+      expect(updateSection[0]).to.include('ALLOWED_UPDATE_FIELDS');
+    });
+
+    it('should use ALLOWED_UPDATE_FIELDS in bulk update', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      const bulkUpdateSection = controllerContent.match(/case 'bulk_update':[\s\S]*?(?=case '|default:)/);
+      expect(bulkUpdateSection).to.not.be.null;
+      expect(bulkUpdateSection[0]).to.include('ALLOWED_UPDATE_FIELDS');
+    });
+  });
+  
   describe('Extended Details Support', function() {
     it('should support extendedDetails in product creation', function() {
       const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
@@ -57,7 +82,7 @@ describe('Enhanced Admin Chatbot Functionality Tests', function() {
     it('should merge extendedDetails objects during update', function() {
       const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
       const controllerContent = fs.readFileSync(controllerPath, 'utf8');
-      expect(controllerContent).to.include('...productToUpdate.extendedDetails');
+      expect(controllerContent).to.include('...(productToUpdate.extendedDetails || {})');
       expect(controllerContent).to.include('...value');
     });
 
