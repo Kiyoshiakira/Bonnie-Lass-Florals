@@ -1107,16 +1107,15 @@ footer a:hover {
   border: 3px solid #95d5b2; /* Light sage border */
   border-radius: 20px;
   box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
-  padding: 1em;
-  max-width: 500px;
-  flex: 0 1 calc(50% - 0.6rem);
+  padding: 0;
+  max-width: 420px;
+  flex: 0 1 calc(33.333% - 1rem);
   text-align: left;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.8em;
 }
 
 .product-card::before {
@@ -1141,34 +1140,38 @@ footer a:hover {
 }
 
 .product-img {
-  width: 150px;
-  height: 150px;
+  width: 100%;
+  height: 280px;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 17px 17px 0 0;
   cursor: zoom-in;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid #fff5e6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  box-shadow: none;
   flex-shrink: 0;
+  display: block;
 }
 
 .product-img:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
 }
 
 .product-title {
   font-weight: bold;
   color: #1b4332; /* Pine green */
-  font-size: 0.95em;
-  margin-bottom: 0.3em;
+  font-size: 1.1em;
+  margin-bottom: 0.4em;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 .product-price {
   color: #2d6a4f; /* Emerald green */
   font-weight: bold;
-  font-size: 0.95em;
-  margin-bottom: 0.3em;
+  font-size: 1.3em;
+  margin-bottom: 0.4em;
 }
 
 .product-stock {
@@ -1190,16 +1193,24 @@ footer a:hover {
 
 .product-desc {
   color: #555;
-  margin-bottom: 0.6em;
-  line-height: 1.4;
-  font-size: 0.85em;
+  margin-bottom: 1em;
+  line-height: 1.5;
+  font-size: 0.9em;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-height: 4.5em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
-/* Product card top section: image on left, info on right */
+/* Product card top section: image on top, full width */
 .product-top-section {
   display: flex;
-  gap: 1em;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 0;
 }
 
 .product-info {
@@ -1207,14 +1218,18 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
+  padding: 1.2em;
   min-width: 0;
+  overflow: visible;
+  overflow-wrap: break-word;
 }
 
 /* Product card bottom section: description and buttons */
 .product-bottom-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: 0.6em;
+  padding: 0 1.2em 1.2em;
 }
 
 .product-card button {
@@ -1735,6 +1750,14 @@ footer a:hover {
    MEDIA QUERIES - Mobile Responsiveness with Floral Theme
    ============================================================================ */
 
+/* Tablet devices (801px-1200px) - 2 column layout */
+@media (max-width: 1200px) {
+  .product-card {
+    flex: 0 1 calc(50% - 1rem);
+    max-width: 100%;
+  }
+}
+
 /* Mobile devices (≤800px) - Show hamburger menu and hide desktop navigation */
 @media (max-width: 800px) {
   section {
@@ -1849,14 +1872,9 @@ footer a:hover {
     max-width: 100%;
   }
   
-  .product-top-section {
-    flex-direction: column;
-    align-items: center;
-  }
-  
   .product-img {
-    width: 200px;
-    height: 200px;
+    width: 100%;
+    height: 250px;
   }
   
   p {
@@ -2189,9 +2207,9 @@ select:focus-visible {
    PRODUCT IMAGE CAROUSEL STYLES
    ============================================================================ */
 :root {
-  --carousel-height: 150px;
-  --carousel-button-size: 30px;
-  --carousel-indicator-size: 8px;
+  --carousel-height: 280px;
+  --carousel-button-size: 36px;
+  --carousel-indicator-size: 10px;
 }
 
 .product-image-carousel {
@@ -2199,6 +2217,15 @@ select:focus-visible {
   width: 100%;
   height: var(--carousel-height);
   overflow: hidden;
+}
+
+.product-image-carousel .product-img,
+.product-image-carousel img,
+.product-image-carousel picture {
+  width: 100%;
+  height: var(--carousel-height);
+  object-fit: cover;
+  border-radius: 0;
 }
 
 .carousel-prev,
