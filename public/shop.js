@@ -284,6 +284,9 @@ function productToCard(p) {
     ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.map(escapeHtml).join(', ')}</div>` 
     : '';
   
+  // Check if product has extended details
+  const hasExtendedDetails = p.extendedDetails && Object.values(p.extendedDetails).some(val => val && val.trim());
+  
   // Generate image carousel or single image
   let imageHtml;
   if (images.length > 1) {
@@ -324,6 +327,12 @@ function productToCard(p) {
       </div>
       <div class="product-bottom-section">
         <div class="product-desc">${productDesc}</div>
+        ${hasExtendedDetails ? `<button 
+          class="more-details-btn"
+          onclick="showProductDetails('${escapeAttr(p._id)}')"
+        >
+          More Details
+        </button>` : ''}
         <button 
           class="add-to-cart"
           data-id="${escapeAttr(p._id)}"
@@ -683,6 +692,32 @@ function openEditProductModal(productId) {
   document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
   document.getElementById('editProductOptions').value = formatOptionsForDisplay(product.options);
   
+  // Populate extended details if they exist
+  const details = product.extendedDetails || {};
+  const ingredientsField = document.getElementById('editProductIngredients');
+  const allergensField = document.getElementById('editProductAllergens');
+  const nutritionalInfoField = document.getElementById('editProductNutritionalInfo');
+  const recipeField = document.getElementById('editProductRecipe');
+  const careInstructionsField = document.getElementById('editProductCareInstructions');
+  const dimensionsField = document.getElementById('editProductDimensions');
+  const materialsField = document.getElementById('editProductMaterials');
+  const weightField = document.getElementById('editProductWeight');
+  const storageInstructionsField = document.getElementById('editProductStorageInstructions');
+  const expirationInfoField = document.getElementById('editProductExpirationInfo');
+  const additionalNotesField = document.getElementById('editProductAdditionalNotes');
+  
+  if (ingredientsField) ingredientsField.value = details.ingredients || '';
+  if (allergensField) allergensField.value = details.allergens || '';
+  if (nutritionalInfoField) nutritionalInfoField.value = details.nutritionalInfo || '';
+  if (recipeField) recipeField.value = details.recipe || '';
+  if (careInstructionsField) careInstructionsField.value = details.careInstructions || '';
+  if (dimensionsField) dimensionsField.value = details.dimensions || '';
+  if (materialsField) materialsField.value = details.materials || '';
+  if (weightField) weightField.value = details.weight || '';
+  if (storageInstructionsField) storageInstructionsField.value = details.storageInstructions || '';
+  if (expirationInfoField) expirationInfoField.value = details.expirationInfo || '';
+  if (additionalNotesField) additionalNotesField.value = details.additionalNotes || '';
+  
   // Get all images for this product
   const images = product.images || (product.image ? [product.image] : []);
   
@@ -765,7 +800,20 @@ async function handleEditProductSubmit(e) {
       price: parseFloat(document.getElementById('editProductPrice').value),
       type: document.getElementById('editProductType').value,
       stock: parseInt(document.getElementById('editProductStock').value),
-      options: parseOptionsFromInput(document.getElementById('editProductOptions').value)
+      options: parseOptionsFromInput(document.getElementById('editProductOptions').value),
+      extendedDetails: {
+        ingredients: document.getElementById('editProductIngredients')?.value || '',
+        allergens: document.getElementById('editProductAllergens')?.value || '',
+        nutritionalInfo: document.getElementById('editProductNutritionalInfo')?.value || '',
+        recipe: document.getElementById('editProductRecipe')?.value || '',
+        careInstructions: document.getElementById('editProductCareInstructions')?.value || '',
+        dimensions: document.getElementById('editProductDimensions')?.value || '',
+        materials: document.getElementById('editProductMaterials')?.value || '',
+        weight: document.getElementById('editProductWeight')?.value || '',
+        storageInstructions: document.getElementById('editProductStorageInstructions')?.value || '',
+        expirationInfo: document.getElementById('editProductExpirationInfo')?.value || '',
+        additionalNotes: document.getElementById('editProductAdditionalNotes')?.value || ''
+      }
     };
     
     // Collect image URLs
@@ -931,3 +979,162 @@ window.applyFilters = applyFilters;
 window.resetFilters = resetFilters;
 window.toggleReviews = toggleReviews;
 window.openEditProductModal = openEditProductModal;
+window.showProductDetails = showProductDetails;
+
+// Function to display product details in a modal
+function showProductDetails(productId) {
+  const product = allProducts.find(p => p._id === productId);
+  if (!product) {
+    console.error('Product not found:', productId);
+    return;
+  }
+  
+  const details = product.extendedDetails;
+  // Check if extended details exist and have at least one non-empty field
+  if (!details || !Object.values(details).some(val => val && val.trim())) {
+    console.error('No extended details available for product:', productId);
+    return;
+  }
+  
+  const productName = escapeHtml(product.name);
+  
+  // Build the details HTML
+  let detailsHtml = `<div class="product-details-content">`;
+  detailsHtml += `<h3>${productName}</h3>`;
+  
+  if (details.ingredients) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Ingredients</h4>
+        <p>${escapeHtml(details.ingredients)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.allergens) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Allergen Information</h4>
+        <p>${escapeHtml(details.allergens)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.nutritionalInfo) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Nutritional Information</h4>
+        <p class="preserve-whitespace">${escapeHtml(details.nutritionalInfo)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.recipe) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Recipe / Usage Instructions</h4>
+        <p class="preserve-whitespace">${escapeHtml(details.recipe)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.careInstructions) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Care Instructions</h4>
+        <p class="preserve-whitespace">${escapeHtml(details.careInstructions)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.dimensions) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Dimensions</h4>
+        <p>${escapeHtml(details.dimensions)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.materials) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Materials</h4>
+        <p>${escapeHtml(details.materials)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.weight) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Weight</h4>
+        <p>${escapeHtml(details.weight)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.storageInstructions) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Storage Instructions</h4>
+        <p>${escapeHtml(details.storageInstructions)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.expirationInfo) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Expiration / Shelf Life</h4>
+        <p>${escapeHtml(details.expirationInfo)}</p>
+      </div>
+    `;
+  }
+  
+  if (details.additionalNotes) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Additional Notes</h4>
+        <p class="preserve-whitespace">${escapeHtml(details.additionalNotes)}</p>
+      </div>
+    `;
+  }
+  
+  detailsHtml += `</div>`;
+  
+  // Create or update modal
+  let modal = document.getElementById('productDetailsModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'productDetailsModal';
+    modal.className = 'product-details-modal';
+    modal.innerHTML = `
+      <div class="product-details-modal-content">
+        <button class="product-details-close" onclick="closeProductDetailsModal()">&times;</button>
+        <div id="productDetailsBody"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeProductDetailsModal();
+      }
+    });
+  }
+  
+  document.getElementById('productDetailsBody').innerHTML = detailsHtml;
+  modal.style.display = 'flex';
+}
+
+function closeProductDetailsModal() {
+  const modal = document.getElementById('productDetailsModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Expose close function to global scope
+window.closeProductDetailsModal = closeProductDetailsModal;
