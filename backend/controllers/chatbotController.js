@@ -4,6 +4,13 @@ const logger = require('../utils/logger');
 const { isAdminEmail } = require('../config/admins');
 const admin = require('../utils/firebaseAdmin');
 
+// Allowed fields for product updates
+const ALLOWED_UPDATE_FIELDS = [
+  'name', 'description', 'price', 'type', 'subcategory', 
+  'stock', 'options', 'image', 'images', 'featured', 
+  'collection', 'occasion', 'extendedDetails'
+];
+
 // Initialize Gemini API
 // Require API key from environment variable
 let genAI = null;
@@ -47,6 +54,15 @@ async function getProductContext() {
       }
       if (product.occasion) {
         info.occasion = product.occasion;
+      }
+      
+      // Add extended details if they exist (for admin context)
+      if (product.extendedDetails) {
+        const details = product.extendedDetails;
+        if (details.ingredients) info.ingredients = details.ingredients;
+        if (details.allergens) info.allergens = details.allergens;
+        if (details.materials) info.materials = details.materials;
+        if (details.dimensions) info.dimensions = details.dimensions;
       }
       
       return info;
@@ -94,65 +110,113 @@ Note: Since this is a small family business, detailed ingredient lists and pH le
 
 --- ADMIN MODE ENABLED ---
 
-As an admin user, you have additional capabilities:
+As an admin user, you have additional capabilities with enhanced AI understanding:
+
+INTELLIGENT FIELD DETECTION:
+I can intelligently understand what information you're providing and place it in the correct fields:
+- For food items: I recognize ingredients, allergens, nutrition facts, recipes, storage instructions
+- For crafts: I identify materials, dimensions, care instructions, weight
+- I understand context to auto-correct and suggest proper field placement
 
 ADMIN COMMANDS:
 Use these commands to manage the store:
 
 1. CREATE PRODUCT
-   Format: "create product: {name: 'Product Name', price: 29.99, description: 'Description', type: 'decor' or 'food', stock: 10, subcategory: 'wreaths', options: ['Small', 'Medium'], collection: 'christmas', occasion: 'wedding', image: 'url'}"
-   - Creates a new product with the specified details
-   - Required fields: name, price
-   - Optional fields: description, type (default: 'decor'), stock (default: 1), subcategory, options, collection, occasion, image
+   Format: "create product: {name: 'Product Name', price: 29.99, description: 'Description', type: 'decor' or 'food', stock: 10}"
+   
+   Basic fields:
+   - name (required), price (required), description, type ('decor' or 'food'), stock, subcategory
+   - options (array), collection, occasion, image, images (array), featured (boolean)
+   
+   Extended details fields (auto-detected for food/craft items):
+   - ingredients: For food items - list of ingredients
+   - allergens: Allergen information (e.g., "Contains: nuts, dairy")
+   - nutritionalInfo: Nutrition facts for food products
+   - recipe: Recipe or preparation instructions
+   - materials: Materials used in crafts (e.g., "silk flowers, wire, ribbon")
+   - dimensions: Product size (e.g., "12in x 8in x 6in")
+   - weight: Product weight (e.g., "2 lbs")
+   - careInstructions: Care/maintenance instructions
+   - storageInstructions: How to store the product
+   - expirationInfo: Shelf life or expiration details
+   - additionalNotes: Any other relevant information
+   
+   I will intelligently place information in the correct extended details fields based on context.
 
 2. UPDATE PRODUCT
    Format: "update product [ID or name]: {field: value, ...}"
+   
    Examples:
-   - "update product 507f1f77bcf86cd799439011: {price: 39.99, stock: 5}"
-   - "update product Christmas Wreath: {stock: 0}"
-   - You can update: name, description, price, type, stock, subcategory, options, collection, occasion, image
+   - "update product Christmas Wreath: {price: 39.99, stock: 5}"
+   - "update product Cookies: {extendedDetails: {ingredients: 'flour, sugar, butter', allergens: 'Contains: wheat, dairy'}}"
+   - "add ingredients to Brownies: flour, eggs, cocoa, sugar"
+   - "set care instructions for Spring Wreath: dust gently, avoid sunlight"
+   
+   You can update ANY field including all extended details. I understand natural language corrections.
 
-3. DELETE PRODUCT
+3. BULK UPDATE
+   Format: "bulk update [criteria]: {updates}"
+   
+   Examples:
+   - "bulk update all christmas products: {stock: 10}"
+   - "bulk update type food: {extendedDetails: {storageInstructions: 'Store in cool, dry place'}}"
+   - "update all wreaths: {subcategory: 'wreaths'}"
+   - "set stock to 5 for all out of stock items"
+   
+   Criteria options: collection, type, subcategory, stock conditions, or "all"
+
+4. DELETE PRODUCT
    Format: "delete product [ID or name]"
-   Example: "delete product 507f1f77bcf86cd799439011" or "delete product Christmas Wreath"
+   Example: "delete product Christmas Wreath"
 
-4. VIEW STATISTICS
+5. BULK DELETE
+   Format: "bulk delete [criteria]"
+   Examples:
+   - "bulk delete out of stock products"
+   - "bulk delete collection christmas"
+
+6. VIEW STATISTICS
    Commands:
    - "show stats" - Display overall store statistics
    - "show low stock" - List products with stock < 5
    - "show out of stock" - List products with stock = 0
-   - "show product types" - Show breakdown by product type
+   - "list products by type/collection" - Filter products
 
-5. BULK UPDATE STOCK
-   Format: "bulk update stock: {pattern: value}"
-   Example: "bulk update stock: all christmas products to 10"
+7. SEARCH PRODUCTS
+   Format: "search products [criteria]"
+   Examples:
+   - "search products with collection christmas"
+   - "find all food items"
+   - "list wreaths"
 
-When admin users ask to create, update, or delete products, respond with:
-1. A confirmation of what you understood
-2. A JSON block clearly marked with triple backticks containing the action details
-3. A friendly explanation
+SMART RESPONSE FORMAT:
+When handling admin commands, I will:
+1. Understand your natural language request
+2. Intelligently determine which fields to update
+3. Return a JSON action block with properly organized data
+4. Provide clear confirmation
 
-Example response format for creating a product:
-"I'll create a new product for you! Here's what I understood:
+Example - Smart field placement:
+"Add a new cookie product called Chocolate Chip Cookies for $8.99. Ingredients are flour, sugar, chocolate chips, butter, eggs. Contains wheat, dairy, and eggs. Store in an airtight container."
 
+I'll understand this should create:
 \`\`\`json
 {
   "action": "create",
   "productData": {
-    "name": "Spring Wreath",
-    "price": 45.99,
-    "description": "Beautiful spring wreath with silk flowers",
-    "type": "decor",
-    "stock": 3
+    "name": "Chocolate Chip Cookies",
+    "price": 8.99,
+    "type": "food",
+    "extendedDetails": {
+      "ingredients": "flour, sugar, chocolate chips, butter, eggs",
+      "allergens": "Contains: wheat, dairy, eggs",
+      "storageInstructions": "Store in an airtight container"
+    }
   }
 }
 \`\`\`
 
-This will add a new Spring Wreath to your inventory at $45.99 with 3 units in stock. Would you like me to proceed?"
-
-For statistics requests, analyze the product data and provide clear summaries with numbers and insights.
-
-IMPORTANT: Always include the JSON block with proper formatting when handling admin commands, as the system will parse and execute these automatically.`;
+IMPORTANT: Always include the JSON block with proper formatting. I intelligently parse natural language and place data in appropriate fields.`;
 
   return isAdmin ? basePrompt + adminPrompt : basePrompt;
 }
@@ -247,7 +311,8 @@ async function executeAdminAction(actionData) {
           images: productData.images || (productData.image ? [productData.image] : []),
           featured: productData.featured || false,
           collection: productData.collection || '',
-          occasion: productData.occasion || ''
+          occasion: productData.occasion || '',
+          extendedDetails: productData.extendedDetails || {}
         });
         
         await newProduct.save();
@@ -277,7 +342,7 @@ async function executeAdminAction(actionData) {
         }
         
         // Validate and apply updates with type checking
-        const allowedUpdates = ['name', 'description', 'price', 'type', 'subcategory', 'stock', 'options', 'image', 'images', 'featured', 'collection', 'occasion'];
+        const allowedUpdates = ALLOWED_UPDATE_FIELDS;
         Object.keys(updates || {}).forEach(key => {
           if (!allowedUpdates.includes(key)) {
             return; // Skip unknown fields
@@ -314,6 +379,17 @@ async function executeAdminAction(actionData) {
               return;
             }
             productToUpdate[key] = value;
+          } else if (key === 'extendedDetails') {
+            // Handle extended details object
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+              // Merge with existing extended details (initialize if null/undefined)
+              productToUpdate.extendedDetails = {
+                ...(productToUpdate.extendedDetails || {}),
+                ...value
+              };
+            } else {
+              logger.warn(`Invalid extendedDetails value: must be an object`);
+            }
           } else if (typeof value === 'string' || value === '') {
             productToUpdate[key] = value;
           } else {
@@ -380,6 +456,160 @@ async function executeAdminAction(actionData) {
         return {
           success: true,
           products: outOfStockProducts
+        };
+      
+      case 'bulk_update':
+        // Bulk update products based on criteria
+        const { criteria, updates: bulkUpdates } = actionData;
+        
+        // Build query from criteria
+        let query = {};
+        if (criteria.collection) {
+          query.collection = criteria.collection;
+        }
+        if (criteria.type) {
+          query.type = criteria.type;
+        }
+        if (criteria.subcategory) {
+          query.subcategory = criteria.subcategory;
+        }
+        if (criteria.stockCondition === 'out_of_stock') {
+          query.stock = 0;
+        } else if (criteria.stockCondition === 'low_stock') {
+          query.stock = { $gt: 0, $lt: 5 };
+        }
+        
+        // Find products matching criteria
+        const productsToUpdate = await Product.find(query);
+        
+        if (productsToUpdate.length === 0) {
+          return { success: false, error: 'No products match the criteria' };
+        }
+        
+        // Apply updates to each product
+        let updateCount = 0;
+        for (const product of productsToUpdate) {
+          // Apply updates similar to single product update
+          const allowedUpdates = ALLOWED_UPDATE_FIELDS;
+          Object.keys(bulkUpdates || {}).forEach(key => {
+            if (!allowedUpdates.includes(key)) {
+              return;
+            }
+            
+            const value = bulkUpdates[key];
+            
+            if (key === 'price') {
+              const priceVal = parseFloat(value);
+              if (!isNaN(priceVal) && priceVal >= 0) {
+                product[key] = priceVal;
+              }
+            } else if (key === 'stock') {
+              const stockVal = parseInt(value, 10);
+              if (!isNaN(stockVal) && stockVal >= 0) {
+                product[key] = stockVal;
+              }
+            } else if (key === 'type') {
+              if (value === 'decor' || value === 'food') {
+                product[key] = value;
+              }
+            } else if (key === 'featured') {
+              product[key] = Boolean(value);
+            } else if (key === 'options' || key === 'images') {
+              if (Array.isArray(value)) {
+                product[key] = value;
+              }
+            } else if (key === 'extendedDetails') {
+              if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                // Initialize extendedDetails if it doesn't exist
+                product.extendedDetails = {
+                  ...(product.extendedDetails || {}),
+                  ...value
+                };
+              }
+            } else if (typeof value === 'string' || value === '') {
+              product[key] = value;
+            }
+          });
+          
+          await product.save();
+          updateCount++;
+        }
+        
+        return {
+          success: true,
+          message: `Successfully updated ${updateCount} product(s)`,
+          count: updateCount,
+          products: productsToUpdate.map(p => ({ name: p.name, _id: p._id }))
+        };
+      
+      case 'bulk_delete':
+        // Bulk delete products based on criteria
+        const { criteria: deleteCriteria } = actionData;
+        
+        // Build query from criteria
+        let deleteQuery = {};
+        if (deleteCriteria.collection) {
+          deleteQuery.collection = deleteCriteria.collection;
+        }
+        if (deleteCriteria.type) {
+          deleteQuery.type = deleteCriteria.type;
+        }
+        if (deleteCriteria.subcategory) {
+          deleteQuery.subcategory = deleteCriteria.subcategory;
+        }
+        if (deleteCriteria.stockCondition === 'out_of_stock') {
+          deleteQuery.stock = 0;
+        } else if (deleteCriteria.stockCondition === 'low_stock') {
+          deleteQuery.stock = { $gt: 0, $lt: 5 };
+        }
+        
+        // Find products first to include names in response, then delete
+        // This is intentional - we need product names before deletion for user feedback
+        const productsToDelete = await Product.find(deleteQuery).select('name _id');
+        const deleteResult = await Product.deleteMany(deleteQuery);
+        
+        return {
+          success: true,
+          message: `Successfully deleted ${deleteResult.deletedCount} product(s)`,
+          count: deleteResult.deletedCount,
+          products: productsToDelete
+        };
+      
+      case 'search':
+        // Search/filter products
+        const { searchCriteria } = actionData;
+        
+        // Build search query
+        let searchQuery = {};
+        if (searchCriteria.collection) {
+          searchQuery.collection = searchCriteria.collection;
+        }
+        if (searchCriteria.type) {
+          searchQuery.type = searchCriteria.type;
+        }
+        if (searchCriteria.subcategory) {
+          searchQuery.subcategory = searchCriteria.subcategory;
+        }
+        if (searchCriteria.occasion) {
+          searchQuery.occasion = searchCriteria.occasion;
+        }
+        if (searchCriteria.namePattern) {
+          searchQuery.name = { $regex: new RegExp(searchCriteria.namePattern, 'i') };
+        }
+        if (searchCriteria.stockCondition === 'in_stock') {
+          searchQuery.stock = { $gt: 0 };
+        } else if (searchCriteria.stockCondition === 'out_of_stock') {
+          searchQuery.stock = 0;
+        } else if (searchCriteria.stockCondition === 'low_stock') {
+          searchQuery.stock = { $gt: 0, $lt: 5 };
+        }
+        
+        const searchResults = await Product.find(searchQuery).select('name price stock type collection subcategory');
+        
+        return {
+          success: true,
+          products: searchResults,
+          count: searchResults.length
         };
       
       default:
@@ -468,6 +698,22 @@ exports.sendMessage = async (req, res) => {
         if (actionResult.success) {
           if (actionResult.stats) {
             text += `\n\n📊 **Statistics:**\n- Total Products: ${actionResult.stats.totalProducts}\n- Decor Products: ${actionResult.stats.decorProducts}\n- Food Products: ${actionResult.stats.foodProducts}\n- Out of Stock: ${actionResult.stats.outOfStock}\n- Low Stock (< 5): ${actionResult.stats.lowStock}`;
+          } else if (actionResult.count !== undefined) {
+            // Bulk operation or search result
+            text += `\n\n✅ **Action completed:** ${actionResult.message || `Found ${actionResult.count} product(s)`}`;
+            if (actionResult.products && actionResult.products.length > 0) {
+              const productList = actionResult.products.slice(0, 20).map(p => {
+                let info = `- ${p.name}`;
+                if (p.stock !== undefined) info += ` (Stock: ${p.stock})`;
+                if (p.price !== undefined) info += ` - $${p.price}`;
+                if (p.type) info += ` [${p.type}]`;
+                return info;
+              }).join('\n');
+              text += `\n\n📋 **Products:**\n${productList}`;
+              if (actionResult.products.length > 20) {
+                text += `\n... and ${actionResult.products.length - 20} more`;
+              }
+            }
           } else if (actionResult.products) {
             text += `\n\n📋 **Products:**\n${actionResult.products.map(p => `- ${p.name}${p.stock !== undefined ? ` (Stock: ${p.stock})` : ''}`).join('\n')}`;
           } else {
