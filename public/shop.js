@@ -329,7 +329,6 @@ function productToCard(p) {
         <div class="product-desc">${productDesc}</div>
         ${hasExtendedDetails ? `<button 
           class="more-details-btn"
-          style="margin-bottom:0.5rem;background:linear-gradient(135deg,#d946ef 0%,#a855f7 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
           onclick="showProductDetails('${escapeAttr(p._id)}')"
         >
           More Details
@@ -985,12 +984,18 @@ window.showProductDetails = showProductDetails;
 // Function to display product details in a modal
 function showProductDetails(productId) {
   const product = allProducts.find(p => p._id === productId);
-  if (!product || !product.extendedDetails) {
-    console.error('Product or extended details not found:', productId);
+  if (!product) {
+    console.error('Product not found:', productId);
     return;
   }
   
   const details = product.extendedDetails;
+  // Check if extended details exist and have at least one non-empty field
+  if (!details || !Object.values(details).some(val => val && val.trim())) {
+    console.error('No extended details available for product:', productId);
+    return;
+  }
+  
   const productName = escapeHtml(product.name);
   
   // Build the details HTML
@@ -1019,7 +1024,7 @@ function showProductDetails(productId) {
     detailsHtml += `
       <div class="detail-section">
         <h4>Nutritional Information</h4>
-        <p style="white-space: pre-wrap;">${escapeHtml(details.nutritionalInfo)}</p>
+        <p class="preserve-whitespace">${escapeHtml(details.nutritionalInfo)}</p>
       </div>
     `;
   }
@@ -1028,7 +1033,7 @@ function showProductDetails(productId) {
     detailsHtml += `
       <div class="detail-section">
         <h4>Recipe / Usage Instructions</h4>
-        <p style="white-space: pre-wrap;">${escapeHtml(details.recipe)}</p>
+        <p class="preserve-whitespace">${escapeHtml(details.recipe)}</p>
       </div>
     `;
   }
@@ -1037,7 +1042,7 @@ function showProductDetails(productId) {
     detailsHtml += `
       <div class="detail-section">
         <h4>Care Instructions</h4>
-        <p style="white-space: pre-wrap;">${escapeHtml(details.careInstructions)}</p>
+        <p class="preserve-whitespace">${escapeHtml(details.careInstructions)}</p>
       </div>
     `;
   }
@@ -1091,7 +1096,7 @@ function showProductDetails(productId) {
     detailsHtml += `
       <div class="detail-section">
         <h4>Additional Notes</h4>
-        <p style="white-space: pre-wrap;">${escapeHtml(details.additionalNotes)}</p>
+        <p class="preserve-whitespace">${escapeHtml(details.additionalNotes)}</p>
       </div>
     `;
   }

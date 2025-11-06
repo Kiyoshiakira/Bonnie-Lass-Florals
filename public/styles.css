@@ -2389,6 +2389,29 @@ select:focus-visible {
   padding-left: 1.5rem;
 }
 
+.preserve-whitespace {
+  white-space: pre-wrap;
+}
+
+.more-details-btn {
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #d946ef 0%, #a855f7 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 1em;
+  font-weight: 600;
+  font-size: 0.85em;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.more-details-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(217, 70, 239, 0.4);
+}
+
 /* Responsive modal */
 @media (max-width: 768px) {
   .product-details-modal {
