@@ -669,8 +669,8 @@
         display: block;
       }
 
-      /* Mobile: Full-screen modal overlay (≤600px) */
-      @media (max-width: 600px) {
+      /* Mobile: Full-screen modal overlay (≤768px) */
+      @media (max-width: 768px) {
         .chatbot-window,
         .chatbot-window.mobile-fullscreen {
           position: fixed;
