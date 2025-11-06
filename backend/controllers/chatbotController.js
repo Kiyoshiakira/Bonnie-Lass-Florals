@@ -11,6 +11,10 @@ const ALLOWED_UPDATE_FIELDS = [
   'collection', 'occasion', 'extendedDetails'
 ];
 
+// Constants for Gemini response handling
+const MESSAGE_TRUNCATE_LENGTH = 100;
+const FINISH_REASON_SAFETY = 'SAFETY';
+
 // Initialize Gemini API
 // Require API key from environment variable
 let genAI = null;
@@ -916,7 +920,7 @@ exports.sendMessage = async (req, res) => {
     if (response.promptFeedback && response.promptFeedback.blockReason) {
       logger.warn('Gemini response blocked', { 
         blockReason: response.promptFeedback.blockReason,
-        message: message.substring(0, 100)
+        message: message.substring(0, MESSAGE_TRUNCATE_LENGTH)
       });
       return res.status(400).json({ 
         error: 'Unable to process your request. Please rephrase and try again.',
@@ -931,12 +935,12 @@ exports.sendMessage = async (req, res) => {
     } catch (error) {
       logger.error('Error extracting text from Gemini response:', error);
       // Check if there are candidates with finish reason
-      if (response.candidates && response.candidates.length > 0) {
-        const candidate = response.candidates[0];
+      const candidate = response.candidates && response.candidates.length > 0 ? response.candidates[0] : null;
+      if (candidate) {
         logger.warn('Response candidate finish reason:', candidate.finishReason);
         
         // If response was blocked by safety filters
-        if (candidate.finishReason === 'SAFETY') {
+        if (candidate.finishReason === FINISH_REASON_SAFETY) {
           return res.status(400).json({ 
             error: 'Unable to process your request due to content restrictions. Please rephrase and try again.',
             success: false
@@ -953,12 +957,13 @@ exports.sendMessage = async (req, res) => {
     
     // Check if response is empty
     if (!text || text.trim().length === 0) {
+      const candidate = response.candidates && response.candidates.length > 0 ? response.candidates[0] : null;
       logger.warn('Gemini returned empty response', {
         messageLength: message.length,
         hasResult: !!result,
         hasResponse: !!response,
-        hasCandidates: response.candidates && response.candidates.length > 0,
-        finishReason: response.candidates && response.candidates.length > 0 ? response.candidates[0].finishReason : 'unknown'
+        hasCandidates: !!candidate,
+        finishReason: candidate ? candidate.finishReason : 'unknown'
       });
       
       return res.status(500).json({ 
