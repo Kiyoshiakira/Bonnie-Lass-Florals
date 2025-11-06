@@ -900,7 +900,8 @@ exports.sendMessage = async (req, res) => {
     // If admin, check for and execute admin actions
     let actionResult = null;
     if (isAdmin) {
-      const actionData = parseAdminAction(text);
+      // const actionData = parseAdminAction ensures immutability initially
+      let actionData = parseAdminAction(text);
       
       // Enhance action data with intelligent field mapping
       actionData = enhanceActionData(actionData);
