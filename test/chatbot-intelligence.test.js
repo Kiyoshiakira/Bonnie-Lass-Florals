@@ -139,6 +139,22 @@ describe('Chatbot Intelligence Enhancements Tests', function() {
   });
 
   describe('Enhanced Field Detection Function', function() {
+    it('should define common allergen keywords constant', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      expect(controllerContent).to.include('COMMON_ALLERGENS');
+      expect(controllerContent).to.include('wheat');
+      expect(controllerContent).to.include('dairy');
+    });
+
+    it('should define storage keywords constant', function() {
+      const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
+      const controllerContent = fs.readFileSync(controllerPath, 'utf8');
+      expect(controllerContent).to.include('STORAGE_KEYWORDS');
+      expect(controllerContent).to.include('refrigerat');
+      expect(controllerContent).to.include('airtight');
+    });
+
     it('should have enhanceActionData function', function() {
       const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
       const controllerContent = fs.readFileSync(controllerPath, 'utf8');
@@ -169,8 +185,8 @@ describe('Chatbot Intelligence Enhancements Tests', function() {
     it('should extract dimensions from description', function() {
       const controllerPath = path.join(__dirname, '..', 'backend', 'controllers', 'chatbotController.js');
       const controllerContent = fs.readFileSync(controllerPath, 'utf8');
-      expect(controllerContent).to.include('dimensionsMatch');
-      expect(controllerContent).to.include('inches?|in|cm|ft|feet');
+      expect(controllerContent).to.include('measurementPattern');
+      expect(controllerContent).to.include('dimensionPattern');
     });
 
     it('should extract weight from description', function() {
