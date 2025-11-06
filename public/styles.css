@@ -117,6 +117,15 @@ header .logo {
   color: #fff;
   text-shadow: 0 2px 10px rgba(27, 67, 50, 0.5);
   margin-right: 48px;
+  display: flex;
+  align-items: center;
+}
+
+header .logo img {
+  height: 80px;
+  width: auto;
+  vertical-align: middle;
+  margin-right: 18px;
 }
 
 /* ============================================================================
@@ -1780,6 +1789,10 @@ footer a:hover {
     flex: 1;
   }
   
+  header .logo img {
+    height: 60px;
+  }
+  
   /* Show hamburger menu button on mobile devices */
   /* Button is created by mobile-nav.js and positioned in header */
   .hamburger {
@@ -1943,6 +1956,10 @@ footer a:hover {
   
   header .logo {
     font-size: 1.5rem;
+  }
+  
+  header .logo img {
+    height: 50px;
   }
   
   nav {
