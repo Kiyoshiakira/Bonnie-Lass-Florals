@@ -41,7 +41,7 @@
         </button>
 
         <!-- Chatbot Window -->
-        <div id="chatbot-window" class="chatbot-window" style="display: none;">
+        <div id="chatbot-window" class="chatbot-window" style="display: none;" aria-hidden="true" role="dialog" aria-labelledby="chatbot-header-title">
           <div class="chatbot-header">
             <div class="chatbot-header-content">
               <div class="chatbot-avatar">
@@ -53,7 +53,7 @@
                 </svg>
               </div>
               <div class="chatbot-header-text">
-                <h3>Floral Assistant</h3>
+                <h3 id="chatbot-header-title">Floral Assistant</h3>
                 <p class="chatbot-status" id="chatbot-status">
                   <span class="status-indicator"></span>
                   Online
@@ -232,10 +232,10 @@
         position: fixed;
         bottom: 100px;
         right: 20px;
-        width: 375px;
-        max-width: 375px;
-        height: 550px;
-        max-height: 550px;
+        width: 400px;
+        max-width: 400px;
+        height: 600px;
+        max-height: 80vh;
         background: white;
         border-radius: 20px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
@@ -244,6 +244,7 @@
         overflow: hidden;
         animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         backdrop-filter: blur(10px);
+        z-index: 9999;
       }
 
       @keyframes slideUp {
@@ -342,6 +343,8 @@
         justify-content: center;
         border-radius: 50%;
         transition: all 0.2s;
+        position: relative;
+        z-index: 10;
       }
 
       .chatbot-close svg {
@@ -538,6 +541,7 @@
         display: flex;
         gap: 10px;
         padding: 16px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         background: white;
         border-top: 1px solid #e5e7eb;
       }
@@ -665,15 +669,18 @@
         display: block;
       }
 
-      /* Mobile: Full-screen modal overlay (≤768px) */
-      @media (max-width: 768px) {
-        .chatbot-window {
+      /* Mobile: Full-screen modal overlay (≤600px) */
+      @media (max-width: 600px) {
+        .chatbot-window,
+        .chatbot-window.mobile-fullscreen {
+          position: fixed;
+          inset: 0;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          width: 100vw;
-          max-width: 100vw;
+          width: 100%;
+          max-width: 100%;
           height: 100vh;
           max-height: 100vh;
           border-radius: 0;
@@ -730,6 +737,7 @@
 
         .chatbot-input-container {
           padding: 16px;
+          padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
 
         /* Ensure close button is easily tappable on mobile */
@@ -773,6 +781,16 @@
     if (isChatbotOpen) {
       chatbotWindow.style.display = 'flex';
       chatbotToggle.style.display = 'none';
+      
+      // Add mobile-fullscreen class on narrow viewports
+      if (window.innerWidth <= 600) {
+        chatbotWindow.classList.add('mobile-fullscreen');
+      }
+      
+      // Update accessibility
+      chatbotWindow.setAttribute('aria-hidden', 'false');
+      chatbotToggle.setAttribute('aria-label', 'Chat is open');
+      
       // Focus input with slight delay to ensure it works on mobile
       setTimeout(() => {
         const input = document.getElementById('chatbot-input');
@@ -781,6 +799,13 @@
     } else {
       chatbotWindow.style.display = 'none';
       chatbotToggle.style.display = 'flex';
+      
+      // Remove mobile-fullscreen class
+      chatbotWindow.classList.remove('mobile-fullscreen');
+      
+      // Update accessibility
+      chatbotWindow.setAttribute('aria-hidden', 'true');
+      chatbotToggle.setAttribute('aria-label', 'Open chat');
     }
   }
 
@@ -1097,6 +1122,18 @@
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSend();
+      }
+    });
+    
+    // Handle window resize for mobile-fullscreen class
+    window.addEventListener('resize', () => {
+      const chatbotWindow = document.getElementById('chatbot-window');
+      if (isChatbotOpen) {
+        if (window.innerWidth <= 600) {
+          chatbotWindow.classList.add('mobile-fullscreen');
+        } else {
+          chatbotWindow.classList.remove('mobile-fullscreen');
+        }
       }
     });
   }
