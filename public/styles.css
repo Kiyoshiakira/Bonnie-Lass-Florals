@@ -1161,7 +1161,6 @@ footer a:hover {
   color: #1b4332; /* Pine green */
   font-size: 1.1em;
   margin-bottom: 0.4em;
-  word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
@@ -1197,13 +1196,13 @@ footer a:hover {
   margin-bottom: 1em;
   line-height: 1.5;
   font-size: 0.9em;
-  word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
   max-height: 4.5em;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -1222,7 +1221,6 @@ footer a:hover {
   padding: 1.2em;
   min-width: 0;
   overflow: visible;
-  word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
