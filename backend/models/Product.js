@@ -13,7 +13,21 @@ const productSchema = new mongoose.Schema({
   stock: { type: Number, default: 1 },
   options: [String], // e.g., ["Small", "Medium", "Large"]
   collection: String, // e.g., 'christmas', 'halloween', 'easter', etc.
-  occasion: String // e.g., 'birthday', 'wedding', 'anniversary', etc.
+  occasion: String, // e.g., 'birthday', 'wedding', 'anniversary', etc.
+  // Extended details fields for additional product information
+  extendedDetails: {
+    ingredients: String, // For food items - list of ingredients
+    allergens: String, // Allergen information
+    nutritionalInfo: String, // Nutritional information for food products
+    recipe: String, // Recipe or usage instructions
+    careInstructions: String, // Care instructions for crafts/decorations
+    dimensions: String, // Product dimensions
+    materials: String, // Materials used in crafts
+    weight: String, // Product weight
+    storageInstructions: String, // How to store the product
+    expirationInfo: String, // Expiration or shelf life information
+    additionalNotes: String // Any other relevant information
+  }
 });
 
 // Virtual for imageUrl that provides canonical image URL
