@@ -330,8 +330,9 @@ function productToCard(p) {
         ${hasExtendedDetails ? `<button 
           class="more-details-btn"
           onclick="showProductDetails('${escapeAttr(p._id)}')"
+          title="View detailed product information"
         >
-          More Details
+          <span class="info-icon">ℹ️</span> View Full Details
         </button>` : ''}
         <button 
           class="add-to-cart"
@@ -1000,7 +1001,7 @@ function showProductDetails(productId) {
   
   // Build the details HTML
   let detailsHtml = `<div class="product-details-content">`;
-  detailsHtml += `<h3>${productName}</h3>`;
+  detailsHtml += `<h3><span class="info-icon-large">ℹ️</span> ${productName} - Product Details</h3>`;
   
   if (details.ingredients) {
     detailsHtml += `
