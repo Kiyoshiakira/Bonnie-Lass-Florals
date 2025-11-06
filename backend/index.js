@@ -23,16 +23,22 @@ const CLIENT_ORIGINS = (process.env.CLIENT_ORIGINS || 'https://bonnielassflorals
   .map(s => s.trim())
   .filter(Boolean);
 
+logger.info(`CORS: Allowed origins configured: ${CLIENT_ORIGINS.join(', ')}`);
+
 app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     if (CLIENT_ORIGINS.indexOf(origin) !== -1) {
+      logger.info(`CORS: Allowing origin: ${origin}`);
       return callback(null, true);
     }
     
-    return callback(new Error('CORS: Origin not allowed'));
+    // Log rejected origins for debugging, but don't throw error
+    // Returning false will still set CORS headers but reject the request
+    logger.warn(`CORS: Rejecting origin: ${origin}. Allowed origins: ${CLIENT_ORIGINS.join(', ')}`);
+    return callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
