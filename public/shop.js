@@ -500,7 +500,15 @@ document.addEventListener('DOMContentLoaded', () => loadProducts());
 // Function to toggle reviews display
 async function toggleReviews(productId) {
   const container = document.getElementById(`reviews-container-${productId}`);
-  const button = container.previousElementSibling;
+  // Fix: Query for the specific View Reviews button instead of using previousElementSibling
+  // to avoid incorrectly targeting the Edit Product button when it exists
+  const productCard = document.getElementById(`product-${productId}`);
+  const button = productCard ? productCard.querySelector('.view-reviews-btn') : null;
+  
+  if (!button) {
+    console.error('View Reviews button not found for product:', productId);
+    return;
+  }
   
   if (container.style.display === 'none') {
     // Show reviews
