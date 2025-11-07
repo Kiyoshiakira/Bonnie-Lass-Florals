@@ -987,10 +987,13 @@ window.openEditProductModal = openEditProductModal;
 window.showProductDetails = showProductDetails;
 window.toggleDetailSection = toggleDetailSection;
 
+// Threshold for automatic collapsible sections (in characters)
+const COLLAPSIBLE_THRESHOLD = 300;
+
 // Helper function to create a collapsible detail section
 function createCollapsibleSection(id, title, content, collapsed = false) {
   const contentLength = content.length;
-  const shouldCollapse = contentLength > 300; // Make collapsible if content is long
+  const shouldCollapse = contentLength > COLLAPSIBLE_THRESHOLD;
   
   // Sanitize id to prevent XSS
   const safeId = escapeAttr(id);
@@ -1002,7 +1005,7 @@ function createCollapsibleSection(id, title, content, collapsed = false) {
           <span class="collapse-arrow">${collapsed ? '▸' : '▾'}</span>
           ${title}
         </h4>
-        <div class="collapsible-content" id="${safeId}" style="${collapsed ? 'display:none;' : ''}">
+        <div class="collapsible-content ${collapsed ? 'hidden' : ''}" id="${safeId}">
           <p class="preserve-whitespace">${content}</p>
         </div>
       </div>
@@ -1037,12 +1040,14 @@ function toggleDetailSection(sectionId) {
     return;
   }
   
-  if (section.style.display === 'none') {
-    section.style.display = 'block';
+  // Toggle visibility using CSS class
+  const isHidden = section.classList.contains('hidden');
+  if (isHidden) {
+    section.classList.remove('hidden');
     arrow.textContent = '▾';
     header.parentElement.classList.remove('collapsed');
   } else {
-    section.style.display = 'none';
+    section.classList.add('hidden');
     arrow.textContent = '▸';
     header.parentElement.classList.add('collapsed');
   }

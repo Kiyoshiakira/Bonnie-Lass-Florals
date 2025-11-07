@@ -2444,6 +2444,10 @@ select:focus-visible {
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
+.collapsible-content.hidden {
+  display: none;
+}
+
 /* Special styling for allergen section */
 .allergen-section {
   background-color: #fef3c7;
