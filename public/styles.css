@@ -292,12 +292,14 @@ nav a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1.2rem;
+  margin: 0 auto 1.5rem;
+  padding: 0.8rem 1rem;
   background: #f1faee; /* Light cream background */
   border-radius: 16px;
   align-items: center;
+  justify-content: center;
   border: 2px solid #95d5b2; /* Light sage border */
+  max-width: fit-content;
 }
 
 .filter-group {
@@ -1909,6 +1911,7 @@ footer a:hover {
   .shop-filters {
     flex-direction: column;
     align-items: stretch;
+    max-width: 100%;
   }
   
   .filter-group {
