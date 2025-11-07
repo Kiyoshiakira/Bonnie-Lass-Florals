@@ -992,14 +992,17 @@ function createCollapsibleSection(id, title, content, collapsed = false) {
   const contentLength = content.length;
   const shouldCollapse = contentLength > 300; // Make collapsible if content is long
   
+  // Sanitize id to prevent XSS
+  const safeId = escapeAttr(id);
+  
   if (shouldCollapse) {
     return `
       <div class="detail-section collapsible-section ${collapsed ? 'collapsed' : ''}">
-        <h4 class="collapsible-header" onclick="toggleDetailSection('${id}')">
+        <h4 class="collapsible-header" onclick="toggleDetailSection('${safeId}')">
           <span class="collapse-arrow">${collapsed ? '▸' : '▾'}</span>
           ${title}
         </h4>
-        <div class="collapsible-content" id="${id}" style="${collapsed ? 'display:none;' : ''}">
+        <div class="collapsible-content" id="${safeId}" style="${collapsed ? 'display:none;' : ''}">
           <p class="preserve-whitespace">${content}</p>
         </div>
       </div>
@@ -1017,8 +1020,22 @@ function createCollapsibleSection(id, title, content, collapsed = false) {
 // Function to toggle collapsible sections
 function toggleDetailSection(sectionId) {
   const section = document.getElementById(sectionId);
+  if (!section) {
+    console.error('Section not found:', sectionId);
+    return;
+  }
+  
   const header = section.previousElementSibling;
+  if (!header) {
+    console.error('Header not found for section:', sectionId);
+    return;
+  }
+  
   const arrow = header.querySelector('.collapse-arrow');
+  if (!arrow) {
+    console.error('Arrow not found in header for section:', sectionId);
+    return;
+  }
   
   if (section.style.display === 'none') {
     section.style.display = 'block';
