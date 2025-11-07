@@ -150,6 +150,12 @@ function applyFilters(type) {
     filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
   } else if (sortBy === 'name') {
     filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  } else if (sortBy === 'name-reverse') {
+    filtered.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+  } else if (sortBy === 'stock-high') {
+    filtered.sort((a, b) => (b.stock || 0) - (a.stock || 0));
+  } else if (sortBy === 'stock-low') {
+    filtered.sort((a, b) => (a.stock || 0) - (b.stock || 0));
   }
   
   const containerId = type === 'decor' ? 'decor-products' : 'food-products';
