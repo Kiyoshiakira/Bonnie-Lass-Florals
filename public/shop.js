@@ -284,9 +284,6 @@ function productToCard(p) {
     ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.map(escapeHtml).join(', ')}</div>` 
     : '';
   
-  // Check if product has extended details
-  const hasExtendedDetails = p.extendedDetails && Object.values(p.extendedDetails).some(val => val && val.trim());
-  
   // Generate image carousel or single image
   let imageHtml;
   if (images.length > 1) {
@@ -327,13 +324,13 @@ function productToCard(p) {
       </div>
       <div class="product-bottom-section">
         <div class="product-desc">${productDesc}</div>
-        ${hasExtendedDetails ? `<button 
+        <button 
           class="more-details-btn"
           onclick="showProductDetails('${escapeAttr(p._id)}')"
           title="View detailed product information"
         >
-          <span class="info-icon">ℹ️</span> View Full Details
-        </button>` : ''}
+          More Details
+        </button>
         <button 
           class="add-to-cart"
           data-id="${escapeAttr(p._id)}"
@@ -501,7 +498,15 @@ document.addEventListener('DOMContentLoaded', () => loadProducts());
 // Function to toggle reviews display
 async function toggleReviews(productId) {
   const container = document.getElementById(`reviews-container-${productId}`);
-  const button = container.previousElementSibling;
+  // Fix: Query for the specific View Reviews button instead of using previousElementSibling
+  // to avoid incorrectly targeting the Edit Product button when it exists
+  const productCard = document.getElementById(`product-${productId}`);
+  const button = productCard ? productCard.querySelector('.view-reviews-btn') : null;
+  
+  if (!button) {
+    console.error('View Reviews button not found for product:', productId);
+    return;
+  }
   
   if (container.style.display === 'none') {
     // Show reviews
@@ -990,19 +995,65 @@ function showProductDetails(productId) {
     return;
   }
   
-  const details = product.extendedDetails;
-  // Check if extended details exist and have at least one non-empty field
-  if (!details || !Object.values(details).some(val => val && val.trim())) {
-    console.error('No extended details available for product:', productId);
-    return;
-  }
-  
   const productName = escapeHtml(product.name);
+  const details = product.extendedDetails || {};
   
   // Build the details HTML
   let detailsHtml = `<div class="product-details-content">`;
   detailsHtml += `<h3><span class="info-icon-large">ℹ️</span> ${productName} - Product Details</h3>`;
   
+  // Always show basic product information
+  if (product.description) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Description</h4>
+        <p class="preserve-whitespace">${escapeHtml(product.description)}</p>
+      </div>
+    `;
+  }
+  
+  if (product.price !== undefined && product.price !== null) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Price</h4>
+        <p>$${Number(product.price).toFixed(2)}</p>
+      </div>
+    `;
+  }
+  
+  if (product.stock !== undefined && product.stock !== null) {
+    const stockStatus = product.stock === 0 ? 'Out of Stock' : 
+                       product.stock <= 5 ? `Low Stock: ${product.stock} available` : 
+                       `${product.stock} available`;
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Availability</h4>
+        <p>${stockStatus}</p>
+      </div>
+    `;
+  }
+  
+  if (product.options && product.options.length > 0) {
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Available Options</h4>
+        <p>${product.options.map(escapeHtml).join(', ')}</p>
+      </div>
+    `;
+  }
+  
+  if (product.type) {
+    const typeLabel = product.type === 'decor' ? 'Handmade Crafts' : 
+                     product.type === 'food' ? 'Cottage Foods' : product.type;
+    detailsHtml += `
+      <div class="detail-section">
+        <h4>Product Type</h4>
+        <p>${escapeHtml(typeLabel)}</p>
+      </div>
+    `;
+  }
+  
+  // Show extended details if available
   if (details.ingredients) {
     detailsHtml += `
       <div class="detail-section">
