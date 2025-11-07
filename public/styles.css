@@ -2409,6 +2409,65 @@ select:focus-visible {
   white-space: pre-wrap;
 }
 
+/* Collapsible detail sections */
+.collapsible-section {
+  margin-bottom: 1.5rem;
+}
+
+.collapsible-section.collapsed .collapsible-header {
+  margin-bottom: 0;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  padding: 0.5rem;
+  margin-left: -0.5rem;
+  border-radius: 6px;
+}
+
+.collapsible-header:hover {
+  background-color: #f3f4f6;
+}
+
+.collapsible-header .collapse-arrow {
+  display: inline-block;
+  color: #52b788;
+  font-size: 1rem;
+  width: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+/* Special styling for allergen section */
+.allergen-section {
+  background-color: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.allergen-section h4 {
+  color: #92400e;
+  margin-top: 0;
+}
+
+.allergen-section h4::before {
+  content: '⚠';
+  color: #f59e0b;
+}
+
+.allergen-section p {
+  color: #78350f;
+  padding-left: 0;
+}
+
 .more-details-btn {
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #d946ef 0%, #a855f7 100%);

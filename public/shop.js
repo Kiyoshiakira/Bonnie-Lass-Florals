@@ -985,6 +985,51 @@ window.resetFilters = resetFilters;
 window.toggleReviews = toggleReviews;
 window.openEditProductModal = openEditProductModal;
 window.showProductDetails = showProductDetails;
+window.toggleDetailSection = toggleDetailSection;
+
+// Helper function to create a collapsible detail section
+function createCollapsibleSection(id, title, content, collapsed = false) {
+  const contentLength = content.length;
+  const shouldCollapse = contentLength > 300; // Make collapsible if content is long
+  
+  if (shouldCollapse) {
+    return `
+      <div class="detail-section collapsible-section ${collapsed ? 'collapsed' : ''}">
+        <h4 class="collapsible-header" onclick="toggleDetailSection('${id}')">
+          <span class="collapse-arrow">${collapsed ? '▸' : '▾'}</span>
+          ${title}
+        </h4>
+        <div class="collapsible-content" id="${id}" style="${collapsed ? 'display:none;' : ''}">
+          <p class="preserve-whitespace">${content}</p>
+        </div>
+      </div>
+    `;
+  } else {
+    return `
+      <div class="detail-section">
+        <h4>${title}</h4>
+        <p class="preserve-whitespace">${content}</p>
+      </div>
+    `;
+  }
+}
+
+// Function to toggle collapsible sections
+function toggleDetailSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  const header = section.previousElementSibling;
+  const arrow = header.querySelector('.collapse-arrow');
+  
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    arrow.textContent = '▾';
+    header.parentElement.classList.remove('collapsed');
+  } else {
+    section.style.display = 'none';
+    arrow.textContent = '▸';
+    header.parentElement.classList.add('collapsed');
+  }
+}
 
 // Function to display product details in a modal
 function showProductDetails(productId) {
@@ -996,6 +1041,8 @@ function showProductDetails(productId) {
   
   const productName = escapeHtml(product.name);
   const details = product.extendedDetails || {};
+  const isFood = product.type === 'food';
+  const isCraft = product.type === 'decor';
   
   // Build the details HTML
   let detailsHtml = `<div class="product-details-content">`;
@@ -1003,12 +1050,12 @@ function showProductDetails(productId) {
   
   // Always show basic product information
   if (product.description) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Description</h4>
-        <p class="preserve-whitespace">${escapeHtml(product.description)}</p>
-      </div>
-    `;
+    detailsHtml += createCollapsibleSection(
+      `desc-${productId}`,
+      'Description',
+      escapeHtml(product.description),
+      false
+    );
   }
   
   if (product.price !== undefined && product.price !== null) {
@@ -1052,104 +1099,119 @@ function showProductDetails(productId) {
     `;
   }
   
-  // Show extended details if available
-  if (details.ingredients) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Ingredients</h4>
-        <p>${escapeHtml(details.ingredients)}</p>
-      </div>
-    `;
+  // Show cottage food specific details
+  if (isFood) {
+    if (details.ingredients) {
+      detailsHtml += createCollapsibleSection(
+        `ingredients-${productId}`,
+        'Ingredients',
+        escapeHtml(details.ingredients),
+        false
+      );
+    }
+    
+    if (details.allergens) {
+      detailsHtml += `
+        <div class="detail-section allergen-section">
+          <h4>Allergen Information</h4>
+          <p>${escapeHtml(details.allergens)}</p>
+        </div>
+      `;
+    }
+    
+    if (details.nutritionalInfo) {
+      detailsHtml += createCollapsibleSection(
+        `nutritional-${productId}`,
+        'Nutritional Information',
+        escapeHtml(details.nutritionalInfo),
+        true
+      );
+    }
+    
+    if (details.recipe) {
+      detailsHtml += createCollapsibleSection(
+        `recipe-${productId}`,
+        'Recipe / Usage Instructions',
+        escapeHtml(details.recipe),
+        true
+      );
+    }
+    
+    if (details.storageInstructions) {
+      detailsHtml += createCollapsibleSection(
+        `storage-${productId}`,
+        'Storage Instructions',
+        escapeHtml(details.storageInstructions),
+        false
+      );
+    }
+    
+    if (details.expirationInfo) {
+      detailsHtml += `
+        <div class="detail-section">
+          <h4>Expiration / Shelf Life</h4>
+          <p>${escapeHtml(details.expirationInfo)}</p>
+        </div>
+      `;
+    }
+    
+    if (details.weight) {
+      detailsHtml += `
+        <div class="detail-section">
+          <h4>Weight</h4>
+          <p>${escapeHtml(details.weight)}</p>
+        </div>
+      `;
+    }
   }
   
-  if (details.allergens) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Allergen Information</h4>
-        <p>${escapeHtml(details.allergens)}</p>
-      </div>
-    `;
+  // Show handmade crafts specific details
+  if (isCraft) {
+    if (details.materials) {
+      detailsHtml += `
+        <div class="detail-section">
+          <h4>Materials</h4>
+          <p>${escapeHtml(details.materials)}</p>
+        </div>
+      `;
+    }
+    
+    if (details.dimensions) {
+      detailsHtml += `
+        <div class="detail-section">
+          <h4>Dimensions</h4>
+          <p>${escapeHtml(details.dimensions)}</p>
+        </div>
+      `;
+    }
+    
+    if (details.weight) {
+      detailsHtml += `
+        <div class="detail-section">
+          <h4>Weight</h4>
+          <p>${escapeHtml(details.weight)}</p>
+        </div>
+      `;
+    }
+    
+    if (details.careInstructions) {
+      detailsHtml += createCollapsibleSection(
+        `care-${productId}`,
+        'Care Instructions',
+        escapeHtml(details.careInstructions),
+        true
+      );
+    }
   }
   
-  if (details.nutritionalInfo) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Nutritional Information</h4>
-        <p class="preserve-whitespace">${escapeHtml(details.nutritionalInfo)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.recipe) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Recipe / Usage Instructions</h4>
-        <p class="preserve-whitespace">${escapeHtml(details.recipe)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.careInstructions) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Care Instructions</h4>
-        <p class="preserve-whitespace">${escapeHtml(details.careInstructions)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.dimensions) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Dimensions</h4>
-        <p>${escapeHtml(details.dimensions)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.materials) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Materials</h4>
-        <p>${escapeHtml(details.materials)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.weight) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Weight</h4>
-        <p>${escapeHtml(details.weight)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.storageInstructions) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Storage Instructions</h4>
-        <p>${escapeHtml(details.storageInstructions)}</p>
-      </div>
-    `;
-  }
-  
-  if (details.expirationInfo) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Expiration / Shelf Life</h4>
-        <p>${escapeHtml(details.expirationInfo)}</p>
-      </div>
-    `;
-  }
-  
+  // Show additional notes for both types
   if (details.additionalNotes) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Additional Notes</h4>
-        <p class="preserve-whitespace">${escapeHtml(details.additionalNotes)}</p>
-      </div>
-    `;
+    detailsHtml += createCollapsibleSection(
+      `notes-${productId}`,
+      'Additional Notes',
+      escapeHtml(details.additionalNotes),
+      true
+    );
   }
   
   detailsHtml += `</div>`;
