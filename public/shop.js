@@ -1126,105 +1126,96 @@ function showProductDetails(productId) {
     `;
   }
   
-  // Show all extended details if they are populated (regardless of product type)
-  if (details.ingredients) {
-    detailsHtml += createCollapsibleSection(
-      `ingredients-${productId}`,
-      'Ingredients',
-      escapeHtml(details.ingredients),
-      false
-    );
-  }
+  // Show all extended details fields (always visible, with N/A or None for empty fields)
+  // Use "None" for textarea fields and "N/A" for text input fields
   
-  if (details.allergens) {
-    detailsHtml += `
-      <div class="detail-section allergen-section">
-        <h4>Allergen Information</h4>
-        <p>${escapeHtml(details.allergens)}</p>
-      </div>
-    `;
-  }
+  // Ingredients (textarea field - show "None" if empty)
+  detailsHtml += createCollapsibleSection(
+    `ingredients-${productId}`,
+    'Ingredients',
+    escapeHtml(details.ingredients || 'None'),
+    false
+  );
   
-  if (details.nutritionalInfo) {
-    detailsHtml += createCollapsibleSection(
-      `nutritional-${productId}`,
-      'Nutritional Information',
-      escapeHtml(details.nutritionalInfo),
-      true
-    );
-  }
+  // Allergen Information (text field - show "N/A" if empty)
+  detailsHtml += `
+    <div class="detail-section allergen-section">
+      <h4>Allergen Information</h4>
+      <p>${escapeHtml(details.allergens || 'N/A')}</p>
+    </div>
+  `;
   
-  if (details.materials) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Materials</h4>
-        <p>${escapeHtml(details.materials)}</p>
-      </div>
-    `;
-  }
+  // Nutritional Information (textarea field - show "None" if empty)
+  detailsHtml += createCollapsibleSection(
+    `nutritional-${productId}`,
+    'Nutritional Information',
+    escapeHtml(details.nutritionalInfo || 'None'),
+    true
+  );
   
-  if (details.dimensions) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Dimensions</h4>
-        <p>${escapeHtml(details.dimensions)}</p>
-      </div>
-    `;
-  }
+  // Materials (text field - show "N/A" if empty)
+  detailsHtml += `
+    <div class="detail-section">
+      <h4>Materials</h4>
+      <p>${escapeHtml(details.materials || 'N/A')}</p>
+    </div>
+  `;
   
-  if (details.weight) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Weight</h4>
-        <p>${escapeHtml(details.weight)}</p>
-      </div>
-    `;
-  }
+  // Dimensions (text field - show "N/A" if empty)
+  detailsHtml += `
+    <div class="detail-section">
+      <h4>Dimensions</h4>
+      <p>${escapeHtml(details.dimensions || 'N/A')}</p>
+    </div>
+  `;
   
-  if (details.careInstructions) {
-    detailsHtml += createCollapsibleSection(
-      `care-${productId}`,
-      'Care Instructions',
-      escapeHtml(details.careInstructions),
-      true
-    );
-  }
+  // Weight (text field - show "N/A" if empty)
+  detailsHtml += `
+    <div class="detail-section">
+      <h4>Weight</h4>
+      <p>${escapeHtml(details.weight || 'N/A')}</p>
+    </div>
+  `;
   
-  if (details.recipe) {
-    detailsHtml += createCollapsibleSection(
-      `recipe-${productId}`,
-      'Recipe / Usage Instructions',
-      escapeHtml(details.recipe),
-      true
-    );
-  }
+  // Care Instructions (textarea field - show "None" if empty)
+  detailsHtml += createCollapsibleSection(
+    `care-${productId}`,
+    'Care Instructions',
+    escapeHtml(details.careInstructions || 'None'),
+    true
+  );
   
-  if (details.storageInstructions) {
-    detailsHtml += createCollapsibleSection(
-      `storage-${productId}`,
-      'Storage Instructions',
-      escapeHtml(details.storageInstructions),
-      false
-    );
-  }
+  // Recipe / Usage Instructions (textarea field - show "None" if empty)
+  detailsHtml += createCollapsibleSection(
+    `recipe-${productId}`,
+    'Recipe / Usage Instructions',
+    escapeHtml(details.recipe || 'None'),
+    true
+  );
   
-  if (details.expirationInfo) {
-    detailsHtml += `
-      <div class="detail-section">
-        <h4>Expiration / Shelf Life</h4>
-        <p>${escapeHtml(details.expirationInfo)}</p>
-      </div>
-    `;
-  }
+  // Storage Instructions (textarea field - show "None" if empty)
+  detailsHtml += createCollapsibleSection(
+    `storage-${productId}`,
+    'Storage Instructions',
+    escapeHtml(details.storageInstructions || 'None'),
+    false
+  );
   
-  if (details.additionalNotes) {
-    detailsHtml += createCollapsibleSection(
-      `notes-${productId}`,
-      'Additional Notes',
-      escapeHtml(details.additionalNotes),
-      true
-    );
-  }
+  // Expiration / Shelf Life (text field - show "N/A" if empty)
+  detailsHtml += `
+    <div class="detail-section">
+      <h4>Expiration / Shelf Life</h4>
+      <p>${escapeHtml(details.expirationInfo || 'N/A')}</p>
+    </div>
+  `;
+  
+  // Additional Notes (textarea field - show "None" if empty)
+  detailsHtml += createCollapsibleSection(
+    `notes-${productId}`,
+    'Additional Notes',
+    escapeHtml(details.additionalNotes || 'None'),
+    true
+  );
   
   detailsHtml += `</div>`;
   

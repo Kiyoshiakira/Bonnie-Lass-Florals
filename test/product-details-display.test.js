@@ -26,9 +26,9 @@ describe('Product Details Display', function() {
     expect(shopJs).to.not.include('if (isCraft) {');
   });
 
-  it('should display all extended details fields when populated', function() {
-    // Verify that all extended details fields are checked with simple if statements
-    // not wrapped in type-based conditionals
+  it('should always display all extended details fields', function() {
+    // Verify that all extended details fields are always shown
+    // Fields should use fallback values like 'None' or 'N/A' when empty
     
     const extendedDetailsFields = [
       'ingredients',
@@ -44,16 +44,32 @@ describe('Product Details Display', function() {
       'additionalNotes'
     ];
 
-    // Each field should have a direct check like: if (details.fieldName)
+    // Each field should have a fallback value using OR operator
     extendedDetailsFields.forEach(field => {
-      const pattern = `if (details.${field})`;
-      expect(shopJs).to.include(pattern, `Should check for ${field} field`);
+      const pattern = `details.${field} || `;
+      expect(shopJs).to.include(pattern, `Should have fallback for ${field} field`);
     });
   });
 
-  it('should have a comment indicating type-agnostic display', function() {
+  it('should use appropriate fallback values for empty fields', function() {
+    // Verify that 'None' is used for textarea fields and 'N/A' for text fields
+    // Textarea fields should use 'None'
+    const textareaFields = ['ingredients', 'nutritionalInfo', 'careInstructions', 'recipe', 'storageInstructions', 'additionalNotes'];
+    textareaFields.forEach(field => {
+      const content = field.charAt(0).toUpperCase() + field.slice(1);
+      expect(shopJs).to.include(`details.${field} || 'None'`, `Should use 'None' for ${field}`);
+    });
+    
+    // Text fields should use 'N/A'
+    const textFields = ['allergens', 'materials', 'dimensions', 'weight', 'expirationInfo'];
+    textFields.forEach(field => {
+      expect(shopJs).to.include(`details.${field} || 'N/A'`, `Should use 'N/A' for ${field}`);
+    });
+  });
+
+  it('should have a comment indicating all fields are always shown', function() {
     // Verify the comment that explains the new behavior
-    expect(shopJs).to.include('Show all extended details if they are populated (regardless of product type)');
+    expect(shopJs).to.include('Show all extended details fields (always visible');
   });
 
   it('should maintain proper HTML structure in showProductDetails function', function() {
@@ -66,20 +82,21 @@ describe('Product Details Display', function() {
 
   it('should properly escape user input in details display', function() {
     // Ensure all user-provided content is escaped
+    // Now fields use fallback values, so we check for the pattern with OR operator
     const fieldsWithEscaping = [
       'escapeHtml(product.name)',
       'escapeHtml(product.description)',
-      'escapeHtml(details.ingredients)',
-      'escapeHtml(details.allergens)',
-      'escapeHtml(details.nutritionalInfo)',
-      'escapeHtml(details.materials)',
-      'escapeHtml(details.dimensions)',
-      'escapeHtml(details.weight)',
-      'escapeHtml(details.careInstructions)',
-      'escapeHtml(details.recipe)',
-      'escapeHtml(details.storageInstructions)',
-      'escapeHtml(details.expirationInfo)',
-      'escapeHtml(details.additionalNotes)'
+      'escapeHtml(details.ingredients || \'None\')',
+      'escapeHtml(details.allergens || \'N/A\')',
+      'escapeHtml(details.nutritionalInfo || \'None\')',
+      'escapeHtml(details.materials || \'N/A\')',
+      'escapeHtml(details.dimensions || \'N/A\')',
+      'escapeHtml(details.weight || \'N/A\')',
+      'escapeHtml(details.careInstructions || \'None\')',
+      'escapeHtml(details.recipe || \'None\')',
+      'escapeHtml(details.storageInstructions || \'None\')',
+      'escapeHtml(details.expirationInfo || \'N/A\')',
+      'escapeHtml(details.additionalNotes || \'None\')'
     ];
 
     fieldsWithEscaping.forEach(escapedField => {
