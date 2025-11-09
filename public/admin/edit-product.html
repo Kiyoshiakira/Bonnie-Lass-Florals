@@ -36,11 +36,6 @@
     #profileDropdown a, #profileDropdown button { display:block; width:100%; padding:0.5rem 0.75rem; color:#333; text-decoration:none; background:none; border:none; text-align:left; cursor:pointer; }
     #profileDropdown a:hover, #profileDropdown button:hover { background:#f6f6f6; }
     
-    .breadcrumb { font-size:0.95rem; color:#666; margin-bottom:1.5rem; }
-    .breadcrumb a { color:#6e33b7; text-decoration:none; }
-    .breadcrumb a:hover { text-decoration:underline; }
-    .breadcrumb-sep { color:#bbb; margin:0 8px; }
-    
     .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
     .page-header h1 { margin:0; }
     
@@ -93,6 +88,47 @@
       font-weight:600;
     }
     .image-preview-primary { border-color:#6e33b7; border-width:3px; }
+    .image-preview-controls {
+      position:absolute;
+      bottom:0;
+      left:0;
+      right:0;
+      display:flex;
+      gap:0.25rem;
+      padding:0.5rem;
+      background:rgba(0,0,0,0.5);
+      opacity:0;
+      transition:opacity 0.2s;
+    }
+    .image-preview-item:hover .image-preview-controls {
+      opacity:1;
+    }
+    .image-preview-controls button {
+      flex:1;
+      padding:0.25rem;
+      border:none;
+      border-radius:4px;
+      background:#fff;
+      color:#333;
+      font-size:0.75rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:background 0.2s;
+    }
+    .image-preview-controls button:hover {
+      background:#f0f0f0;
+    }
+    .image-preview-controls button:disabled {
+      opacity:0.5;
+      cursor:not-allowed;
+    }
+    .image-preview-controls .btn-danger {
+      background:#ef4444;
+      color:#fff;
+    }
+    .image-preview-controls .btn-danger:hover {
+      background:#dc2626;
+    }
     
     .button-group { display:flex; gap:0.75rem; margin-top:2rem; flex-wrap:wrap; }
     .btn { 
@@ -158,13 +194,10 @@
   </header>
 
   <main>
-    <div class="breadcrumb">
-      <a href="/index.html">Home</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="/profile.html">Profile</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="/admin/upload.html">Manage Products</a>
-      <span class="breadcrumb-sep">›</span>
+    <div style="font-size:0.95rem;color:#666;margin-bottom:0.75rem;">
+      <a href="/index.html" style="color:#6e33b7;text-decoration:none;">Home</a> <span style="color:#bbb;margin:0 8px;">›</span>
+      <a href="/profile.html" style="color:#6e33b7;text-decoration:none;">Profile</a> <span style="color:#bbb;margin:0 8px;">›</span>
+      <a href="/admin/upload.html" style="color:#6e33b7;text-decoration:none;">Manage Products</a> <span style="color:#bbb;margin:0 8px;">›</span>
       <span style="font-weight:600;">Edit Product</span>
     </div>
 
@@ -233,7 +266,7 @@
         
         <div id="currentImagesContainer" style="display:none;">
           <label>Current Images</label>
-          <div class="help-text" style="margin-bottom:0.5rem;">The first image is used as the primary product image</div>
+          <div class="help-text" style="margin-bottom:0.5rem;">The first image is the primary product image. Hover over images to reorder or delete them.</div>
           <div id="currentImagesPreview" class="image-preview-grid"></div>
         </div>
         
@@ -339,57 +372,7 @@
     let currentProduct = null;
     let productId = null;
 
-    // Profile dropdown behavior
-    const profileImg = document.getElementById('profileCircle');
-    const dropdown = document.getElementById('profileDropdown');
-    profileImg && profileImg.addEventListener('click', () => {
-      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-    });
-    document.addEventListener('click', (e) => {
-      if (!document.getElementById('profileCircleContainer').contains(e.target)) {
-        dropdown.style.display = 'none';
-      }
-    });
-
-    // Initialize UI state based on Firebase auth
-    firebase.auth().onAuthStateChanged(async (user) => {
-      const userInfo = document.getElementById('userInfoDropdown');
-      const adminOrdersLink = document.getElementById('adminOrdersLink');
-      const uploadProductLink = document.getElementById('uploadProductLink');
-      const paletteLink = document.getElementById('paletteLink');
-      const messagesLink = document.getElementById('messagesLink');
-      
-      if (!user) {
-        userInfo.innerHTML = '<div style="color:#666;">Not signed in</div>';
-        adminOrdersLink.style.display = 'none';
-        uploadProductLink.style.display = 'none';
-        paletteLink.style.display = 'none';
-        messagesLink.style.display = 'none';
-        return;
-      }
-      
-      const token = await user.getIdToken(true);
-      const email = user.email || '';
-      userInfo.innerHTML = `<strong style="display:block;">${email}</strong>`;
-      
-      // Check admin status
-      try {
-        const response = await fetch(`${API_BASE}/api/admin/check`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const isAdmin = response.ok ? (await response.json()).isAdmin : false;
-        adminOrdersLink.style.display = isAdmin ? 'block' : 'none';
-        uploadProductLink.style.display = isAdmin ? 'block' : 'none';
-        paletteLink.style.display = isAdmin ? 'block' : 'none';
-        messagesLink.style.display = isAdmin ? 'block' : 'none';
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        adminOrdersLink.style.display = 'none';
-        uploadProductLink.style.display = 'none';
-        paletteLink.style.display = 'none';
-        messagesLink.style.display = 'none';
-      }
-    });
+    // Profile dropdown and auth handled by auth.js
 
     // Get product ID from URL
     function getProductIdFromUrl() {
@@ -468,7 +451,7 @@
       document.getElementById('imageUrls').value = '';
     }
 
-    // Display current images
+    // Display current images with management controls
     function displayCurrentImages(images) {
       const container = document.getElementById('currentImagesContainer');
       const preview = document.getElementById('currentImagesPreview');
@@ -480,9 +463,14 @@
       
       container.style.display = 'block';
       preview.innerHTML = images.map((img, idx) => `
-        <div class="image-preview-item ${idx === 0 ? 'image-preview-primary' : ''}">
+        <div class="image-preview-item ${idx === 0 ? 'image-preview-primary' : ''}" data-image-index="${idx}">
           <img src="${escapeAttr(img)}" alt="Product image ${idx + 1}" onerror="this.src='/img/default-product.png'">
           <div class="image-preview-badge">${idx === 0 ? 'Primary' : `#${idx + 1}`}</div>
+          <div class="image-preview-controls">
+            <button type="button" onclick="moveImage(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} title="Move left">◄</button>
+            <button type="button" onclick="moveImage(${idx}, 1)" ${idx === images.length - 1 ? 'disabled' : ''} title="Move right">►</button>
+            <button type="button" class="btn-danger" onclick="deleteImage(${idx})" title="Delete">×</button>
+          </div>
         </div>
       `).join('');
     }
@@ -741,14 +729,51 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Escape HTML
+    // HTML escaping utilities
     function escapeHtml(s) {
       if (!s && s !== 0) return '';
-      return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+      const div = document.createElement('div');
+      div.textContent = String(s);
+      return div.innerHTML;
     }
     
     function escapeAttr(s) {
       return escapeHtml(s).replace(/"/g, '&quot;');
+    }
+
+    // Image management functions
+    function moveImage(index, direction) {
+      if (!currentProduct || !currentProduct.images) return;
+      
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= currentProduct.images.length) return;
+      
+      // Swap images
+      const images = [...currentProduct.images];
+      [images[index], images[newIndex]] = [images[newIndex], images[index]];
+      currentProduct.images = images;
+      
+      // Update display
+      displayCurrentImages(images);
+    }
+
+    function deleteImage(index) {
+      if (!currentProduct || !currentProduct.images) return;
+      
+      if (!confirm('Are you sure you want to delete this image?')) return;
+      
+      // Remove image from array
+      const images = [...currentProduct.images];
+      images.splice(index, 1);
+      currentProduct.images = images;
+      
+      // Update display
+      displayCurrentImages(images);
+      
+      // Show message if no images left
+      if (images.length === 0) {
+        showError('All images removed. Please add at least one image before saving.');
+      }
     }
 
     // Event listeners
