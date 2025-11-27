@@ -74,6 +74,90 @@ router.get('/product/:productId/stats', async (req, res) => {
   }
 });
 
+// POST /api/reviews/bulk-stats - Get review statistics for multiple products in one request
+// This reduces N+1 queries to a single aggregation for better performance
+router.post('/bulk-stats', async (req, res) => {
+  try {
+    const { productIds } = req.body;
+    
+    // Validate input
+    if (!Array.isArray(productIds)) {
+      return res.status(400).json({ error: 'productIds must be an array' });
+    }
+    
+    // Limit number of products to prevent abuse (max 100 products per request)
+    if (productIds.length > 100) {
+      return res.status(400).json({ error: 'Maximum 100 products per request' });
+    }
+    
+    // Filter and sanitize valid ObjectIds
+    const validProductIds = productIds
+      .filter(id => typeof id === 'string' && id.match(/^[0-9a-fA-F]{24}$/))
+      .map(id => new mongoose.Types.ObjectId(id));
+    
+    if (validProductIds.length === 0) {
+      return res.json({ stats: {} });
+    }
+    
+    // Use MongoDB aggregation pipeline for efficient bulk stats
+    const aggregationResult = await Review.aggregate([
+      {
+        $match: {
+          product: { $in: validProductIds }
+        }
+      },
+      {
+        $group: {
+          _id: '$product',
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 },
+          rating1: { $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] } },
+          rating2: { $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] } },
+          rating3: { $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] } },
+          rating4: { $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] } },
+          rating5: { $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] } }
+        }
+      }
+    ]);
+    
+    // Transform aggregation result into a map keyed by product ID
+    const stats = {};
+    aggregationResult.forEach(result => {
+      stats[result._id.toString()] = {
+        averageRating: Math.round(result.averageRating * 10) / 10,
+        totalReviews: result.totalReviews,
+        ratingDistribution: {
+          1: result.rating1,
+          2: result.rating2,
+          3: result.rating3,
+          4: result.rating4,
+          5: result.rating5
+        }
+      };
+    });
+    
+    // Add empty stats for products with no reviews
+    validProductIds.forEach(id => {
+      const idStr = id.toString();
+      if (!stats[idStr]) {
+        stats[idStr] = {
+          averageRating: 0,
+          totalReviews: 0,
+          ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+      }
+    });
+    
+    // Set cache headers for performance (cache for 1 minute)
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    
+    res.json({ stats });
+  } catch (err) {
+    logger.error('POST /api/reviews/bulk-stats error', err);
+    res.status(500).json({ error: 'Failed to fetch bulk review statistics' });
+  }
+});
+
 // POST /api/reviews - Create a new review (requires authentication)
 router.post(
   '/',

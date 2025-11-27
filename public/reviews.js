@@ -57,6 +57,38 @@ async function fetchReviewStats(productId) {
 }
 
 /**
+ * Fetch review statistics for multiple products in a single request (bulk operation)
+ * This is more efficient than fetching stats one-by-one for many products
+ * @param {string[]} productIds - Array of product IDs
+ * @returns {Promise<Object>} Map of productId -> stats
+ */
+async function fetchBulkReviewStats(productIds) {
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return {};
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews/bulk-stats`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productIds })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch bulk review stats');
+    }
+    
+    const data = await response.json();
+    return data.stats || {};
+  } catch (error) {
+    console.error('Error fetching bulk review stats:', error);
+    return {};
+  }
+}
+
+/**
  * Create a new review
  */
 async function createReview(productId, rating, comment) {
@@ -411,4 +443,5 @@ window.initProductReviews = initProductReviews;
 window.loadProductReviews = loadProductReviews;
 window.renderStars = renderStars;
 window.fetchReviewStats = fetchReviewStats;
+window.fetchBulkReviewStats = fetchBulkReviewStats;
 window.fetchReviews = fetchReviews;

@@ -8,11 +8,17 @@
     <meta name="author" content="Bonnie Lass Florals">
     <title>Bonnie Lass Florals - Handcrafted Silk Flowers</title>
     <link rel="icon" href="/favicon.ico">
+    <!-- Preconnect to external domains for faster resource loading -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://bonnie-lass-florals.onrender.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
+    <!-- Preload critical CSS -->
+    <link rel="preload" href="styles.css" as="style">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="auth.css">
     <!-- Theme Loader - Load early to minimize FOUC -->
     <script src="theme-loader.js"></script>
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs - Load asynchronously to avoid blocking render -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
