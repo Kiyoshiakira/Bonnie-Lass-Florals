@@ -44,8 +44,8 @@ function getCachedProducts() {
     }
     
     // Check if cache is still valid (not expired)
-    const cacheAge = Date.now() - parseInt(cachedTime, 10);
-    if (cacheAge > CACHE_DURATION_MS) {
+    const cacheAgeMs = Date.now() - parseInt(cachedTime, 10);
+    if (cacheAgeMs > CACHE_DURATION_MS) {
       return null; // Cache expired
     }
     

@@ -90,9 +90,9 @@ router.post('/bulk-stats', async (req, res) => {
       return res.status(400).json({ error: 'Maximum 100 products per request' });
     }
     
-    // Filter and sanitize valid ObjectIds
+    // Filter and sanitize valid ObjectIds using mongoose's built-in validator
     const validProductIds = productIds
-      .filter(id => typeof id === 'string' && id.match(/^[0-9a-fA-F]{24}$/))
+      .filter(id => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
       .map(id => new mongoose.Types.ObjectId(id));
     
     if (validProductIds.length === 0) {
@@ -121,6 +121,7 @@ router.post('/bulk-stats', async (req, res) => {
     ]);
     
     // Transform aggregation result into a map keyed by product ID
+    // Use same rounding logic as individual stats endpoint for consistency
     const stats = {};
     aggregationResult.forEach(result => {
       stats[result._id.toString()] = {
