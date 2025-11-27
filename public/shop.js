@@ -25,19 +25,76 @@ let totalPages = 1;
 let isLoading = false;
 let isAdmin = false; // Track admin status
 
+// LocalStorage cache keys and settings for instant page loads
+const PRODUCTS_CACHE_KEY = 'cachedProducts';
+const PRODUCTS_CACHE_TIME_KEY = 'cachedProductsTime';
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes cache validity
+
+/**
+ * Get cached products from localStorage for instant display
+ * @returns {Array|null} Cached products array or null if cache is invalid/expired
+ */
+function getCachedProducts() {
+  try {
+    const cachedTime = localStorage.getItem(PRODUCTS_CACHE_TIME_KEY);
+    const cachedData = localStorage.getItem(PRODUCTS_CACHE_KEY);
+    
+    if (!cachedTime || !cachedData) {
+      return null;
+    }
+    
+    // Check if cache is still valid (not expired)
+    const cacheAgeMs = Date.now() - parseInt(cachedTime, 10);
+    if (cacheAgeMs > CACHE_DURATION_MS) {
+      return null; // Cache expired
+    }
+    
+    const products = JSON.parse(cachedData);
+    return Array.isArray(products) ? products : null;
+  } catch (err) {
+    console.warn('Failed to load cached products:', err);
+    return null;
+  }
+}
+
+/**
+ * Save products to localStorage cache for instant future loads
+ * @param {Array} products - Products array to cache
+ */
+function cacheProducts(products) {
+  try {
+    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(products));
+    localStorage.setItem(PRODUCTS_CACHE_TIME_KEY, Date.now().toString());
+  } catch (err) {
+    // Storage quota exceeded or other error - silently fail
+    console.warn('Failed to cache products:', err);
+  }
+}
+
 // Load products dynamically from backend with pagination
+// Uses localStorage cache for instant initial display, then updates with fresh data
 async function loadProducts(page = 1, append = false) {
   if (isLoading) return;
   
   try {
     isLoading = true;
     
+    // Step 1: Show cached products immediately for instant page load
+    // This provides a near-instant experience while fresh data loads
     if (!append) {
-      showInlineLoading('decor-products');
-      showInlineLoading('food-products');
+      const cachedProducts = getCachedProducts();
+      if (cachedProducts && cachedProducts.length > 0) {
+        allProducts = cachedProducts;
+        renderProducts();
+        // Don't show loading spinner since we have cached content
+      } else {
+        // No cache available - show loading spinner
+        showInlineLoading('decor-products');
+        showInlineLoading('food-products');
+      }
     }
     
-    // Use your Render API URL with pagination parameters
+    // Step 2: Fetch fresh data from the server
     // Note: Using limit=1000 to maintain current UX (load all products at once)
     // This can be changed to a lower limit (e.g., 20) when implementing
     // "load more" or infinite scroll functionality
@@ -50,16 +107,13 @@ async function loadProducts(page = 1, append = false) {
     const data = await res.json();
     
     // Handle both old format (array) and new format (object with products array)
+    let freshProducts;
     if (Array.isArray(data)) {
       // Old format - backward compatibility
-      allProducts = data;
+      freshProducts = data;
     } else {
       // New format with pagination
-      if (append) {
-        allProducts = [...allProducts, ...data.products];
-      } else {
-        allProducts = data.products;
-      }
+      freshProducts = data.products;
       
       if (data.pagination) {
         currentPage = data.pagination.page;
@@ -67,16 +121,31 @@ async function loadProducts(page = 1, append = false) {
       }
     }
     
+    // Step 3: Update products and cache
+    if (append) {
+      allProducts = [...allProducts, ...freshProducts];
+    } else {
+      allProducts = freshProducts;
+    }
+    
+    // Cache the fresh products for next page load
+    cacheProducts(allProducts);
+    
+    // Re-render with fresh data (may have updates from cache)
     renderProducts();
     
     // Initialize image zoom after products are loaded
     setTimeout(() => initImageZoom(), 100);
   } catch (err) {
     console.error('Error loading products:', err);
-    document.getElementById('decor-products').innerHTML = 
-      '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
-    document.getElementById('food-products').innerHTML = 
-      '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
+    // Only show error if we don't have cached products displayed
+    if (allProducts.length === 0) {
+      document.getElementById('decor-products').innerHTML = 
+        '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
+      document.getElementById('food-products').innerHTML = 
+        '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
+    }
+    // If we have cached data, silently continue showing it
   } finally {
     isLoading = false;
   }
@@ -537,14 +606,8 @@ async function toggleReviews(productId) {
   }
 }
 
-// Fix: Throttle review stats requests to avoid overwhelming the API (prevents 429 errors)
-// Maximum number of parallel requests to the reviews API
-const MAX_PARALLEL_REVIEW_REQUESTS = 6;
-
-// Delay between batches (in milliseconds)
-const BATCH_DELAY_MS = 200;
-
-// Function to load rating stars for all products with batching to prevent API overload
+// Function to load rating stars for all products using bulk API for better performance
+// Uses single API call instead of N individual requests
 async function loadProductRatings() {
   const productCards = document.querySelectorAll('.product-card');
   
@@ -557,19 +620,52 @@ async function loadProductRatings() {
     }
   }
   
-  // Fix: Process product IDs in chunks to limit parallel requests
-  // This prevents overwhelming the reviews API and reduces 429 rate limit errors
-  for (let i = 0; i < productIds.length; i += MAX_PARALLEL_REVIEW_REQUESTS) {
-    const chunk = productIds.slice(i, i + MAX_PARALLEL_REVIEW_REQUESTS);
+  if (productIds.length === 0) {
+    return;
+  }
+  
+  try {
+    // Use bulk API endpoint for all product ratings in a single request
+    // This is much faster than individual requests for each product
+    const bulkStats = await window.fetchBulkReviewStats(productIds);
     
-    // Process this chunk in parallel (up to MAX_PARALLEL requests)
+    // Update each product's rating display
+    for (const productId of productIds) {
+      const ratingContainer = document.getElementById(`product-rating-${productId}`);
+      if (!ratingContainer) continue;
+      
+      const stats = bulkStats[productId];
+      if (stats && stats.totalReviews > 0) {
+        ratingContainer.innerHTML = `
+          <div class="product-rating">
+            <span class="stars">${window.renderStars(stats.averageRating)}</span>
+            <span class="rating-count">${stats.averageRating.toFixed(1)} (${stats.totalReviews})</span>
+          </div>
+        `;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading bulk product ratings:', error);
+    // Fallback to individual requests if bulk fails (graceful degradation)
+    await loadProductRatingsFallback(productIds);
+  }
+}
+
+// Fallback function for loading ratings one-by-one if bulk API fails
+// Uses batching to prevent overwhelming the API
+async function loadProductRatingsFallback(productIds) {
+  const MAX_PARALLEL_REQUESTS = 6;
+  const BATCH_DELAY_MS = 200;
+  
+  for (let i = 0; i < productIds.length; i += MAX_PARALLEL_REQUESTS) {
+    const chunk = productIds.slice(i, i + MAX_PARALLEL_REQUESTS);
+    
     await Promise.all(
       chunk.map(async (productId) => {
         const ratingContainer = document.getElementById(`product-rating-${productId}`);
         if (!ratingContainer) return;
         
         try {
-          // Keep existing fetchReviewStats function unchanged
           const stats = await window.fetchReviewStats(productId);
           if (stats.totalReviews > 0) {
             ratingContainer.innerHTML = `
@@ -585,9 +681,7 @@ async function loadProductRatings() {
       })
     );
     
-    // Fix: Add delay between chunks to prevent API rate limiting
-    // Only add delay if there are more chunks to process
-    if (i + MAX_PARALLEL_REVIEW_REQUESTS < productIds.length) {
+    if (i + MAX_PARALLEL_REQUESTS < productIds.length) {
       await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
     }
   }
