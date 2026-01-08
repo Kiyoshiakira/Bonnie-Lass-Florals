@@ -6,7 +6,7 @@ const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBo4GNnJd8awnviuIlo9mJ9vaar8jvf6G0",
   authDomain: "bonnie-lass-florals.firebaseapp.com",
   projectId: "bonnie-lass-florals",
-  storageBucket: "bonnie-lass-florals.firebasestorage.app",
+  storageBucket: "bonnie-lass-florals.appspot.com",
   messagingSenderId: "1009091302977",
   appId: "1:1009091302977:web:2322ff602eccee4509d8c0",
   measurementId: "G-DQRB98D0WY"
