@@ -1055,8 +1055,8 @@ exports.sendMessage = async (req, res) => {
     // Check if user is admin
     const isAdmin = await checkIsAdmin(req);
     
-    // Get the generative model - Using Gemini 3.0 Flash for latest capabilities
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.0-flash' });
+    // Get the generative model - Using Gemini 3 Flash Preview for latest capabilities
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
     
     // Generate system prompt with current product context and admin mode if applicable
     const systemPrompt = await generateSystemPrompt(isAdmin);
@@ -1245,7 +1245,7 @@ exports.getStatus = async (req, res) => {
     
     res.json({
       status: genAI ? 'active' : 'unavailable',
-      model: 'gemini-3.0-flash',
+      model: 'gemini-3-flash-preview',
       configured: !!genAI,
       productCount,
       features: [
