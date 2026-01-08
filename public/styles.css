@@ -1296,6 +1296,123 @@ footer a:hover {
 }
 
 /* ============================================================================
+   MULTI-PRODUCT PANEL - Group multiple products in one panel
+   ============================================================================ */
+.multi-product-panel {
+  background: #fff;
+  border: 3px solid #95d5b2;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(45, 106, 79, 0.15);
+  padding: 0;
+  max-width: 420px;
+  flex: 0 1 calc(33.333% - 1rem);
+  text-align: left;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+}
+
+.multi-product-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #d946ef, #a855f7, #8b5cf6);
+  transition: height 0.3s ease;
+}
+
+.multi-product-panel:hover::before {
+  height: 6px;
+}
+
+.multi-product-panel:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(45, 106, 79, 0.3);
+  border-color: #52b788;
+}
+
+.multi-product-header {
+  background: linear-gradient(135deg, #f6f2fe 0%, #faf5ff 100%);
+  padding: 1.2rem;
+  border-bottom: 2px solid #e9d5ff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.multi-product-group-title {
+  margin: 0;
+  color: #7c3aed;
+  font-size: 1.3em;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.multi-product-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.multi-product-selector label {
+  font-weight: 600;
+  color: #6b21a8;
+  font-size: 0.9em;
+}
+
+.product-dropdown {
+  padding: 0.6em 1em;
+  border: 2px solid #d8b4fe;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b21a8;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.product-dropdown:hover {
+  border-color: #a855f7;
+  background: #faf5ff;
+}
+
+.product-dropdown:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.multi-product-content {
+  transition: opacity 0.2s ease;
+}
+
+.multi-product-content .product-card {
+  border: none;
+  box-shadow: none;
+  max-width: none;
+  flex: 1;
+  margin: 0;
+}
+
+.multi-product-content .product-card::before {
+  display: none;
+}
+
+.multi-product-content .product-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+/* ============================================================================
    IMAGE LIGHTBOX/MODAL - Clean image viewing
    ============================================================================ */
 .image-modal {

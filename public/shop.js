@@ -156,17 +156,41 @@ function renderProducts() {
   const decor = allProducts.filter(p => p.type === 'decor');
   const food = allProducts.filter(p => p.type === 'food');
   
-  document.getElementById('decor-products').innerHTML = decor.length > 0 
-    ? decor.map(productToCard).join('') 
-    : '<div style="color:#888;padding:1rem;">No products found.</div>';
-    
-  document.getElementById('food-products').innerHTML = food.length > 0 
-    ? food.map(productToCard).join('') 
-    : '<div style="color:#888;padding:1rem;">No products found.</div>';
+  // Group products
+  const decorGrouped = groupProducts(decor);
+  const foodGrouped = groupProducts(food);
+  
+  // Render decor products (grouped panels + ungrouped cards)
+  let decorHtml = '';
+  
+  // Render grouped products as multi-product panels
+  for (const [groupName, products] of Object.entries(decorGrouped.grouped)) {
+    decorHtml += multiProductPanelToCard(groupName, products);
+  }
+  
+  // Render ungrouped products as individual cards
+  decorHtml += decorGrouped.ungrouped.map(productToCard).join('');
+  
+  document.getElementById('decor-products').innerHTML = decorHtml || 
+    '<div style="color:#888;padding:1rem;">No products found.</div>';
+  
+  // Render food products (grouped panels + ungrouped cards)
+  let foodHtml = '';
+  
+  // Render grouped products as multi-product panels
+  for (const [groupName, products] of Object.entries(foodGrouped.grouped)) {
+    foodHtml += multiProductPanelToCard(groupName, products);
+  }
+  
+  // Render ungrouped products as individual cards
+  foodHtml += foodGrouped.ungrouped.map(productToCard).join('');
+  
+  document.getElementById('food-products').innerHTML = foodHtml || 
+    '<div style="color:#888;padding:1rem;">No products found.</div>';
   
   // Add fade-in animation to product cards
   setTimeout(() => {
-    document.querySelectorAll('.product-card').forEach((card, index) => {
+    document.querySelectorAll('.product-card, .multi-product-panel').forEach((card, index) => {
       card.style.opacity = '0';
       setTimeout(() => {
         card.classList.add('fade-in');
@@ -228,13 +252,25 @@ function applyFilters(type) {
   }
   
   const containerId = type === 'decor' ? 'decor-products' : 'food-products';
-  document.getElementById(containerId).innerHTML = filtered.length > 0 
-    ? filtered.map(productToCard).join('') 
-    : '<div style="color:#888;padding:1rem;">No products found.</div>';
+  
+  // Group filtered products
+  const filteredGrouped = groupProducts(filtered);
+  
+  // Render grouped products as multi-product panels
+  let filteredHtml = '';
+  for (const [groupName, products] of Object.entries(filteredGrouped.grouped)) {
+    filteredHtml += multiProductPanelToCard(groupName, products);
+  }
+  
+  // Render ungrouped products as individual cards
+  filteredHtml += filteredGrouped.ungrouped.map(productToCard).join('');
+  
+  document.getElementById(containerId).innerHTML = filteredHtml || 
+    '<div style="color:#888;padding:1rem;">No products found.</div>';
   
   // Add fade-in animation
   setTimeout(() => {
-    document.querySelectorAll(`#${containerId} .product-card`).forEach((card, index) => {
+    document.querySelectorAll(`#${containerId} .product-card, #${containerId} .multi-product-panel`).forEach((card, index) => {
       card.style.opacity = '0';
       setTimeout(() => {
         card.classList.add('fade-in');
@@ -432,6 +468,234 @@ function productToCard(p) {
     </div>
   `;
 }
+
+/**
+ * Group products by their productGroup field
+ * @param {Array} products - Array of products to group
+ * @returns {Object} Object with grouped and ungrouped products
+ */
+function groupProducts(products) {
+  const grouped = {};
+  const ungrouped = [];
+  
+  products.forEach(product => {
+    if (product.productGroup && product.productGroup.trim()) {
+      const groupName = product.productGroup.trim();
+      if (!grouped[groupName]) {
+        grouped[groupName] = [];
+      }
+      grouped[groupName].push(product);
+    } else {
+      ungrouped.push(product);
+    }
+  });
+  
+  return { grouped, ungrouped };
+}
+
+/**
+ * Render a multi-product panel for a group of products
+ * @param {string} groupName - Name of the product group
+ * @param {Array} products - Array of products in the group
+ * @returns {string} HTML for the multi-product panel
+ */
+function multiProductPanelToCard(groupName, products) {
+  if (!products || products.length === 0) return '';
+  
+  // Sort products by name for consistent display
+  const sortedProducts = [...products].sort((a, b) => 
+    (a.name || '').localeCompare(b.name || '')
+  );
+  
+  const firstProduct = sortedProducts[0];
+  const panelId = `panel-${escapeAttr(groupName.replace(/\s+/g, '-').toLowerCase())}`;
+  const dropdownId = `dropdown-${escapeAttr(groupName.replace(/\s+/g, '-').toLowerCase())}`;
+  
+  // Create dropdown options
+  const dropdownOptions = sortedProducts.map((p, idx) => {
+    const productName = escapeHtml(p.name);
+    const stock = p.stock !== undefined ? p.stock : 0;
+    const stockText = stock === 0 ? ' (Out of Stock)' : stock <= 5 ? ` (${stock} left)` : '';
+    return `<option value="${idx}" ${idx === 0 ? 'selected' : ''}>${productName}${stockText}</option>`;
+  }).join('');
+  
+  // Generate initial product display
+  const initialProductHtml = generateProductContent(firstProduct, 0, panelId, sortedProducts);
+  
+  return `
+    <div class="multi-product-panel" id="${panelId}" data-group-name="${escapeAttr(groupName)}">
+      <div class="multi-product-header">
+        <h3 class="multi-product-group-title">${escapeHtml(groupName)}</h3>
+        <div class="multi-product-selector">
+          <label for="${dropdownId}">Select Product:</label>
+          <select id="${dropdownId}" onchange="switchProduct('${escapeAttr(panelId)}', this.value)" class="product-dropdown">
+            ${dropdownOptions}
+          </select>
+        </div>
+      </div>
+      <div class="multi-product-content" id="${panelId}-content">
+        ${initialProductHtml}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Generate product content HTML for a product within a multi-product panel
+ * @param {Object} product - Product object
+ * @param {number} index - Index of the product in the group
+ * @param {string} panelId - ID of the parent panel
+ * @param {Array} allGroupProducts - All products in the group (for storage)
+ * @returns {string} HTML for the product content
+ */
+function generateProductContent(product, index, panelId, allGroupProducts = null) {
+  // Store products data for switchProduct function
+  if (allGroupProducts) {
+    groupedProductsData[panelId] = allGroupProducts;
+  }
+  
+  const stock = product.stock !== undefined ? product.stock : 0;
+  let stockClass = '';
+  let stockText = `Stock: ${stock}`;
+  
+  if (stock === 0) {
+    stockClass = 'out-of-stock';
+    stockText = 'Out of Stock';
+  } else if (stock <= 5) {
+    stockClass = 'low-stock';
+    stockText = `Low Stock: ${stock} left`;
+  }
+  
+  const isOutOfStock = stock === 0;
+  
+  // Get all images for the product
+  const images = (product.images && product.images.length > 0) 
+    ? product.images 
+    : (product.image ? [product.image] : ['/img/default-product.png']);
+  
+  const productName = escapeHtml(product.name);
+  const productDesc = escapeHtml(product.description || '');
+  const productPrice = product.price && !isNaN(product.price) ? Number(product.price).toFixed(2) : 'N/A';
+  
+  // Escape options if present
+  const optionsHtml = product.options && product.options.length 
+    ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${product.options.map(escapeHtml).join(', ')}</div>` 
+    : '';
+  
+  // Generate image carousel or single image
+  let imageHtml;
+  if (images.length > 1) {
+    // Multi-image carousel
+    const carouselId = `carousel-${escapeAttr(product._id)}`;
+    imageHtml = `
+      <div class="product-image-carousel" id="${carouselId}">
+        ${images.map((img, idx) => {
+          const imageUrl = img && img.trim() ? escapeAttr(img) : '/img/default-product.png';
+          return generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`);
+        }).join('')}
+        ${images.length > 1 ? `
+          <button class="carousel-prev" onclick="prevImage('${carouselId}')">‹</button>
+          <button class="carousel-next" onclick="nextImage('${carouselId}')">›</button>
+          <div class="carousel-indicators">
+            ${images.map((_, idx) => `<span class="indicator ${idx === 0 ? 'active' : ''}" onclick="goToImage('${carouselId}', ${idx})"></span>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    // Single image
+    const imageUrl = images[0] && images[0].trim() ? escapeAttr(images[0]) : '/img/default-product.png';
+    imageHtml = generateResponsiveImage(imageUrl, productName);
+  }
+  
+  return `
+    <div class="product-card" id="product-${escapeAttr(product._id)}" data-product-index="${index}">
+      <div class="product-top-section">
+        ${imageHtml}
+        <div class="product-info">
+          <div class="product-title">${productName}</div>
+          <div class="product-price">$${productPrice}</div>
+          <div class="product-stock ${stockClass}">${stockText}</div>
+          <div id="product-rating-${escapeAttr(product._id)}"></div>
+          ${optionsHtml}
+        </div>
+      </div>
+      <div class="product-bottom-section">
+        <div class="product-desc">${productDesc}</div>
+        <button 
+          class="more-details-btn"
+          onclick="showProductDetails('${escapeAttr(product._id)}')"
+          title="View detailed product information"
+        >
+          More Details
+        </button>
+        <button 
+          class="add-to-cart"
+          data-id="${escapeAttr(product._id)}"
+          ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
+        >
+          ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </button>
+        <button 
+          class="view-reviews-btn"
+          style="margin-top:0.5rem;background:linear-gradient(135deg,#52b788 0%,#40916c 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
+          onclick="toggleReviews('${escapeAttr(product._id)}')"
+        >
+          View Reviews
+        </button>
+        ${isAdmin ? `<button 
+          class="edit-product-btn"
+          data-id="${escapeAttr(product._id)}"
+          onclick="openEditProductModal('${escapeAttr(product._id)}')"
+        >
+          Edit Product
+        </button>` : ''}
+        <div id="reviews-container-${escapeAttr(product._id)}" style="display:none;"></div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Switch to a different product within a multi-product panel
+ * @param {string} panelId - ID of the panel
+ * @param {string} productIndex - Index of the product to switch to
+ */
+function switchProduct(panelId, productIndex) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  
+  const contentDiv = document.getElementById(`${panelId}-content`);
+  if (!contentDiv) return;
+  
+  // Get products from stored data
+  const products = groupedProductsData[panelId];
+  if (!products || !products[productIndex]) return;
+  
+  const selectedProduct = products[productIndex];
+  
+  // Generate new content
+  const newContent = generateProductContent(selectedProduct, productIndex, panelId);
+  
+  // Add fade transition
+  contentDiv.style.opacity = '0';
+  setTimeout(() => {
+    contentDiv.innerHTML = newContent;
+    contentDiv.style.opacity = '1';
+    
+    // Re-initialize carousels and zoom for new content
+    initCarousels();
+    initImageZoom();
+    
+    // Load ratings for the new product
+    if (window.fetchReviewStats) {
+      loadProductRatings();
+    }
+  }, 200);
+}
+
+// Store grouped products data for switchProduct function
+let groupedProductsData = {};
 
 /**
  * Generate responsive image HTML with proper attributes for performance
@@ -797,6 +1061,7 @@ function openEditProductModal(productId) {
   document.getElementById('editProductType').value = product.type || 'decor';
   document.getElementById('editProductStock').value = product.stock !== undefined ? product.stock : 1;
   document.getElementById('editProductOptions').value = formatOptionsForDisplay(product.options);
+  document.getElementById('editProductGroup').value = product.productGroup || '';
   
   // Populate extended details if they exist
   const details = product.extendedDetails || {};
@@ -907,6 +1172,7 @@ async function handleEditProductSubmit(e) {
       type: document.getElementById('editProductType').value,
       stock: parseInt(document.getElementById('editProductStock').value),
       options: parseOptionsFromInput(document.getElementById('editProductOptions').value),
+      productGroup: document.getElementById('editProductGroup')?.value || '',
       extendedDetails: {
         ingredients: document.getElementById('editProductIngredients')?.value || '',
         allergens: document.getElementById('editProductAllergens')?.value || '',
@@ -1087,6 +1353,7 @@ window.toggleReviews = toggleReviews;
 window.openEditProductModal = openEditProductModal;
 window.showProductDetails = showProductDetails;
 window.toggleDetailSection = toggleDetailSection;
+window.switchProduct = switchProduct;
 
 // Threshold for automatic collapsible sections (in characters)
 const COLLAPSIBLE_THRESHOLD = 300;
