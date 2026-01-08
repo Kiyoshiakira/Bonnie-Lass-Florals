@@ -19,6 +19,7 @@
   // Chatbot state
   let isChatbotOpen = false;
   let isLoading = false;
+  let selectedFiles = []; // Array to store selected files for upload
 
   /**
    * Create chatbot HTML structure
@@ -95,6 +96,12 @@
           </div>
 
           <div class="chatbot-input-container">
+            <input type="file" id="chatbot-file-input" accept="image/*" multiple style="display: none;">
+            <button id="chatbot-attach" class="chatbot-attach-button" aria-label="Attach photos" title="Attach photos">
+              <svg class="attach-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </button>
             <textarea 
               id="chatbot-input" 
               class="chatbot-input" 
@@ -107,6 +114,7 @@
               </svg>
             </button>
           </div>
+          <div id="chatbot-file-preview" class="chatbot-file-preview" style="display: none;"></div>
 
           <div class="chatbot-footer">
             <svg class="gemini-logo" viewBox="0 0 24 24" fill="currentColor">
@@ -546,6 +554,87 @@
         border-top: 1px solid #e5e7eb;
       }
 
+      .chatbot-attach-button {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        color: #6b7280;
+        min-width: 48px;
+        width: 48px;
+        min-height: 48px;
+        height: 48px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .chatbot-attach-button:hover:not(:disabled) {
+        border-color: #85ff85;
+        color: #10b981;
+        background: rgba(133, 255, 133, 0.1);
+      }
+
+      .chatbot-attach-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .attach-icon {
+        width: 22px;
+        height: 22px;
+      }
+
+      .chatbot-file-preview {
+        padding: 12px 16px;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .chatbot-file-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+      }
+
+      .chatbot-file-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .chatbot-file-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        line-height: 1;
+        padding: 0;
+      }
+
+      .chatbot-file-remove:hover {
+        background: #dc2626;
+      }
+
       .chatbot-input {
         flex: 1;
         border: 2px solid #e5e7eb;
@@ -956,6 +1045,136 @@
   }
 
   /**
+   * Handle file selection
+   */
+  function handleFileSelect(event) {
+    const files = Array.from(event.target.files);
+    const validFiles = files.filter(file => {
+      // Only allow images
+      if (!file.type.startsWith('image/')) {
+        console.warn('Skipping non-image file:', file.name);
+        return false;
+      }
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        console.warn('File too large:', file.name);
+        return false;
+      }
+      return true;
+    });
+    
+    selectedFiles = [...selectedFiles, ...validFiles];
+    updateFilePreview();
+  }
+
+  /**
+   * Update file preview display
+   */
+  function updateFilePreview() {
+    const previewContainer = document.getElementById('chatbot-file-preview');
+    
+    if (selectedFiles.length === 0) {
+      previewContainer.style.display = 'none';
+      previewContainer.innerHTML = '';
+      return;
+    }
+    
+    previewContainer.style.display = 'flex';
+    previewContainer.innerHTML = '';
+    
+    selectedFiles.forEach((file, index) => {
+      const fileItem = document.createElement('div');
+      fileItem.className = 'chatbot-file-item';
+      
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.alt = file.name;
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'chatbot-file-remove';
+      removeBtn.innerHTML = '×';
+      removeBtn.onclick = () => removeFile(index);
+      
+      fileItem.appendChild(img);
+      fileItem.appendChild(removeBtn);
+      previewContainer.appendChild(fileItem);
+    });
+  }
+
+  /**
+   * Remove file from selection
+   */
+  function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFilePreview();
+  }
+
+  /**
+   * Upload file to Firebase Storage
+   */
+  async function uploadImageToFirebase(file) {
+    if (typeof firebase === 'undefined' || !firebase.storage) {
+      throw new Error('Firebase Storage is not available');
+    }
+    
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+    }
+    
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('File size exceeds 10MB limit.');
+    }
+    
+    const storage = firebase.storage();
+    const storageRef = storage.ref();
+    const timestamp = Date.now();
+    
+    // Sanitize filename
+    let safeName = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/\.{2,}/g, '_')
+      .replace(/^\.+/, '')
+      .substring(0, 100);
+    
+    if (!safeName || safeName.length < 3) {
+      const extension = file.type.split('/')[1] || 'jpg';
+      safeName = `image.${extension}`;
+    }
+    
+    const filename = `product-images/${timestamp}-${safeName}`;
+    const imageRef = storageRef.child(filename);
+    
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        uploadedAt: new Date().toISOString()
+      }
+    };
+    
+    const snapshot = await imageRef.put(file, metadata);
+    const downloadURL = await snapshot.ref.getDownloadURL();
+    return downloadURL;
+  }
+
+  /**
+   * Upload all selected files
+   */
+  async function uploadAllFiles() {
+    if (selectedFiles.length === 0) {
+      return [];
+    }
+    
+    const uploadPromises = selectedFiles.map(file => uploadImageToFirebase(file));
+    const urls = await Promise.all(uploadPromises);
+    return urls;
+  }
+
+  /**
    * Send message to chatbot API
    */
   async function sendMessage(message, isRetry = false) {
@@ -964,6 +1183,31 @@
     try {
       isLoading = true;
       showLoading();
+      
+      // Upload files if any are selected
+      let imageUrls = [];
+      if (selectedFiles.length > 0) {
+        try {
+          addMessage('⏳ Uploading photos...', 'assistant');
+          imageUrls = await uploadAllFiles();
+          addMessage(`✅ Uploaded ${imageUrls.length} photo(s) successfully!`, 'assistant');
+          
+          // Append image URLs to message
+          if (imageUrls.length > 0) {
+            message += `\n\nPhoto URLs:\n${imageUrls.join('\n')}`;
+          }
+          
+          // Clear selected files
+          selectedFiles = [];
+          updateFilePreview();
+        } catch (uploadError) {
+          console.error('Upload error:', uploadError);
+          showErrorMessage(`Failed to upload photos: ${uploadError.message}`);
+          hideLoading();
+          isLoading = false;
+          return;
+        }
+      }
       
       // Add user message to history
       chatHistory.push({ role: 'user', content: message });
@@ -1067,17 +1311,25 @@
     const input = document.getElementById('chatbot-input');
     const message = input.value.trim();
     
-    if (!message || isLoading) return;
+    // Allow sending if there's a message or if there are files attached
+    if ((!message && selectedFiles.length === 0) || isLoading) return;
     
-    // Add user message to chat
-    addMessage(message, 'user');
+    // Add user message to chat if there is text
+    if (message) {
+      addMessage(message, 'user');
+    }
+    
+    // If only files, indicate photos are being sent
+    if (!message && selectedFiles.length > 0) {
+      addMessage(`📸 Sending ${selectedFiles.length} photo(s)...`, 'user');
+    }
     
     // Clear input
     input.value = '';
     input.style.height = 'auto';
     
     // Send to API
-    sendMessage(message);
+    sendMessage(message || `I'm uploading ${selectedFiles.length} photo(s)`);
   }
 
   /**
@@ -1111,6 +1363,16 @@
     document.getElementById('chatbot-toggle').addEventListener('click', toggleChatbot);
     document.getElementById('chatbot-close').addEventListener('click', toggleChatbot);
     document.getElementById('chatbot-send').addEventListener('click', handleSend);
+    
+    // File attachment handling
+    const attachBtn = document.getElementById('chatbot-attach');
+    const fileInput = document.getElementById('chatbot-file-input');
+    
+    attachBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', handleFileSelect);
     
     const input = document.getElementById('chatbot-input');
     
