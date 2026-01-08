@@ -1060,11 +1060,22 @@
         console.warn('File too large:', file.name);
         return false;
       }
+      // Check for duplicates based on name and size
+      const isDuplicate = selectedFiles.some(existing => 
+        existing.name === file.name && existing.size === file.size
+      );
+      if (isDuplicate) {
+        console.warn('File already selected:', file.name);
+        return false;
+      }
       return true;
     });
     
     selectedFiles = [...selectedFiles, ...validFiles];
     updateFilePreview();
+    
+    // Clear the file input so the same file can be selected again if removed
+    event.target.value = '';
   }
 
   /**
@@ -1155,6 +1166,7 @@
     const storage = firebase.storage();
     const storageRef = storage.ref();
     const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8); // Add random suffix
     
     // Sanitize filename - keep only alphanumeric, dots, hyphens, underscores
     let safeName = file.name
@@ -1166,7 +1178,7 @@
     // Ensure filename has valid extension
     if (!safeName || safeName.length < 3 || !ALLOWED_EXTENSIONS.some(ext => safeName.toLowerCase().endsWith(ext))) {
       const extension = fileExtension.substring(1); // remove leading dot
-      safeName = `image.${extension}`;
+      safeName = `image_${randomSuffix}.${extension}`; // Include random suffix to prevent conflicts
     }
     
     const filename = `product-images/${timestamp}-${safeName}`;
