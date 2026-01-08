@@ -907,9 +907,11 @@ async function executeAdminAction(actionData) {
         if (productId) {
           productForPhotos = await Product.findById(productId);
         } else if (productName) {
+          // Escape special regex characters to prevent ReDoS
+          const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           productForPhotos = await Product.findOne({ name: productName });
           if (!productForPhotos) {
-            productForPhotos = await Product.findOne({ name: { $regex: new RegExp(`^${productName}$`, 'i') } });
+            productForPhotos = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
           }
         }
         
@@ -954,9 +956,11 @@ async function executeAdminAction(actionData) {
         if (productId) {
           productForRemoval = await Product.findById(productId);
         } else if (productName) {
+          // Escape special regex characters to prevent ReDoS
+          const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           productForRemoval = await Product.findOne({ name: productName });
           if (!productForRemoval) {
-            productForRemoval = await Product.findOne({ name: { $regex: new RegExp(`^${productName}$`, 'i') } });
+            productForRemoval = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
           }
         }
         
@@ -976,7 +980,7 @@ async function executeAdminAction(actionData) {
           return { success: false, error: 'Product has no images to remove' };
         }
         
-        // Remove images by URL or by index (0-based or 1-based)
+        // Remove images by URL or by index (support 1-based indexing for user-friendliness)
         let remainingImages = [...currentImages];
         let removedCount = 0;
         
@@ -989,15 +993,11 @@ async function executeAdminAction(actionData) {
               removedCount++;
             }
           } else if (typeof item === 'number') {
-            // Treat as index (support both 0-based and 1-based)
-            const index0 = item; // 0-based
-            const index1 = item - 1; // 1-based
+            // Treat as 1-based index for user-friendliness (1 = first photo)
+            const index = item - 1;
             
-            if (index0 >= 0 && index0 < remainingImages.length) {
-              remainingImages.splice(index0, 1);
-              removedCount++;
-            } else if (index1 >= 0 && index1 < remainingImages.length) {
-              remainingImages.splice(index1, 1);
+            if (index >= 0 && index < remainingImages.length) {
+              remainingImages.splice(index, 1);
               removedCount++;
             }
           }

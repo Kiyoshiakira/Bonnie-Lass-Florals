@@ -1075,9 +1075,24 @@
     
     if (selectedFiles.length === 0) {
       previewContainer.style.display = 'none';
+      // Revoke all existing blob URLs to prevent memory leaks
+      const existingImages = previewContainer.querySelectorAll('img');
+      existingImages.forEach(img => {
+        if (img.src.startsWith('blob:')) {
+          URL.revokeObjectURL(img.src);
+        }
+      });
       previewContainer.innerHTML = '';
       return;
     }
+    
+    // Revoke old blob URLs before creating new ones
+    const existingImages = previewContainer.querySelectorAll('img');
+    existingImages.forEach(img => {
+      if (img.src.startsWith('blob:')) {
+        URL.revokeObjectURL(img.src);
+      }
+    });
     
     previewContainer.style.display = 'flex';
     previewContainer.innerHTML = '';
@@ -1118,11 +1133,18 @@
     }
     
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+    }
+    
+    // Validate file extension
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+      throw new Error('Invalid file extension. Only .jpg, .jpeg, .png, .gif, and .webp are allowed.');
     }
     
     // Validate file size
@@ -1134,15 +1156,16 @@
     const storageRef = storage.ref();
     const timestamp = Date.now();
     
-    // Sanitize filename
+    // Sanitize filename - keep only alphanumeric, dots, hyphens, underscores
     let safeName = file.name
       .replace(/[^a-zA-Z0-9._-]/g, '_')
       .replace(/\.{2,}/g, '_')
       .replace(/^\.+/, '')
       .substring(0, 100);
     
-    if (!safeName || safeName.length < 3) {
-      const extension = file.type.split('/')[1] || 'jpg';
+    // Ensure filename has valid extension
+    if (!safeName || safeName.length < 3 || !ALLOWED_EXTENSIONS.some(ext => safeName.toLowerCase().endsWith(ext))) {
+      const extension = fileExtension.substring(1); // remove leading dot
       safeName = `image.${extension}`;
     }
     
@@ -1314,14 +1337,18 @@
     // Allow sending if there's a message or if there are files attached
     if ((!message && selectedFiles.length === 0) || isLoading) return;
     
+    let userMessage = message;
+    let apiMessage = message;
+    
     // Add user message to chat if there is text
     if (message) {
       addMessage(message, 'user');
-    }
-    
-    // If only files, indicate photos are being sent
-    if (!message && selectedFiles.length > 0) {
-      addMessage(`📸 Sending ${selectedFiles.length} photo(s)...`, 'user');
+    } else if (selectedFiles.length > 0) {
+      // If only files, indicate photos are being sent
+      const photoMessage = `📸 Sending ${selectedFiles.length} photo(s)...`;
+      addMessage(photoMessage, 'user');
+      userMessage = photoMessage;
+      apiMessage = `I'm uploading ${selectedFiles.length} photo(s)`;
     }
     
     // Clear input
@@ -1329,7 +1356,7 @@
     input.style.height = 'auto';
     
     // Send to API
-    sendMessage(message || `I'm uploading ${selectedFiles.length} photo(s)`);
+    sendMessage(apiMessage);
   }
 
   /**
