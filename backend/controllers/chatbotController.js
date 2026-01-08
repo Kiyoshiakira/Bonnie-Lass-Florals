@@ -170,6 +170,11 @@ Use these commands to manage the store. I understand both formal command syntax 
    - name (required), price (required), description, type ('decor' or 'food'), stock, subcategory
    - options (array), collection, occasion, image, images (array), featured (boolean)
    
+   Photo Management:
+   - When adding photos: Use the images field as an array of image URLs
+   - Examples: "with photos: [url1, url2, url3]" or "images: ['https://...', 'https://...']"
+   - You can specify multiple photo URLs in the images array
+   
    Extended details fields (I auto-detect and populate these intelligently from natural language):
    - ingredients: For food items - list of ingredients (I recognize: "made with", "contains", "includes")
    - allergens: Allergen information (I recognize: "contains", "allergen", "may contain", "free of")
@@ -259,6 +264,46 @@ Use these commands to manage the store. I understand both formal command syntax 
    - "show me what's in stock"
    - "what christmas items do we have"
 
+8. LIST ALL PRODUCTS
+   Format: "list products" or "list all products"
+   Natural language examples:
+   - "show me all products"
+   - "list products"
+   - "what products do we have"
+   - "get product list"
+   
+   This returns a simplified list of all products with their IDs and names for selection.
+
+9. UPDATE PRODUCT - INTERACTIVE MODE
+   When a user wants to update a product but doesn't specify which one, or wants to choose what to update:
+   - First, return a "list_products" action to show available products
+   - The user will then select a product from the list
+   - Then ask what they want to update: "info" (product details) or "photos" (add/remove photos)
+   
+   Natural language examples:
+   - "I want to update a product" → list_products action
+   - "Update product info" → list_products action, then ask which product
+   - "Add photos to a product" → list_products action, then ask which product
+   - "Change product photos" → list_products action
+
+10. ADD PHOTOS TO PRODUCT
+    Format: "add photos to [product]: [photo URLs]"
+    Natural language examples:
+    - "Add photos to [product]: [url1, url2]"
+    - "Upload images to [product name]"
+    - "Add these photos to [product]: [urls]"
+    
+    Return action: "add_photos" with productName and newImages array
+
+11. REMOVE PHOTOS FROM PRODUCT
+    Format: "remove photos from [product]: [photo URLs or indices]"
+    Natural language examples:
+    - "Remove photo [url] from [product]"
+    - "Delete first photo from [product]"
+    - "Remove images from [product]: [urls]"
+    
+    Return action: "remove_photos" with productName and imagesToRemove array (URLs or indices)
+
 ADVANCED NATURAL LANGUAGE PROCESSING:
 When handling admin commands, I:
 1. Parse your natural language request with deep understanding of intent
@@ -295,13 +340,15 @@ SMART RESPONSE FORMAT:
 Smart field placement: I ALWAYS return JSON action blocks with this structure, populated from natural language:
 \`\`\`json
 {
-  "action": "create|update|delete|bulk_update|bulk_delete|search|stats|low_stock|out_of_stock",
+  "action": "create|update|delete|bulk_update|bulk_delete|search|stats|low_stock|out_of_stock|list_products|add_photos|remove_photos",
   "productData": { /* for create */ },
   "productId": "optional",
   "productName": "optional",
   "updates": { /* for update */ },
   "criteria": { /* for bulk/search operations */ },
-  "searchCriteria": { /* for search */ }
+  "searchCriteria": { /* for search */ },
+  "newImages": [ /* array of image URLs for add_photos */ ],
+  "imagesToRemove": [ /* array of image URLs or indices for remove_photos */ ]
 }
 \`\`\`
 
@@ -842,6 +889,140 @@ async function executeAdminAction(actionData) {
           count: searchResults.length
         };
       
+      case 'list_products':
+        // List all products for selection (simplified view)
+        const allProducts = await Product.find().select('name _id type price stock').sort({ name: 1 });
+        
+        return {
+          success: true,
+          products: allProducts,
+          count: allProducts.length,
+          message: 'Here are all available products. Please select one or tell me the product name.'
+        };
+      
+      case 'add_photos':
+        // Add photos to an existing product
+        let productForPhotos;
+        
+        if (productId) {
+          productForPhotos = await Product.findById(productId);
+        } else if (productName) {
+          // Escape special regex characters to prevent ReDoS
+          const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          productForPhotos = await Product.findOne({ name: productName });
+          if (!productForPhotos) {
+            productForPhotos = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+          }
+        }
+        
+        if (!productForPhotos) {
+          return { success: false, error: 'Product not found' };
+        }
+        
+        const { newImages } = actionData;
+        if (!newImages || !Array.isArray(newImages) || newImages.length === 0) {
+          return { success: false, error: 'No images provided to add' };
+        }
+        
+        // Get existing images array or initialize
+        const existingImages = productForPhotos.images || [];
+        
+        // Add new images that aren't already in the array
+        const imagesToAdd = newImages.filter(img => !existingImages.includes(img));
+        const updatedImages = [...existingImages, ...imagesToAdd];
+        
+        // Update the product
+        productForPhotos.images = updatedImages;
+        
+        // Update primary image if none exists
+        if (!productForPhotos.image && updatedImages.length > 0) {
+          productForPhotos.image = updatedImages[0];
+        }
+        
+        await productForPhotos.save();
+        
+        return {
+          success: true,
+          message: `Successfully added ${imagesToAdd.length} photo(s) to "${productForPhotos.name}". Total photos: ${updatedImages.length}`,
+          product: productForPhotos,
+          addedCount: imagesToAdd.length,
+          totalPhotos: updatedImages.length
+        };
+      
+      case 'remove_photos':
+        // Remove photos from an existing product
+        let productForRemoval;
+        
+        if (productId) {
+          productForRemoval = await Product.findById(productId);
+        } else if (productName) {
+          // Escape special regex characters to prevent ReDoS
+          const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          productForRemoval = await Product.findOne({ name: productName });
+          if (!productForRemoval) {
+            productForRemoval = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+          }
+        }
+        
+        if (!productForRemoval) {
+          return { success: false, error: 'Product not found' };
+        }
+        
+        const { imagesToRemove } = actionData;
+        if (!imagesToRemove || !Array.isArray(imagesToRemove) || imagesToRemove.length === 0) {
+          return { success: false, error: 'No images specified to remove' };
+        }
+        
+        // Get existing images array
+        let currentImages = productForRemoval.images || [];
+        
+        if (currentImages.length === 0) {
+          return { success: false, error: 'Product has no images to remove' };
+        }
+        
+        // Remove images by URL or by index (support 1-based indexing for user-friendliness)
+        let remainingImages = [...currentImages];
+        let removedCount = 0;
+        
+        for (const item of imagesToRemove) {
+          if (typeof item === 'string') {
+            // Check if it's a URL
+            const index = remainingImages.indexOf(item);
+            if (index !== -1) {
+              remainingImages.splice(index, 1);
+              removedCount++;
+            }
+          } else if (typeof item === 'number') {
+            // Treat as 1-based index for user-friendliness (1 = first photo)
+            const index = item - 1;
+            
+            if (index >= 0 && index < remainingImages.length) {
+              remainingImages.splice(index, 1);
+              removedCount++;
+            }
+          }
+        }
+        
+        // Update the product
+        productForRemoval.images = remainingImages;
+        
+        // Update primary image if it was removed
+        if (remainingImages.length > 0 && !remainingImages.includes(productForRemoval.image)) {
+          productForRemoval.image = remainingImages[0];
+        } else if (remainingImages.length === 0) {
+          productForRemoval.image = '';
+        }
+        
+        await productForRemoval.save();
+        
+        return {
+          success: true,
+          message: `Successfully removed ${removedCount} photo(s) from "${productForRemoval.name}". Remaining photos: ${remainingImages.length}`,
+          product: productForRemoval,
+          removedCount: removedCount,
+          remainingPhotos: remainingImages.length
+        };
+      
       default:
         return { success: false, error: 'Unknown action' };
     }
@@ -874,8 +1055,8 @@ exports.sendMessage = async (req, res) => {
     // Check if user is admin
     const isAdmin = await checkIsAdmin(req);
     
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Get the generative model - Using Gemini 3.0 Flash for latest capabilities
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.0-flash' });
     
     // Generate system prompt with current product context and admin mode if applicable
     const systemPrompt = await generateSystemPrompt(isAdmin);
@@ -988,12 +1169,19 @@ exports.sendMessage = async (req, res) => {
         if (actionResult.success) {
           if (actionResult.stats) {
             text += `\n\n📊 **Statistics:**\n- Total Products: ${actionResult.stats.totalProducts}\n- Decor Products: ${actionResult.stats.decorProducts}\n- Food Products: ${actionResult.stats.foodProducts}\n- Out of Stock: ${actionResult.stats.outOfStock}\n- Low Stock (< 5): ${actionResult.stats.lowStock}`;
+          } else if (actionResult.addedCount !== undefined) {
+            // Photo add operation
+            text += `\n\n✅ **Action completed:** ${actionResult.message}`;
+          } else if (actionResult.removedCount !== undefined) {
+            // Photo remove operation
+            text += `\n\n✅ **Action completed:** ${actionResult.message}`;
           } else if (actionResult.count !== undefined) {
             // Bulk operation or search result
             text += `\n\n✅ **Action completed:** ${actionResult.message || `Found ${actionResult.count} product(s)`}`;
             if (actionResult.products && actionResult.products.length > 0) {
               const productList = actionResult.products.slice(0, 20).map(p => {
                 let info = `- ${p.name}`;
+                if (p._id) info += ` (ID: ${p._id})`;
                 if (p.stock !== undefined) info += ` (Stock: ${p.stock})`;
                 if (p.price !== undefined) info += ` - $${p.price}`;
                 if (p.type) info += ` [${p.type}]`;
@@ -1057,7 +1245,7 @@ exports.getStatus = async (req, res) => {
     
     res.json({
       status: genAI ? 'active' : 'unavailable',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       configured: !!genAI,
       productCount,
       features: [
@@ -1065,7 +1253,9 @@ exports.getStatus = async (req, res) => {
         'Stock availability',
         'Pricing details',
         'Material information',
-        'Collection filtering'
+        'Collection filtering',
+        'Photo management (admin)',
+        'Product updates (admin)'
       ]
     });
   } catch (error) {
