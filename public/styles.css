@@ -1883,6 +1883,11 @@ footer a:hover {
     flex: 0 1 calc(50% - 1rem);
     max-width: 100%;
   }
+  
+  .multi-product-panel {
+    flex: 0 1 calc(50% - 1rem);
+    max-width: 100%;
+  }
 }
 
 /* Mobile devices (≤800px) - Show hamburger menu and hide desktop navigation */
@@ -1999,6 +2004,11 @@ footer a:hover {
   }
   
   .product-card {
+    flex: 0 1 100%;
+    max-width: 100%;
+  }
+  
+  .multi-product-panel {
     flex: 0 1 100%;
     max-width: 100%;
   }
