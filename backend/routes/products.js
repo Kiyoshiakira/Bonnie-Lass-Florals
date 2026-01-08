@@ -225,7 +225,8 @@ router.post('/', firebaseAdminAuth, adminMutationLimiter, optionalUpload, create
         : [],
       featured: body.featured === 'true' || body.featured === true,
       collection: body.collection || '',
-      occasion: body.occasion || ''
+      occasion: body.occasion || '',
+      productGroup: body.productGroup || ''
     };
 
     // Handle images array (new multi-image support)
@@ -373,7 +374,8 @@ router.post('/batch', firebaseAdminAuth, adminMutationLimiter, batchProductValid
           images: imageUrls.length > 0 ? imageUrls : [], // All images in array
           featured: productData.featured === 'true' || productData.featured === true || false,
           collection: productData.collection || '',
-          occasion: productData.occasion || ''
+          occasion: productData.occasion || '',
+          productGroup: productData.productGroup || ''
         };
         
         // Check for duplicates against existing products
@@ -485,6 +487,12 @@ router.put('/:id', firebaseAdminAuth, adminMutationLimiter, optionalUpload, upda
     }
     if (typeof body.collection !== 'undefined') updates.collection = body.collection;
     if (typeof body.occasion !== 'undefined') updates.occasion = body.occasion;
+    if (typeof body.productGroup !== 'undefined') updates.productGroup = body.productGroup;
+    
+    // Handle extendedDetails (nested object)
+    if (typeof body.extendedDetails !== 'undefined' && typeof body.extendedDetails === 'object') {
+      updates.extendedDetails = body.extendedDetails;
+    }
 
     // Handle images array (new multi-image support)
     if (typeof body.images !== 'undefined') {
