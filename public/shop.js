@@ -206,8 +206,9 @@ function renderProducts() {
     }
   }, 50);
   
-  // Setup event delegation for add-to-cart buttons (only once)
+  // Setup event delegation for add-to-cart buttons and dropdowns (only once)
   setupAddToCartHandlers();
+  setupDropdownHandlers();
 }
 
 // Apply filters to products
@@ -288,6 +289,7 @@ function applyFilters(type) {
   
   // Re-setup event handlers after filtering
   setupAddToCartHandlers();
+  setupDropdownHandlers();
 }
 
 // Reset filters
@@ -339,6 +341,30 @@ function setupAddToCartHandlers() {
   document.getElementById('food-products').addEventListener('click', handleAddToCart);
   
   addToCartHandlersSetup = true;
+}
+
+// Event delegation handler for product dropdown selectors
+let dropdownHandlersSetup = false;
+function setupDropdownHandlers() {
+  if (dropdownHandlersSetup) return; // Only setup once
+  
+  // Use event delegation on the container elements
+  document.getElementById('decor-products').addEventListener('change', handleDropdownChange);
+  document.getElementById('food-products').addEventListener('change', handleDropdownChange);
+  
+  dropdownHandlersSetup = true;
+}
+
+function handleDropdownChange(event) {
+  const dropdown = event.target.closest('.product-dropdown');
+  if (!dropdown) return; // Change was not on a product dropdown
+  
+  const panelId = dropdown.dataset.panelId;
+  const selectedIndex = dropdown.value;
+  
+  if (panelId && selectedIndex) {
+    switchProduct(panelId, selectedIndex);
+  }
 }
 
 function handleAddToCart(event) {
@@ -475,6 +501,11 @@ function productToCard(p) {
  * @returns {Object} Object with grouped and ungrouped products
  */
 function groupProducts(products) {
+  // Add null/undefined check
+  if (!products || !Array.isArray(products)) {
+    return { grouped: {}, ungrouped: [] };
+  }
+  
   const grouped = {};
   const ungrouped = [];
   
@@ -508,8 +539,8 @@ function multiProductPanelToCard(groupName, products) {
   );
   
   const firstProduct = sortedProducts[0];
-  const panelId = `panel-${escapeAttr(groupName.replace(/\s+/g, '-').toLowerCase())}`;
-  const dropdownId = `dropdown-${escapeAttr(groupName.replace(/\s+/g, '-').toLowerCase())}`;
+  const panelId = MultiProductPanel.generatePanelId(groupName);
+  const dropdownId = `dropdown-${panelId}`;
   
   // Create dropdown options
   const dropdownOptions = sortedProducts.map((p, idx) => {
@@ -528,7 +559,7 @@ function multiProductPanelToCard(groupName, products) {
         <h3 class="multi-product-group-title">${escapeHtml(groupName)}</h3>
         <div class="multi-product-selector">
           <label for="${dropdownId}">Select Product:</label>
-          <select id="${dropdownId}" onchange="switchProduct('${escapeAttr(panelId)}', this.value)" class="product-dropdown">
+          <select id="${dropdownId}" class="product-dropdown" data-panel-id="${escapeAttr(panelId)}">
             ${dropdownOptions}
           </select>
         </div>
@@ -551,7 +582,7 @@ function multiProductPanelToCard(groupName, products) {
 function generateProductContent(product, index, panelId, allGroupProducts = null) {
   // Store products data for switchProduct function
   if (allGroupProducts) {
-    groupedProductsData[panelId] = allGroupProducts;
+    MultiProductPanel.storeGroupData(panelId, allGroupProducts);
   }
   
   const stock = product.stock !== undefined ? product.stock : 0;
@@ -659,7 +690,7 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
 /**
  * Switch to a different product within a multi-product panel
  * @param {string} panelId - ID of the panel
- * @param {string} productIndex - Index of the product to switch to
+ * @param {string} productIndex - Index of the product to switch to (from dropdown value)
  */
 function switchProduct(panelId, productIndex) {
   const panel = document.getElementById(panelId);
@@ -668,14 +699,18 @@ function switchProduct(panelId, productIndex) {
   const contentDiv = document.getElementById(`${panelId}-content`);
   if (!contentDiv) return;
   
-  // Get products from stored data
-  const products = groupedProductsData[panelId];
-  if (!products || !products[productIndex]) return;
+  // Convert string index to number for array access
+  const index = parseInt(productIndex, 10);
+  if (isNaN(index)) return;
   
-  const selectedProduct = products[productIndex];
+  // Get products from stored data
+  const products = MultiProductPanel.getGroupData(panelId);
+  if (!products || !products[index]) return;
+  
+  const selectedProduct = products[index];
   
   // Generate new content
-  const newContent = generateProductContent(selectedProduct, productIndex, panelId);
+  const newContent = generateProductContent(selectedProduct, index, panelId);
   
   // Add fade transition
   contentDiv.style.opacity = '0';
@@ -683,9 +718,27 @@ function switchProduct(panelId, productIndex) {
     contentDiv.innerHTML = newContent;
     contentDiv.style.opacity = '1';
     
-    // Re-initialize carousels and zoom for new content
-    initCarousels();
-    initImageZoom();
+    // Re-initialize carousels and zoom only for the new content
+    const newProductCard = contentDiv.querySelector('.product-card');
+    if (newProductCard) {
+      // Initialize carousels within the new product card
+      const carousels = newProductCard.querySelectorAll('.product-image-carousel');
+      carousels.forEach(carousel => {
+        const images = carousel.querySelectorAll('.product-img');
+        images.forEach((img, idx) => {
+          img.style.display = idx === 0 ? 'block' : 'none';
+        });
+      });
+      
+      // Initialize zoom for images in the new product card
+      if (window.initImageZoom) {
+        const images = newProductCard.querySelectorAll('.product-img');
+        images.forEach(img => {
+          // Assuming initImageZoom sets up click handlers
+          img.style.cursor = 'zoom-in';
+        });
+      }
+    }
     
     // Load ratings for the new product
     if (window.fetchReviewStats) {
@@ -695,7 +748,26 @@ function switchProduct(panelId, productIndex) {
 }
 
 // Store grouped products data for switchProduct function
-let groupedProductsData = {};
+// Use a namespace to avoid global conflicts
+const MultiProductPanel = {
+  groupedProductsData: {},
+  panelCounter: 0,
+  
+  generatePanelId: function(groupName) {
+    // Create a unique ID using counter to avoid collisions
+    const sanitizedName = groupName.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '');
+    this.panelCounter++;
+    return `panel-${sanitizedName}-${this.panelCounter}`;
+  },
+  
+  storeGroupData: function(panelId, products) {
+    this.groupedProductsData[panelId] = products;
+  },
+  
+  getGroupData: function(panelId) {
+    return this.groupedProductsData[panelId];
+  }
+};
 
 /**
  * Generate responsive image HTML with proper attributes for performance
