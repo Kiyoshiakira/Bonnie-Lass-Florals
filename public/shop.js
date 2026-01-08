@@ -749,25 +749,28 @@ function switchProduct(panelId, productIndex) {
 
 // Store grouped products data for switchProduct function
 // Use a namespace to avoid global conflicts
-const MultiProductPanel = {
-  groupedProductsData: {},
-  panelCounter: 0,
-  
-  generatePanelId: function(groupName) {
-    // Create a unique ID using counter to avoid collisions
-    const sanitizedName = groupName.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '');
-    this.panelCounter++;
-    return `panel-${sanitizedName}-${this.panelCounter}`;
-  },
-  
-  storeGroupData: function(panelId, products) {
-    this.groupedProductsData[panelId] = products;
-  },
-  
-  getGroupData: function(panelId) {
-    return this.groupedProductsData[panelId];
-  }
-};
+// Wrapped in an immediately invoked function to avoid polluting global scope
+(function() {
+  window.MultiProductPanel = {
+    groupedProductsData: {},
+    panelCounter: 0,
+    
+    generatePanelId: function(groupName) {
+      // Create a unique ID using counter to avoid collisions
+      const sanitizedName = groupName.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '');
+      this.panelCounter++;
+      return `panel-${sanitizedName}-${this.panelCounter}`;
+    },
+    
+    storeGroupData: function(panelId, products) {
+      this.groupedProductsData[panelId] = products;
+    },
+    
+    getGroupData: function(panelId) {
+      return this.groupedProductsData[panelId];
+    }
+  };
+})();
 
 /**
  * Generate responsive image HTML with proper attributes for performance
