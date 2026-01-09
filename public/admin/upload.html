@@ -198,7 +198,7 @@
     <!-- Manage Products -->
     <section style="margin-top:2rem;">
       <h2>Manage Products</h2>
-      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;">
+      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
         <button id="loadProductsBtn" style="background:#efefef;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid #ddd;">Load All Products</button>
         <div style="display:flex;gap:0.5rem;align-items:center;">
           <span style="font-size:0.9rem;color:#666;">View as:</span>
@@ -206,6 +206,13 @@
             <span id="viewToggleText">Panels</span>
           </button>
         </div>
+        <div id="mergeControls" style="display:none;gap:0.5rem;align-items:center;margin-left:auto;flex-wrap:wrap;">
+          <span id="selectedCount" style="font-size:0.9rem;color:#666;font-weight:600;">0 selected</span>
+          <input type="text" id="groupNameInput" placeholder="Enter group name (e.g., Sauces)" style="padding:0.5rem;border-radius:6px;border:1px solid #ddd;min-width:200px;">
+          <button id="mergeProductsBtn" style="background:#10b981;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;">Merge Selected</button>
+          <button id="cancelMergeBtn" style="background:#ef4444;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;">Cancel</button>
+        </div>
+        <button id="startMergeBtn" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;margin-left:auto;">Merge Products</button>
       </div>
 
       <div id="products-list" style="min-height:120px;"></div>
@@ -597,22 +604,47 @@
 
     function renderLineView(products) {
       let html = `<table style="width:100%;border-collapse:collapse">`;
-      html += `<thead><tr><th style="text-align:left;padding:0.5rem;border-bottom:1px solid #eee;">Name</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Price</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Stock</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Type</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Actions</th></tr></thead>`;
+      html += `<thead><tr>`;
+      if (mergeMode) {
+        html += `<th style="text-align:center;padding:0.5rem;border-bottom:1px solid #eee;width:50px;">Select</th>`;
+      }
+      html += `<th style="text-align:left;padding:0.5rem;border-bottom:1px solid #eee;">Name</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Price</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Stock</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Type</th>`;
+      if (!mergeMode) {
+        html += `<th style="padding:0.5rem;border-bottom:1px solid #eee;">Actions</th>`;
+      }
+      html += `</tr></thead>`;
       html += `<tbody>`;
       products.forEach(p => {
         html += `<tr>`;
+        if (mergeMode) {
+          const isChecked = selectedProducts.has(p._id);
+          html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;text-align:center;">`;
+          html += `<input type="checkbox" data-product-id="${p._id}" class="product-checkbox" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;">`;
+          html += `</td>`;
+        }
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(p.name || '')}</td>`;
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">$${(p.price || 0).toFixed ? (Number(p.price).toFixed(2)) : escapeHtml(String(p.price || ''))}</td>`;
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(String(p.stock || 0))}</td>`;
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(p.type || '')}</td>`;
-        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">`;
-        html += `<button data-id="${p._id}" class="edit-btn" style="margin-right:0.5rem;">Edit</button>`;
-        html += `<button data-id="${p._id}" class="delete-btn" style="background:#f87171;color:#fff;border:none;padding:0.4rem 0.6rem;border-radius:4px;">Delete</button>`;
-        html += `</td>`;
+        if (!mergeMode) {
+          html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">`;
+          html += `<button data-id="${p._id}" class="edit-btn" style="margin-right:0.5rem;">Edit</button>`;
+          html += `<button data-id="${p._id}" class="delete-btn" style="background:#f87171;color:#fff;border:none;padding:0.4rem 0.6rem;border-radius:4px;">Delete</button>`;
+          html += `</td>`;
+        }
         html += `</tr>`;
       });
       html += `</tbody></table>`;
       document.getElementById('products-list').innerHTML = html;
+      
+      // Add event listeners for checkboxes
+      if (mergeMode) {
+        document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            handleCheckboxChange(this.dataset.productId, this.checked);
+          });
+        });
+      }
     }
 
     function renderPanelView(products) {
@@ -620,22 +652,41 @@
       products.forEach(p => {
         const imageUrl = (p.images && p.images.length > 0) ? p.images[0] : (p.image || '/img/default-product.png');
         const imageCount = (p.images && p.images.length) || 0;
-        html += `<div style="border:1px solid #ddd;border-radius:8px;padding:1rem;background:#fff;">`;
+        const isChecked = selectedProducts.has(p._id);
+        html += `<div style="border:1px solid ${isChecked && mergeMode ? '#10b981' : '#ddd'};border-radius:8px;padding:1rem;background:#fff;${isChecked && mergeMode ? 'box-shadow:0 0 0 2px rgba(16,185,129,0.2);' : ''}">`;
         html += `<div style="position:relative;">`;
         html += `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(p.name||'')}" style="width:100%;height:200px;object-fit:cover;border-radius:4px;margin-bottom:0.75rem;" onerror="this.src='/img/default-product.png'">`;
         if (imageCount > 1) {
           html += `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.85rem;font-weight:600;">${imageCount} images</div>`;
         }
+        if (mergeMode) {
+          html += `<div style="position:absolute;top:8px;left:8px;background:#fff;border-radius:4px;padding:0.25rem;">`;
+          html += `<input type="checkbox" data-product-id="${p._id}" class="product-checkbox" ${isChecked ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;">`;
+          html += `</div>`;
+        }
         html += `</div>`;
         html += `<div style="font-weight:700;margin-bottom:0.25rem;">${escapeHtml(p.name || '')}</div>`;
         html += `<div style="color:#666;margin-bottom:0.5rem;">$${(p.price || 0).toFixed ? Number(p.price).toFixed(2) : escapeHtml(String(p.price||''))}</div>`;
-        html += `<div style="display:flex;gap:0.5rem;">`;
-        html += `<button data-id="${p._id}" class="edit-btn" style="flex:1;padding:0.5rem;background:#efefef;border-radius:4px;border:1px solid #ddd;">Edit</button>`;
-        html += `<button data-id="${p._id}" class="delete-btn" style="flex:1;padding:0.5rem;background:#f87171;color:#fff;border:none;border-radius:4px;">Delete</button>`;
-        html += `</div></div>`;
+        if (!mergeMode) {
+          html += `<div style="display:flex;gap:0.5rem;">`;
+          html += `<button data-id="${p._id}" class="edit-btn" style="flex:1;padding:0.5rem;background:#efefef;border-radius:4px;border:1px solid #ddd;">Edit</button>`;
+          html += `<button data-id="${p._id}" class="delete-btn" style="flex:1;padding:0.5rem;background:#f87171;color:#fff;border:none;border-radius:4px;">Delete</button>`;
+          html += `</div>`;
+        }
+        html += `</div>`;
       });
       html += '</div>';
       document.getElementById('products-list').innerHTML = html;
+      
+      // Add event listeners for checkboxes
+      if (mergeMode) {
+        document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            handleCheckboxChange(this.dataset.productId, this.checked);
+          });
+        });
+      }
+    }
     }
 
     // Event delegation for edit/delete buttons
@@ -665,6 +716,114 @@
         } catch (err) {
           alert('Error: ' + err.message);
         }
+      }
+    });
+
+    // --------------------------
+    // Merge Products Functionality
+    // --------------------------
+    let selectedProducts = new Set();
+    let mergeMode = false;
+
+    // Toggle merge mode
+    document.getElementById('startMergeBtn').addEventListener('click', function() {
+      mergeMode = true;
+      selectedProducts.clear();
+      document.getElementById('startMergeBtn').style.display = 'none';
+      document.getElementById('mergeControls').style.display = 'flex';
+      updateSelectedCount();
+      // Re-render products list with checkboxes
+      if (allProducts.length > 0) {
+        if (currentView === 'line') renderLineView(allProducts);
+        else renderPanelView(allProducts);
+      }
+    });
+
+    // Cancel merge mode
+    document.getElementById('cancelMergeBtn').addEventListener('click', function() {
+      mergeMode = false;
+      selectedProducts.clear();
+      document.getElementById('startMergeBtn').style.display = 'block';
+      document.getElementById('mergeControls').style.display = 'none';
+      document.getElementById('groupNameInput').value = '';
+      // Re-render products list without checkboxes
+      if (allProducts.length > 0) {
+        if (currentView === 'line') renderLineView(allProducts);
+        else renderPanelView(allProducts);
+      }
+    });
+
+    // Update selected count display
+    function updateSelectedCount() {
+      document.getElementById('selectedCount').textContent = `${selectedProducts.size} selected`;
+    }
+
+    // Handle checkbox changes
+    function handleCheckboxChange(productId, isChecked) {
+      if (isChecked) {
+        selectedProducts.add(productId);
+      } else {
+        selectedProducts.delete(productId);
+      }
+      updateSelectedCount();
+    }
+
+    // Merge selected products
+    document.getElementById('mergeProductsBtn').addEventListener('click', async function() {
+      const groupName = document.getElementById('groupNameInput').value.trim();
+      
+      if (!groupName) {
+        alert('Please enter a group name');
+        return;
+      }
+
+      if (selectedProducts.size === 0) {
+        alert('Please select at least one product to merge');
+        return;
+      }
+
+      if (!confirm(`Merge ${selectedProducts.size} products into group "${groupName}"?`)) {
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert('Please login first');
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(`${API_BASE}/api/products/batch`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            productIds: Array.from(selectedProducts),
+            productGroup: groupName
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`Successfully merged ${data.modifiedCount} products into group "${groupName}"`);
+          // Reset merge mode
+          mergeMode = false;
+          selectedProducts.clear();
+          document.getElementById('startMergeBtn').style.display = 'block';
+          document.getElementById('mergeControls').style.display = 'none';
+          document.getElementById('groupNameInput').value = '';
+          // Reload products
+          document.getElementById('loadProductsBtn').click();
+        } else {
+          alert('Merge failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+        console.error('Merge error:', err);
       }
     });
 
