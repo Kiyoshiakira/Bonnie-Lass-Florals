@@ -404,11 +404,21 @@
 
       try {
         // Load all products to populate the product group datalist
-        const allProductsResponse = await fetch(`${API_BASE}/api/products?limit=1000`);
-        if (allProductsResponse.ok) {
-          const payload = await allProductsResponse.json();
-          const allProducts = Array.isArray(payload) ? payload : (payload.products || []);
-          populateProductGroupDatalist(allProducts);
+        // Note: This is a temporary solution. Consider creating a dedicated endpoint
+        // that returns only unique product groups for better performance.
+        try {
+          const allProductsResponse = await fetch(`${API_BASE}/api/products?limit=1000`);
+          if (allProductsResponse.ok) {
+            const payload = await allProductsResponse.json();
+            const allProducts = Array.isArray(payload) ? payload : (payload.products || []);
+            populateProductGroupDatalist(allProducts);
+          } else {
+            // Log warning but don't fail the page load
+            console.warn('Failed to load product groups for autocomplete');
+          }
+        } catch (groupLoadErr) {
+          // Silently log error - product group autocomplete is optional functionality
+          console.warn('Error loading product groups for autocomplete:', groupLoadErr);
         }
         
         const response = await fetch(`${API_BASE}/api/products/${productId}`);
