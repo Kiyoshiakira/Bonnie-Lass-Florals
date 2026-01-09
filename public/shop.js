@@ -11,6 +11,9 @@ function showShopSection(type) {
     document.getElementById('shop-food').classList.add('active');
     document.getElementById('foodTab').classList.add('active');
   }
+  
+  // Save the current tab to URL hash for persistence across page reloads
+  window.location.hash = type;
 }
 
 // API Base URL constant
@@ -927,7 +930,15 @@ function initCarousels() {
 }
 
 // Initialize on DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => loadProducts());
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore tab state from URL hash on page load
+  const hash = window.location.hash.substring(1); // Remove the '#' character
+  if (hash === 'food' || hash === 'decor') {
+    showShopSection(hash);
+  }
+  
+  loadProducts();
+});
 
 // Function to toggle reviews display
 async function toggleReviews(productId) {
