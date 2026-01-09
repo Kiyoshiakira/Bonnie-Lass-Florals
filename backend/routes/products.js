@@ -570,4 +570,65 @@ router.delete('/:id', firebaseAdminAuth, adminMutationLimiter, async (req, res) 
   }
 });
 
+// Validation rules for batch product update (merge products into group)
+const batchUpdateValidation = [
+  body('productIds').isArray().withMessage('productIds must be an array'),
+  body('productIds.*').isMongoId().withMessage('Each productId must be a valid MongoDB ID'),
+  body('productGroup').isString().withMessage('productGroup must be a string'),
+  body('productGroup').trim().notEmpty().withMessage('productGroup cannot be empty')
+];
+
+// PATCH /api/products/batch - batch update products (admin only)
+// Used for merging multiple products into a product group
+router.patch('/batch', firebaseAdminAuth, adminMutationLimiter, batchUpdateValidation, async (req, res) => {
+  // Check validation results
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { productIds, productGroup } = req.body;
+
+    // Validate that we have products to update
+    if (!productIds || productIds.length === 0) {
+      return res.status(400).json({ error: 'No products selected for update' });
+    }
+
+    // Limit batch size to prevent abuse
+    if (productIds.length > 100) {
+      return res.status(400).json({ error: 'Cannot update more than 100 products at once' });
+    }
+
+    // Check if all products exist before attempting update
+    const existingProducts = await Product.find({ _id: { $in: productIds } });
+    
+    if (existingProducts.length === 0) {
+      return res.status(404).json({ error: 'No valid products found with the provided IDs' });
+    }
+
+    if (existingProducts.length < productIds.length) {
+      logger.warn(`Batch update: ${productIds.length - existingProducts.length} product IDs not found`);
+    }
+
+    // Update all products with the new productGroup
+    const updateResult = await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $set: { productGroup: productGroup.trim() } }
+    );
+
+    logger.info(`Batch updated ${updateResult.modifiedCount} products to group: ${productGroup}`);
+
+    res.json({
+      message: `Successfully updated ${updateResult.modifiedCount} products`,
+      modifiedCount: updateResult.modifiedCount,
+      requestedCount: productIds.length,
+      productGroup: productGroup.trim()
+    });
+  } catch (err) {
+    logger.error('PATCH /api/products/batch error', err);
+    res.status(500).json({ error: err.message || 'Failed to batch update products' });
+  }
+});
+
 module.exports = router;
