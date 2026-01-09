@@ -4,6 +4,11 @@ const logger = require('../utils/logger');
 const { isAdminEmail } = require('../config/admins');
 const admin = require('../utils/firebaseAdmin');
 
+// TODO: Migrate to @google/genai SDK for Gemini 3 support
+// Current SDK (@google/generative-ai) is deprecated and only supports up to Gemini 2.5
+// New SDK supports Gemini 3 Flash Preview and Gemini 3 Pro
+// Migration guide: https://cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview
+
 // Allowed fields for product updates
 const ALLOWED_UPDATE_FIELDS = [
   'name', 'description', 'price', 'type', 'subcategory', 
@@ -1186,8 +1191,10 @@ exports.sendMessage = async (req, res) => {
     // Check if user is admin
     const isAdmin = await checkIsAdmin(req);
     
-    // Get the generative model - Using Gemini 3 Flash Preview for latest capabilities
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    // Get the generative model - Using Gemini 2.5 Flash (latest stable model)
+    // Note: Gemini 3 Flash Preview requires the new @google/genai SDK (migration planned)
+    // Current SDK (@google/generative-ai 0.24.1) supports up to Gemini 2.5
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     // Generate system prompt with current product context and admin mode if applicable
     const systemPrompt = await generateSystemPrompt(isAdmin);
@@ -1225,7 +1232,36 @@ exports.sendMessage = async (req, res) => {
     });
     
     // Send message and get response
-    const result = await chat.sendMessage(message);
+    let result;
+    try {
+      result = await chat.sendMessage(message);
+    } catch (apiError) {
+      logger.error('Gemini API error:', {
+        error: apiError.message,
+        status: apiError.status || 'unknown',
+        details: apiError.details || 'none'
+      });
+      
+      // Handle specific API errors
+      if (apiError.message && apiError.message.includes('API_KEY_INVALID')) {
+        return res.status(500).json({ 
+          error: 'Chatbot configuration error. Please contact support.',
+          success: false
+        });
+      }
+      
+      if (apiError.message && apiError.message.includes('models/gemini-2.5-flash')) {
+        logger.error('Model not found error - gemini-2.5-flash may not be available');
+        return res.status(500).json({ 
+          error: 'The chatbot model is temporarily unavailable. Please try again later.',
+          success: false
+        });
+      }
+      
+      // Re-throw to be caught by outer catch
+      throw apiError;
+    }
+    
     const response = result.response;
     
     // Check if response was blocked or filtered
@@ -1376,7 +1412,7 @@ exports.getStatus = async (req, res) => {
     
     res.json({
       status: genAI ? 'active' : 'unavailable',
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.5-flash',
       configured: !!genAI,
       productCount,
       features: [
