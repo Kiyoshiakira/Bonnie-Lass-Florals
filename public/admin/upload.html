@@ -718,7 +718,7 @@
       if (mergeMode) {
         html += `<th style="text-align:center;padding:0.5rem;border-bottom:1px solid #eee;width:50px;">Select</th>`;
       }
-      html += `<th style="text-align:left;padding:0.5rem;border-bottom:1px solid #eee;">Name</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Price</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Stock</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Type</th>`;
+      html += `<th style="text-align:left;padding:0.5rem;border-bottom:1px solid #eee;">Name</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Price</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Stock</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Type</th><th style="padding:0.5rem;border-bottom:1px solid #eee;">Group</th>`;
       if (!mergeMode) {
         html += `<th style="padding:0.5rem;border-bottom:1px solid #eee;">Actions</th>`;
       }
@@ -736,6 +736,13 @@
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">$${(p.price || 0).toFixed ? (Number(p.price).toFixed(2)) : escapeHtml(String(p.price || ''))}</td>`;
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(String(p.stock || 0))}</td>`;
         html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">${escapeHtml(p.type || '')}</td>`;
+        html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">`;
+        if (p.productGroup && p.productGroup.trim()) {
+          html += `<span style="background:#6e33b7;color:#fff;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;white-space:nowrap;">📦 ${escapeHtml(p.productGroup)}</span>`;
+        } else {
+          html += `<span style="color:#999;font-size:0.85rem;">—</span>`;
+        }
+        html += `</td>`;
         if (!mergeMode) {
           html += `<td style="padding:0.5rem;border-bottom:1px solid #f5f5f5;">`;
           html += `<button data-id="${p._id}" class="edit-btn" style="margin-right:0.5rem;">Edit</button>`;
@@ -777,6 +784,11 @@
         html += `</div>`;
         html += `<div style="font-weight:700;margin-bottom:0.25rem;">${escapeHtml(p.name || '')}</div>`;
         html += `<div style="color:#666;margin-bottom:0.5rem;">$${(p.price || 0).toFixed ? Number(p.price).toFixed(2) : escapeHtml(String(p.price||''))}</div>`;
+        if (p.productGroup && p.productGroup.trim()) {
+          html += `<div style="margin-bottom:0.5rem;">`;
+          html += `<span style="background:#6e33b7;color:#fff;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;display:inline-block;">📦 ${escapeHtml(p.productGroup)}</span>`;
+          html += `</div>`;
+        }
         if (!mergeMode) {
           html += `<div style="display:flex;gap:0.5rem;">`;
           html += `<button data-id="${p._id}" class="edit-btn" style="flex:1;padding:0.5rem;background:#efefef;border-radius:4px;border:1px solid #ddd;">Edit</button>`;
