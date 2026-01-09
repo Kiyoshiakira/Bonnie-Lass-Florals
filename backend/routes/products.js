@@ -600,6 +600,17 @@ router.patch('/batch', firebaseAdminAuth, adminMutationLimiter, batchUpdateValid
       return res.status(400).json({ error: 'Cannot update more than 100 products at once' });
     }
 
+    // Check if all products exist before attempting update
+    const existingProducts = await Product.find({ _id: { $in: productIds } });
+    
+    if (existingProducts.length === 0) {
+      return res.status(404).json({ error: 'No valid products found with the provided IDs' });
+    }
+
+    if (existingProducts.length < productIds.length) {
+      logger.warn(`Batch update: ${productIds.length - existingProducts.length} product IDs not found`);
+    }
+
     // Update all products with the new productGroup
     const updateResult = await Product.updateMany(
       { _id: { $in: productIds } },
@@ -611,6 +622,7 @@ router.patch('/batch', firebaseAdminAuth, adminMutationLimiter, batchUpdateValid
     res.json({
       message: `Successfully updated ${updateResult.modifiedCount} products`,
       modifiedCount: updateResult.modifiedCount,
+      requestedCount: productIds.length,
       productGroup: productGroup.trim()
     });
   } catch (err) {
