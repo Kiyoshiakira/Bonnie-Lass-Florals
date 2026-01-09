@@ -1,13 +1,8 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 const Product = require('../models/Product');
 const logger = require('../utils/logger');
 const { isAdminEmail } = require('../config/admins');
 const admin = require('../utils/firebaseAdmin');
-
-// TODO: Migrate to @google/genai SDK for Gemini 3 support
-// Current SDK (@google/generative-ai) is deprecated and only supports up to Gemini 2.5
-// New SDK supports Gemini 3 Flash Preview and Gemini 3 Pro
-// Migration guide: https://cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview
 
 // Allowed fields for product updates
 const ALLOWED_UPDATE_FIELDS = [
@@ -20,16 +15,16 @@ const ALLOWED_UPDATE_FIELDS = [
 const MESSAGE_TRUNCATE_LENGTH = 100;
 const FINISH_REASON_SAFETY = 'SAFETY';
 
-// Initialize Gemini API
-// Require API key from environment variable
+// Initialize Gemini API with new @google/genai SDK
+// Supports Gemini 3 Flash Preview and other latest models
 let genAI = null;
 try {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     logger.warn('GEMINI_API_KEY environment variable is not set. Chatbot will not function.');
   } else {
-    genAI = new GoogleGenerativeAI(apiKey);
-    logger.info('Gemini AI initialized successfully');
+    genAI = new GoogleGenAI({ apiKey });
+    logger.info('Gemini AI initialized successfully with new SDK');
   }
 } catch (error) {
   logger.error('Failed to initialize Gemini AI:', error);
@@ -1191,10 +1186,11 @@ exports.sendMessage = async (req, res) => {
     // Check if user is admin
     const isAdmin = await checkIsAdmin(req);
     
-    // Get the generative model - Using Gemini 2.5 Flash (latest stable model)
-    // Note: Gemini 3 Flash Preview requires the new @google/genai SDK (migration planned)
-    // Current SDK (@google/generative-ai 0.24.1) supports up to Gemini 2.5
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Get the generative model - Using Gemini 3 Flash Preview
+    // Now available with @google/genai SDK v1.35.0+
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-3-flash-preview'
+    });
     
     // Generate system prompt with current product context and admin mode if applicable
     const systemPrompt = await generateSystemPrompt(isAdmin);
@@ -1250,8 +1246,8 @@ exports.sendMessage = async (req, res) => {
         });
       }
       
-      if (apiError.message && apiError.message.includes('models/gemini-2.5-flash')) {
-        logger.error('Model not found error - gemini-2.5-flash may not be available');
+      if (apiError.message && apiError.message.includes('models/gemini-3-flash-preview')) {
+        logger.error('Model not found error - gemini-3-flash-preview may not be available');
         return res.status(500).json({ 
           error: 'The chatbot model is temporarily unavailable. Please try again later.',
           success: false
@@ -1412,7 +1408,8 @@ exports.getStatus = async (req, res) => {
     
     res.json({
       status: genAI ? 'active' : 'unavailable',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
+      sdk: '@google/genai v1.35.0',
       configured: !!genAI,
       productCount,
       features: [
