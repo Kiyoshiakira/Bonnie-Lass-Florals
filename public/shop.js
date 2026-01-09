@@ -482,13 +482,25 @@ function productToCard(p) {
         >
           View Reviews
         </button>
-        ${isAdmin ? `<button 
-          class="edit-product-btn"
-          data-id="${escapeAttr(p._id)}"
-          onclick="openEditProductModal('${escapeAttr(p._id)}')"
-        >
-          Edit Product
-        </button>` : ''}
+        ${isAdmin ? `
+        <div class="admin-actions" style="margin-top:0.5rem;display:flex;gap:0.5rem;">
+          <button 
+            class="edit-product-btn"
+            data-id="${escapeAttr(p._id)}"
+            onclick="openEditProductModal('${escapeAttr(p._id)}')"
+            style="flex:1;background:linear-gradient(135deg,#6e33b7 0%,#5a2a96 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;"
+          >
+            Quick Edit
+          </button>
+          <button 
+            class="edit-product-page-btn"
+            onclick="window.location.href='/admin/edit-product.html?id=${escapeAttr(p._id)}'"
+            style="flex:1;background:linear-gradient(135deg,#9333ea 0%,#7e22ce 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;"
+            title="Open full edit page with advanced options"
+          >
+            Full Edit
+          </button>
+        </div>` : ''}
         <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
       </div>
     </div>
@@ -674,13 +686,25 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
         >
           View Reviews
         </button>
-        ${isAdmin ? `<button 
-          class="edit-product-btn"
-          data-id="${escapeAttr(product._id)}"
-          onclick="openEditProductModal('${escapeAttr(product._id)}')"
-        >
-          Edit Product
-        </button>` : ''}
+        ${isAdmin ? `
+        <div class="admin-actions" style="margin-top:0.5rem;display:flex;gap:0.5rem;">
+          <button 
+            class="edit-product-btn"
+            data-id="${escapeAttr(product._id)}"
+            onclick="openEditProductModal('${escapeAttr(product._id)}')"
+            style="flex:1;background:linear-gradient(135deg,#6e33b7 0%,#5a2a96 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;"
+          >
+            Quick Edit
+          </button>
+          <button 
+            class="edit-product-page-btn"
+            onclick="window.location.href='/admin/edit-product.html?id=${escapeAttr(product._id)}'"
+            style="flex:1;background:linear-gradient(135deg,#9333ea 0%,#7e22ce 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;"
+            title="Open full edit page with advanced options"
+          >
+            Full Edit
+          </button>
+        </div>` : ''}
         <div id="reviews-container-${escapeAttr(product._id)}" style="display:none;"></div>
       </div>
     </div>
