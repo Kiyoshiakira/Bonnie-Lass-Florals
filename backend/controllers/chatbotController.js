@@ -304,6 +304,36 @@ Use these commands to manage the store. I understand both formal command syntax 
     
     Return action: "remove_photos" with productName and imagesToRemove array (URLs or indices)
 
+12. MERGE PRODUCTS (Create Product Group)
+    Format: "merge products [product names or IDs] into group [group name]"
+    Natural language examples:
+    - "Merge [product1], [product2], and [product3] into a group called [group name]"
+    - "Group [products] together as [group name]"
+    - "Create a panel called [group name] with [products]"
+    - "Combine [products] into [group name] group"
+    
+    Return action: "merge_products" with productNames (array) or productIds (array) and groupName (string)
+    
+    Examples:
+    - "merge products BBQ Sauce, Hot Sauce, and Ketchup into group Sauces"
+    - "group Strawberry Jam, Blueberry Jam into Jams panel"
+    - "create a panel called Cookies with Chocolate Chip, Oatmeal Raisin"
+
+13. ADD TO GROUP (Add Items to Existing Panel)
+    Format: "add [product names or IDs] to group [group name]"
+    Natural language examples:
+    - "Add [product] to the [group name] panel"
+    - "Put [product] in the [group name] group"
+    - "Include [product] with the [group name] items"
+    - "Add [products] to existing [group name] panel"
+    
+    Return action: "add_to_group" with productNames (array) or productIds (array) and groupName (string)
+    
+    Examples:
+    - "add Mustard to the Sauces group"
+    - "add Peanut Butter Cookies to Cookies panel"
+    - "put Spring Wreath in the Seasonal Wreaths group"
+
 ADVANCED NATURAL LANGUAGE PROCESSING:
 When handling admin commands, I:
 1. Parse your natural language request with deep understanding of intent
@@ -340,7 +370,7 @@ SMART RESPONSE FORMAT:
 Smart field placement: I ALWAYS return JSON action blocks with this structure, populated from natural language:
 \`\`\`json
 {
-  "action": "create|update|delete|bulk_update|bulk_delete|search|stats|low_stock|out_of_stock|list_products|add_photos|remove_photos",
+  "action": "create|update|delete|bulk_update|bulk_delete|search|stats|low_stock|out_of_stock|list_products|add_photos|remove_photos|merge_products|add_to_group",
   "productData": { /* for create */ },
   "productId": "optional",
   "productName": "optional",
@@ -348,7 +378,10 @@ Smart field placement: I ALWAYS return JSON action blocks with this structure, p
   "criteria": { /* for bulk/search operations */ },
   "searchCriteria": { /* for search */ },
   "newImages": [ /* array of image URLs for add_photos */ ],
-  "imagesToRemove": [ /* array of image URLs or indices for remove_photos */ ]
+  "imagesToRemove": [ /* array of image URLs or indices for remove_photos */ ],
+  "productNames": [ /* array of product names for merge_products and add_to_group */ ],
+  "productIds": [ /* array of product IDs for merge_products and add_to_group */ ],
+  "groupName": "string /* group name for merge_products and add_to_group */"
 }
 \`\`\`
 
@@ -1021,6 +1054,104 @@ async function executeAdminAction(actionData) {
           product: productForRemoval,
           removedCount: removedCount,
           remainingPhotos: remainingImages.length
+        };
+      
+      case 'merge_products':
+        // Merge multiple products into a product group
+        const { productNames: mergeNames, productIds: mergeIds, groupName: mergeGroupName } = actionData;
+        
+        if (!mergeGroupName || typeof mergeGroupName !== 'string' || mergeGroupName.trim() === '') {
+          return { success: false, error: 'Group name is required and must be a non-empty string' };
+        }
+        
+        if ((!mergeNames || mergeNames.length === 0) && (!mergeIds || mergeIds.length === 0)) {
+          return { success: false, error: 'At least one product name or ID is required' };
+        }
+        
+        // Build query to find products by names or IDs
+        let mergeQuery = {};
+        if (mergeIds && mergeIds.length > 0) {
+          mergeQuery._id = { $in: mergeIds };
+        } else if (mergeNames && mergeNames.length > 0) {
+          // Create case-insensitive regex for each product name
+          const nameRegexes = mergeNames.map(name => {
+            // Escape special regex characters
+            const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`^${escapedName}$`, 'i');
+          });
+          mergeQuery.name = { $in: nameRegexes };
+        }
+        
+        // Find products to merge
+        const productsToMerge = await Product.find(mergeQuery);
+        
+        if (productsToMerge.length === 0) {
+          return { success: false, error: 'No products found with the provided names or IDs' };
+        }
+        
+        // Update all products with the group name
+        const mergeResult = await Product.updateMany(
+          { _id: { $in: productsToMerge.map(p => p._id) } },
+          { $set: { productGroup: mergeGroupName.trim() } }
+        );
+        
+        logger.info(`Merged ${mergeResult.modifiedCount} products into group: ${mergeGroupName}`);
+        
+        return {
+          success: true,
+          message: `Successfully merged ${mergeResult.modifiedCount} product(s) into group "${mergeGroupName.trim()}"`,
+          modifiedCount: mergeResult.modifiedCount,
+          groupName: mergeGroupName.trim(),
+          products: productsToMerge.map(p => ({ name: p.name, _id: p._id }))
+        };
+      
+      case 'add_to_group':
+        // Add products to an existing product group
+        const { productNames: addNames, productIds: addIds, groupName: addGroupName } = actionData;
+        
+        if (!addGroupName || typeof addGroupName !== 'string' || addGroupName.trim() === '') {
+          return { success: false, error: 'Group name is required and must be a non-empty string' };
+        }
+        
+        if ((!addNames || addNames.length === 0) && (!addIds || addIds.length === 0)) {
+          return { success: false, error: 'At least one product name or ID is required' };
+        }
+        
+        // Build query to find products by names or IDs
+        let addQuery = {};
+        if (addIds && addIds.length > 0) {
+          addQuery._id = { $in: addIds };
+        } else if (addNames && addNames.length > 0) {
+          // Create case-insensitive regex for each product name
+          const nameRegexes = addNames.map(name => {
+            // Escape special regex characters
+            const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`^${escapedName}$`, 'i');
+          });
+          addQuery.name = { $in: nameRegexes };
+        }
+        
+        // Find products to add
+        const productsToAdd = await Product.find(addQuery);
+        
+        if (productsToAdd.length === 0) {
+          return { success: false, error: 'No products found with the provided names or IDs' };
+        }
+        
+        // Update all products with the group name
+        const addResult = await Product.updateMany(
+          { _id: { $in: productsToAdd.map(p => p._id) } },
+          { $set: { productGroup: addGroupName.trim() } }
+        );
+        
+        logger.info(`Added ${addResult.modifiedCount} products to group: ${addGroupName}`);
+        
+        return {
+          success: true,
+          message: `Successfully added ${addResult.modifiedCount} product(s) to group "${addGroupName.trim()}"`,
+          modifiedCount: addResult.modifiedCount,
+          groupName: addGroupName.trim(),
+          products: productsToAdd.map(p => ({ name: p.name, _id: p._id }))
         };
       
       default:
