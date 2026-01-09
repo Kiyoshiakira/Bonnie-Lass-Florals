@@ -76,6 +76,11 @@ describe('Shop Tab Switching Logic (Unit Tests)', function() {
     
     // Simulate the showShopSection function logic
     function showShopSection(type) {
+      // Validate type parameter
+      if (type !== 'decor' && type !== 'food') {
+        return;
+      }
+      
       mockDocument.getElementById('shop-decor').classList.remove('active');
       mockDocument.getElementById('shop-food').classList.remove('active');
       mockDocument.getElementById('decorTab').classList.remove('active');
@@ -99,6 +104,53 @@ describe('Shop Tab Switching Logic (Unit Tests)', function() {
     // Test switching to decor
     showShopSection('decor');
     expect(mockWindow.location.hash).to.equal('decor');
+  });
+
+  it('should validate type parameter and reject invalid values', function() {
+    const mockWindow = {
+      location: {
+        hash: 'decor' // Set initial hash
+      }
+    };
+    
+    const mockDocument = {
+      getElementById: (_id) => ({
+        classList: {
+          remove: () => {},
+          add: () => {}
+        }
+      })
+    };
+    
+    function showShopSection(type) {
+      // Validate type parameter
+      if (type !== 'decor' && type !== 'food') {
+        return;
+      }
+      
+      mockDocument.getElementById('shop-decor').classList.remove('active');
+      mockDocument.getElementById('shop-food').classList.remove('active');
+      mockDocument.getElementById('decorTab').classList.remove('active');
+      mockDocument.getElementById('foodTab').classList.remove('active');
+      if (type === 'decor') {
+        mockDocument.getElementById('shop-decor').classList.add('active');
+        mockDocument.getElementById('decorTab').classList.add('active');
+      } else {
+        mockDocument.getElementById('shop-food').classList.add('active');
+        mockDocument.getElementById('foodTab').classList.add('active');
+      }
+      
+      mockWindow.location.hash = type;
+    }
+    
+    // Test with invalid type
+    showShopSection('invalid');
+    // Hash should remain unchanged
+    expect(mockWindow.location.hash).to.equal('decor');
+    
+    // Test with valid type to ensure it still works
+    showShopSection('food');
+    expect(mockWindow.location.hash).to.equal('food');
   });
 
   it('should restore tab from URL hash', function() {

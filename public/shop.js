@@ -1,5 +1,11 @@
 // Handles tab switching between Handmade Crafts and Cottage Foods
 function showShopSection(type) {
+  // Validate type parameter
+  if (type !== 'decor' && type !== 'food') {
+    console.warn('Invalid shop section type:', type);
+    return;
+  }
+  
   document.getElementById('shop-decor').classList.remove('active');
   document.getElementById('shop-food').classList.remove('active');
   document.getElementById('decorTab').classList.remove('active');
