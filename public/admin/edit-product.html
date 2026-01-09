@@ -262,6 +262,13 @@
             <input type="text" id="options" name="options" placeholder="e.g., Red, Blue, Large, Small" data-history="product_options">
             <div class="help-text">Enter different variants or options available for this product</div>
           </div>
+          
+          <div class="form-full">
+            <label for="productGroup">Product Group (Optional)</label>
+            <input type="text" id="productGroup" name="productGroup" list="productGroupList" placeholder="e.g., Sauces, Jams, Wreaths" data-history="product_group">
+            <datalist id="productGroupList"></datalist>
+            <div class="help-text">Group similar products together (e.g., different sauce flavors). Leave blank for standalone product.</div>
+          </div>
         </div>
       </section>
 
@@ -396,6 +403,14 @@
       }
 
       try {
+        // Load all products to populate the product group datalist
+        const allProductsResponse = await fetch(`${API_BASE}/api/products?limit=1000`);
+        if (allProductsResponse.ok) {
+          const payload = await allProductsResponse.json();
+          const allProducts = Array.isArray(payload) ? payload : (payload.products || []);
+          populateProductGroupDatalist(allProducts);
+        }
+        
         const response = await fetch(`${API_BASE}/api/products/${productId}`);
         
         if (!response.ok) {
@@ -415,6 +430,28 @@
         document.getElementById('loadingMessage').style.display = 'none';
       }
     }
+    
+    // Populate product group datalist with unique values from all products
+    function populateProductGroupDatalist(products) {
+      const productGroupList = document.getElementById('productGroupList');
+      const productGroups = new Set();
+      
+      products.forEach(p => {
+        if (p.productGroup && p.productGroup.trim()) {
+          productGroups.add(p.productGroup.trim());
+        }
+      });
+      
+      // Clear existing options
+      productGroupList.innerHTML = '';
+      
+      // Add product groups in alphabetical order
+      Array.from(productGroups).sort().forEach(group => {
+        const option = document.createElement('option');
+        option.value = group;
+        productGroupList.appendChild(option);
+      });
+    }
 
     // Populate form with product data
     function populateForm(product) {
@@ -431,6 +468,7 @@
       document.getElementById('options').value = (product.options && product.options.join) 
         ? product.options.join(',') 
         : (product.options || '');
+      document.getElementById('productGroup').value = product.productGroup || '';
       
       // Extended details
       const details = product.extendedDetails || {};
@@ -598,6 +636,7 @@
           subcategory: document.getElementById('subcategory').value,
           stock: document.getElementById('stock').value,
           options: document.getElementById('options').value,
+          productGroup: document.getElementById('productGroup').value.trim() || '',
           images: imageUrls,
           extendedDetails: {
             ingredients: document.getElementById('ingredients').value || '',

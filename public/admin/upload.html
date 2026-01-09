@@ -133,6 +133,11 @@
         <label for="options">Options (comma-separated)</label>
         <input type="text" id="options" name="options" data-history="product_options">
 
+        <label for="productGroup">Product Group (Optional)</label>
+        <input type="text" id="productGroup" name="productGroup" list="productGroupList" placeholder="e.g., Sauces, Jams, Wreaths" data-history="product_group">
+        <datalist id="productGroupList"></datalist>
+        <p style="margin:0.25rem 0 0 0;color:#6b7280;font-size:0.85rem;">Group similar products together (e.g., different sauce flavors). Leave blank for standalone product.</p>
+
         <!-- Extended Details Section -->
         <div style="margin-top:1.5rem;padding:1rem;background:#f9fafb;border-radius:8px;border:2px solid #e5e7eb;">
           <h3 style="margin:0 0 1rem 0;color:#4b2f6f;font-size:1.1rem;">Extended Details (Optional)</h3>
@@ -449,6 +454,7 @@
           stock: form.stock.value || 1,
           options: form.options.value || '',
           images: imageUrls, // Send all images
+          productGroup: form.productGroup.value.trim() || '',
           extendedDetails: {
             ingredients: form.ingredients.value || '',
             allergens: form.allergens.value || '',
@@ -624,6 +630,9 @@
         // Populate subcategory filter with unique subcategories
         populateSubcategoryFilter();
         
+        // Populate product group datalist with unique product groups
+        populateProductGroupDatalist();
+        
         // Apply initial filters (will show all products)
         applyProductFilters();
       } catch (err) {
@@ -652,6 +661,28 @@
         option.value = subcat;
         option.textContent = subcat;
         subcategoryFilter.appendChild(option);
+      });
+    }
+
+    // Populate product group datalist with unique values from products
+    function populateProductGroupDatalist() {
+      const productGroupList = document.getElementById('productGroupList');
+      const productGroups = new Set();
+      
+      allProducts.forEach(p => {
+        if (p.productGroup && p.productGroup.trim()) {
+          productGroups.add(p.productGroup.trim());
+        }
+      });
+      
+      // Clear existing options
+      productGroupList.innerHTML = '';
+      
+      // Add product groups in alphabetical order
+      Array.from(productGroups).sort().forEach(group => {
+        const option = document.createElement('option');
+        option.value = group;
+        productGroupList.appendChild(option);
       });
     }
 
