@@ -631,4 +631,62 @@ router.patch('/batch', firebaseAdminAuth, adminMutationLimiter, batchUpdateValid
   }
 });
 
+// Validation rules for batch product unmerge (remove products from group)
+const batchUnmergeValidation = [
+  body('productIds').isArray().withMessage('productIds must be an array'),
+  body('productIds.*').isMongoId().withMessage('Each productId must be a valid MongoDB ID')
+];
+
+// DELETE /api/products/batch/unmerge - batch unmerge products (admin only)
+// Used for removing multiple products from their product groups
+router.delete('/batch/unmerge', firebaseAdminAuth, adminMutationLimiter, batchUnmergeValidation, async (req, res) => {
+  // Check validation results
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { productIds } = req.body;
+
+    // Validate that we have products to update
+    if (!productIds || productIds.length === 0) {
+      return res.status(400).json({ error: 'No products selected for unmerge' });
+    }
+
+    // Limit batch size to prevent abuse
+    if (productIds.length > 100) {
+      return res.status(400).json({ error: 'Cannot unmerge more than 100 products at once' });
+    }
+
+    // Check if all products exist before attempting update
+    const existingProducts = await Product.find({ _id: { $in: productIds } });
+    
+    if (existingProducts.length === 0) {
+      return res.status(404).json({ error: 'No valid products found with the provided IDs' });
+    }
+
+    if (existingProducts.length < productIds.length) {
+      logger.warn(`Batch unmerge: ${productIds.length - existingProducts.length} product IDs not found`);
+    }
+
+    // Remove productGroup from all products (set to empty string)
+    const updateResult = await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $set: { productGroup: '' } }
+    );
+
+    logger.info(`Batch unmerged ${updateResult.modifiedCount} products from their groups`);
+
+    res.json({
+      message: `Successfully unmerged ${updateResult.modifiedCount} products`,
+      modifiedCount: updateResult.modifiedCount,
+      requestedCount: productIds.length
+    });
+  } catch (err) {
+    logger.error('DELETE /api/products/batch/unmerge error', err);
+    res.status(500).json({ error: err.message || 'Failed to batch unmerge products' });
+  }
+});
+
 module.exports = router;

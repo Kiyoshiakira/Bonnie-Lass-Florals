@@ -215,9 +215,10 @@
           <span id="selectedCount" style="font-size:0.9rem;color:#666;font-weight:600;">0 selected</span>
           <input type="text" id="groupNameInput" placeholder="Enter group name (e.g., Sauces)" style="padding:0.5rem;border-radius:6px;border:1px solid #ddd;min-width:200px;">
           <button id="mergeProductsBtn" style="background:#10b981;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;">Merge Selected</button>
+          <button id="unmergeProductsBtn" style="background:#f59e0b;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;">Unmerge Selected</button>
           <button id="cancelMergeBtn" style="background:#ef4444;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;">Cancel</button>
         </div>
-        <button id="startMergeBtn" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;margin-left:auto;">Merge Products</button>
+        <button id="startMergeBtn" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;margin-left:auto;">Manage Groups</button>
       </div>
 
       <!-- Filter controls -->
@@ -976,6 +977,57 @@
       } catch (err) {
         alert('Error: ' + err.message);
         console.error('Merge error:', err);
+      }
+    });
+
+    // Unmerge selected products
+    document.getElementById('unmergeProductsBtn').addEventListener('click', async function() {
+      if (selectedProducts.size === 0) {
+        alert('Please select at least one product to unmerge');
+        return;
+      }
+
+      if (!confirm(`Unmerge ${selectedProducts.size} products from their groups?`)) {
+        return;
+      }
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          alert('Please login first');
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const res = await fetch(`${API_BASE}/api/products/batch/unmerge`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            productIds: Array.from(selectedProducts)
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`Successfully unmerged ${data.modifiedCount} products from their groups`);
+          // Reset merge mode
+          mergeMode = false;
+          selectedProducts.clear();
+          document.getElementById('startMergeBtn').style.display = 'block';
+          document.getElementById('mergeControls').style.display = 'none';
+          document.getElementById('groupNameInput').value = '';
+          // Reload products
+          document.getElementById('loadProductsBtn').click();
+        } else {
+          alert('Unmerge failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+        console.error('Unmerge error:', err);
       }
     });
 
