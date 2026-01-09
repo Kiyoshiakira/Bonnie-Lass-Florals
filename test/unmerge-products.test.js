@@ -106,9 +106,9 @@ describe('Unmerge Products Feature', function() {
     });
     
     it('should format unmerge confirmation text', function() {
-      const formatConfirm = (count) => `Unmerge ${count} products from their groups?`;
+      const formatConfirm = (count) => `Unmerge ${count} ${count === 1 ? 'product' : 'products'} from ${count === 1 ? 'its' : 'their'} group${count === 1 ? '' : 's'}?`;
       
-      expect(formatConfirm(1)).to.equal('Unmerge 1 products from their groups?');
+      expect(formatConfirm(1)).to.equal('Unmerge 1 product from its group?');
       expect(formatConfirm(5)).to.equal('Unmerge 5 products from their groups?');
     });
   });

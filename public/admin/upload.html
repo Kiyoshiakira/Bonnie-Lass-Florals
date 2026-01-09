@@ -935,7 +935,9 @@
         return;
       }
 
-      if (!confirm(`Merge ${selectedProducts.size} products into group "${groupName}"?`)) {
+      const count = selectedProducts.size;
+      const productText = count === 1 ? 'product' : 'products';
+      if (!confirm(`Merge ${count} ${productText} into group "${groupName}"?`)) {
         return;
       }
 
@@ -987,7 +989,10 @@
         return;
       }
 
-      if (!confirm(`Unmerge ${selectedProducts.size} products from their groups?`)) {
+      const count = selectedProducts.size;
+      const productText = count === 1 ? 'product' : 'products';
+      const groupText = count === 1 ? 'its group' : 'their groups';
+      if (!confirm(`Unmerge ${count} ${productText} from ${groupText}?`)) {
         return;
       }
 
