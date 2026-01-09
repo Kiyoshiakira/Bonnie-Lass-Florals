@@ -14,6 +14,7 @@ const productSchema = new mongoose.Schema({
   options: [String], // e.g., ["Small", "Medium", "Large"]
   collection: String, // e.g., 'christmas', 'halloween', 'easter', etc.
   occasion: String, // e.g., 'birthday', 'wedding', 'anniversary', etc.
+  productGroup: String, // Optional: Group multiple related products together (e.g., "Sauces", "Jams")
   // Extended details fields for additional product information
   extendedDetails: {
     ingredients: String, // For food items - list of ingredients
