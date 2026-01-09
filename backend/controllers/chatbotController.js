@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 const Product = require('../models/Product');
 const logger = require('../utils/logger');
 const { isAdminEmail } = require('../config/admins');
@@ -14,17 +14,18 @@ const ALLOWED_UPDATE_FIELDS = [
 // Constants for Gemini response handling
 const MESSAGE_TRUNCATE_LENGTH = 100;
 const FINISH_REASON_SAFETY = 'SAFETY';
+const GEMINI_MODEL = 'gemini-3-flash-preview'; // Current model in use
 
-// Initialize Gemini API
-// Require API key from environment variable
+// Initialize Gemini API with new @google/genai SDK
+// Supports Gemini 3 Flash Preview and other latest models
 let genAI = null;
 try {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     logger.warn('GEMINI_API_KEY environment variable is not set. Chatbot will not function.');
   } else {
-    genAI = new GoogleGenerativeAI(apiKey);
-    logger.info('Gemini AI initialized successfully');
+    genAI = new GoogleGenAI({ apiKey });
+    logger.info('Gemini AI initialized successfully with new SDK');
   }
 } catch (error) {
   logger.error('Failed to initialize Gemini AI:', error);
@@ -1186,8 +1187,10 @@ exports.sendMessage = async (req, res) => {
     // Check if user is admin
     const isAdmin = await checkIsAdmin(req);
     
-    // Get the generative model - Using Gemini 3 Flash Preview for latest capabilities
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    // Get the generative model - Using Gemini 3 Flash Preview
+    const model = genAI.getGenerativeModel({ 
+      model: GEMINI_MODEL
+    });
     
     // Generate system prompt with current product context and admin mode if applicable
     const systemPrompt = await generateSystemPrompt(isAdmin);
@@ -1225,7 +1228,36 @@ exports.sendMessage = async (req, res) => {
     });
     
     // Send message and get response
-    const result = await chat.sendMessage(message);
+    let result;
+    try {
+      result = await chat.sendMessage(message);
+    } catch (apiError) {
+      logger.error('Gemini API error:', {
+        error: apiError.message,
+        status: apiError.status || 'unknown',
+        details: apiError.details || 'none'
+      });
+      
+      // Handle specific API errors
+      if (apiError.message && apiError.message.includes('API_KEY_INVALID')) {
+        return res.status(500).json({ 
+          error: 'Chatbot configuration error. Please contact support.',
+          success: false
+        });
+      }
+      
+      if (apiError.message && apiError.message.includes(`models/${GEMINI_MODEL}`)) {
+        logger.error(`Model not found error - ${GEMINI_MODEL} may not be available`);
+        return res.status(500).json({ 
+          error: 'The chatbot model is temporarily unavailable. Please try again later.',
+          success: false
+        });
+      }
+      
+      // Re-throw to be caught by outer catch
+      throw apiError;
+    }
+    
     const response = result.response;
     
     // Check if response was blocked or filtered
@@ -1376,7 +1408,8 @@ exports.getStatus = async (req, res) => {
     
     res.json({
       status: genAI ? 'active' : 'unavailable',
-      model: 'gemini-3-flash-preview',
+      model: GEMINI_MODEL,
+      sdk: '@google/genai',
       configured: !!genAI,
       productCount,
       features: [

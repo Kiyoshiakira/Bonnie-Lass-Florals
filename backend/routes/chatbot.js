@@ -5,13 +5,17 @@ const { body, validationResult } = require('express-validator');
 const chatbotController = require('../controllers/chatbotController');
 const logger = require('../utils/logger');
 
-// Rate limiter for chatbot endpoints (20 requests per minute to prevent abuse)
+// Rate limiter for chatbot endpoints (60 requests per minute with better user experience)
 const chatbotLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 20,
+  max: 60, // Increased from 20 to 60 to allow more requests
   message: { error: 'Too many chatbot requests. Please wait a moment and try again.' },
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip failed requests (don't count them against the limit)
+  skipFailedRequests: true,
+  // Skip successful requests (only count failed ones)
+  skipSuccessfulRequests: false,
 });
 
 /**
