@@ -21,7 +21,7 @@ function fileExists(filename) {
   try {
     const fullPath = path.join(UPLOAD_DIR, filename);
     return fs.existsSync(fullPath);
-  } catch (err) {
+  } catch (_err) {
     return false;
   }
 }

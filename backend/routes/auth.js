@@ -11,7 +11,7 @@ router.post('/signup', async (req, res) => {
     const user = new User({ email, password: hashedPassword, name });
     await user.save();
     res.status(201).json({ message: 'User created!' });
-  } catch (err) {
+  } catch (_err) {
     res.status(400).json({ error: 'Email already exists or invalid details.' });
   }
 });

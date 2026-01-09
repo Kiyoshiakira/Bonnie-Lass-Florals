@@ -103,10 +103,10 @@ describe('Chatbot Integration Tests', function() {
   });
 
   describe('Dependencies', function() {
-    it('should have @google/generative-ai package in package.json', function() {
+    it('should have @google/genai package in package.json', function() {
       const packagePath = path.join(__dirname, '..', 'package.json');
       const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-      expect(packageJson.dependencies).to.have.property('@google/generative-ai');
+      expect(packageJson.dependencies).to.have.property('@google/genai');
     });
   });
 

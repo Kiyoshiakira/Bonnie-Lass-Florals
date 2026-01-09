@@ -9,7 +9,7 @@ const Product = require('../models/Product');
 const firebaseAdminAuth = require('../middleware/firebaseAdminAuth'); // admin-only middleware
 const { distance } = require('fastest-levenshtein');
 const logger = require('../utils/logger');
-const { normalizeImageUrl, normalizeProduct } = require('../utils/media');
+const { normalizeProduct } = require('../utils/media');
 
 // Pagination constants
 const DEFAULT_LIMIT = 20;
@@ -82,7 +82,6 @@ function isDuplicateProduct(newProduct, existingProduct) {
   
   // Check for key differentiators (colors, sizes, types) in the name
   const colorWords = ['red', 'blue', 'green', 'yellow', 'pink', 'purple', 'orange', 'white', 'black', 'brown', 'tan', 'gray', 'grey'];
-  const sizeWords = ['small', 'medium', 'large', 'mini', 'tiny', 'huge', 'giant'];
   const name1Lower = newProduct.name.toLowerCase();
   const name2Lower = existingProduct.name.toLowerCase();
   

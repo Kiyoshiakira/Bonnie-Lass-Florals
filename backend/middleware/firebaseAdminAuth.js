@@ -21,7 +21,7 @@ module.exports = async function firebaseAdminAuth(req, res, next) {
     }
     req.user = decodedToken;
     next();
-  } catch (error) {
+  } catch (_error) {
     return res.status(401).json({ error: 'Invalid or expired token.' });
   }
 };
