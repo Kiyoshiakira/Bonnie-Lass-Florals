@@ -139,10 +139,73 @@ Comprehensive test suite added in `test/chatbot-merge-products.test.js`:
 - **Batch Update Endpoint**: Existing PATCH `/api/products/batch` API for direct updates
 - **Input History**: productGroup field supports autocomplete with history
 
+## Unmerge Products Feature
+
+The admin interface now supports unmerging products from their groups through the Upload Product page.
+
+### How to Use
+
+1. **Access Merge/Unmerge Mode**: Click the "Manage Groups" button in the Upload Product page
+2. **Select Products**: Check the boxes next to products you want to unmerge
+3. **Unmerge**: Click the "Unmerge Selected" button
+4. **Confirm**: Confirm the action in the dialog
+
+### Features
+
+- **Remove from Groups**: Unmerge products to remove them from their current product group
+- **Visual Feedback**: Products show their current group with a purple badge (📦 Group Name)
+- **No Group Name Required**: Unlike merge, unmerge doesn't require entering a group name
+- **Batch Operation**: Unmerge up to 100 products at once
+- **Clean State**: After unmerging, products have no group label and can be merged into any new group
+
+### API Endpoint
+
+**DELETE /api/products/batch/unmerge**
+- Removes products from their product groups
+- Sets `productGroup` to empty string
+- Requires authentication (admin only)
+- Request body:
+  ```json
+  {
+    "productIds": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+  }
+  ```
+- Response:
+  ```json
+  {
+    "message": "Successfully unmerged 2 products",
+    "modifiedCount": 2,
+    "requestedCount": 2
+  }
+  ```
+
+### Workflow Examples
+
+#### Example 1: Unmerge and Remerge
+1. Products are in "Sauces" group
+2. Unmerge them → products have no group
+3. Merge them into "Condiments" group → products now in new group
+
+#### Example 2: Reorganize Groups
+1. Mix of products in "Sauces" and "Jams" groups
+2. Select all from "Sauces"
+3. Unmerge them
+4. Merge them with "Jams" products into new "Spreads" group
+
+### Testing
+
+Comprehensive test suite added in `test/unmerge-products.test.js`:
+- 17 tests covering all aspects of the unmerge feature
+- Validates API request/response structure
+- Tests frontend selection and UI logic
+- Verifies backend unmerge operation
+- Tests merge → unmerge → remerge workflow
+- All tests passing ✓
+
 ## Future Enhancements
 
 Possible improvements:
 - List all existing product groups
-- Remove products from groups
 - Rename product groups
 - View all products in a specific group
+- Bulk move products between groups
