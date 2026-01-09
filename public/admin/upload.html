@@ -215,6 +215,30 @@
         <button id="startMergeBtn" style="background:#6e33b7;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;font-weight:600;margin-left:auto;">Merge Products</button>
       </div>
 
+      <!-- Filter controls -->
+      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;background:#f8fafc;padding:1rem;border-radius:8px;">
+        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+          <label for="productTypeFilter" style="font-size:0.85rem;color:#666;font-weight:600;margin:0;">Product Type:</label>
+          <select id="productTypeFilter" style="padding:0.5rem;border-radius:6px;border:1px solid #ddd;font-size:0.9rem;">
+            <option value="all">All Products</option>
+            <option value="decor">Handmade Crafts</option>
+            <option value="food">Cottage Food</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+          <label for="subcategoryFilter" style="font-size:0.85rem;color:#666;font-weight:600;margin:0;">Subcategory:</label>
+          <select id="subcategoryFilter" style="padding:0.5rem;border-radius:6px;border:1px solid #ddd;font-size:0.9rem;">
+            <option value="all">All Subcategories</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+          <label for="searchFilter" style="font-size:0.85rem;color:#666;font-weight:600;margin:0;">Search:</label>
+          <input type="text" id="searchFilter" placeholder="Search products..." style="padding:0.5rem;border-radius:6px;border:1px solid #ddd;font-size:0.9rem;min-width:200px;">
+        </div>
+        <button id="clearFiltersBtn" style="background:#ef4444;color:#fff;padding:0.5rem 0.75rem;border-radius:8px;border:none;align-self:flex-end;">Clear Filters</button>
+        <div id="productCount" style="align-self:flex-end;margin-left:auto;font-size:0.9rem;color:#666;font-weight:600;"></div>
+      </div>
+
       <div id="products-list" style="min-height:120px;"></div>
     </section>
 
@@ -573,14 +597,15 @@
     // Load / Manage products
     // --------------------------
     let allProducts = [];
+    let filteredProducts = [];
     let currentView = 'line'; // 'line' or 'panel'
 
     document.getElementById('viewToggleBtn').addEventListener('click', function() {
       currentView = currentView === 'line' ? 'panel' : 'line';
       this.dataset.view = currentView;
       document.getElementById('viewToggleText').textContent = currentView === 'line' ? 'Panels' : 'Lines';
-      if (document.getElementById('products-list').innerHTML !== '') {
-        document.getElementById('loadProductsBtn').click();
+      if (allProducts.length > 0) {
+        applyProductFilters();
       }
     });
 
@@ -588,18 +613,103 @@
       const list = document.getElementById('products-list');
       list.innerHTML = '<p>Loading products...</p>';
       try {
-        const res = await fetch(`${API_BASE}/api/products`);
+        // Fetch all products with a high limit to ensure we get everything
+        const res = await fetch(`${API_BASE}/api/products?limit=1000`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const payload = await res.json();
         // Normalize response: accept either array (legacy) or object with products array
         const products = Array.isArray(payload) ? payload : (payload.products || []);
         allProducts = products;
-        if (currentView === 'line') renderLineView(allProducts);
-        else renderPanelView(allProducts);
+        
+        // Populate subcategory filter with unique subcategories
+        populateSubcategoryFilter();
+        
+        // Apply initial filters (will show all products)
+        applyProductFilters();
       } catch (err) {
         console.error('Error loading products:', err);
         document.getElementById('products-list').innerHTML = '<div style="color:#ef4444;padding:1rem;">Failed to load products. Please try again later.</div>';
       }
+    });
+
+    // Populate subcategory filter dropdown with unique values from products
+    function populateSubcategoryFilter() {
+      const subcategoryFilter = document.getElementById('subcategoryFilter');
+      const subcategories = new Set();
+      
+      allProducts.forEach(p => {
+        if (p.subcategory && p.subcategory.trim()) {
+          subcategories.add(p.subcategory.trim());
+        }
+      });
+      
+      // Clear existing options except "All Subcategories"
+      subcategoryFilter.innerHTML = '<option value="all">All Subcategories</option>';
+      
+      // Add subcategories in alphabetical order
+      Array.from(subcategories).sort().forEach(subcat => {
+        const option = document.createElement('option');
+        option.value = subcat;
+        option.textContent = subcat;
+        subcategoryFilter.appendChild(option);
+      });
+    }
+
+    // Apply filters to products
+    function applyProductFilters() {
+      const typeFilter = document.getElementById('productTypeFilter').value;
+      const subcategoryFilter = document.getElementById('subcategoryFilter').value;
+      const searchFilter = document.getElementById('searchFilter').value.toLowerCase().trim();
+      
+      // Filter products based on selected criteria
+      filteredProducts = allProducts.filter(p => {
+        // Type filter
+        if (typeFilter !== 'all' && p.type !== typeFilter) {
+          return false;
+        }
+        
+        // Subcategory filter
+        if (subcategoryFilter !== 'all' && p.subcategory !== subcategoryFilter) {
+          return false;
+        }
+        
+        // Search filter (search in name, description, subcategory)
+        if (searchFilter) {
+          const searchText = [
+            p.name || '',
+            p.description || '',
+            p.subcategory || '',
+            p.productGroup || ''
+          ].join(' ').toLowerCase();
+          
+          if (!searchText.includes(searchFilter)) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+      // Update product count display
+      const productCount = document.getElementById('productCount');
+      productCount.textContent = `Showing ${filteredProducts.length} of ${allProducts.length} products`;
+      
+      // Render filtered products
+      if (currentView === 'line') renderLineView(filteredProducts);
+      else renderPanelView(filteredProducts);
+    }
+
+    // Event listeners for filters
+    document.getElementById('productTypeFilter').addEventListener('change', applyProductFilters);
+    document.getElementById('subcategoryFilter').addEventListener('change', applyProductFilters);
+    document.getElementById('searchFilter').addEventListener('input', applyProductFilters);
+    
+    // Clear filters button
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+      document.getElementById('productTypeFilter').value = 'all';
+      document.getElementById('subcategoryFilter').value = 'all';
+      document.getElementById('searchFilter').value = '';
+      applyProductFilters();
     });
 
     function renderLineView(products) {
@@ -732,9 +842,9 @@
       document.getElementById('mergeControls').style.display = 'flex';
       updateSelectedCount();
       // Re-render products list with checkboxes
-      if (allProducts.length > 0) {
-        if (currentView === 'line') renderLineView(allProducts);
-        else renderPanelView(allProducts);
+      if (filteredProducts.length > 0) {
+        if (currentView === 'line') renderLineView(filteredProducts);
+        else renderPanelView(filteredProducts);
       }
     });
 
@@ -746,9 +856,9 @@
       document.getElementById('mergeControls').style.display = 'none';
       document.getElementById('groupNameInput').value = '';
       // Re-render products list without checkboxes
-      if (allProducts.length > 0) {
-        if (currentView === 'line') renderLineView(allProducts);
-        else renderPanelView(allProducts);
+      if (filteredProducts.length > 0) {
+        if (currentView === 'line') renderLineView(filteredProducts);
+        else renderPanelView(filteredProducts);
       }
     });
 

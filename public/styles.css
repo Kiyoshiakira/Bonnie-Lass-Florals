@@ -1295,6 +1295,45 @@ footer a:hover {
   opacity: 0.6;
 }
 
+/* Admin Action Buttons - Quick Edit and Full Edit for admins */
+.admin-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-actions button {
+  flex: 1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 1em;
+  font-weight: 600;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-actions .edit-product-btn {
+  background: linear-gradient(135deg, #6e33b7 0%, #5a2a96 100%);
+}
+
+.admin-actions .edit-product-btn:hover {
+  background: linear-gradient(135deg, #5a2a96 0%, #4a2278 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(110, 51, 183, 0.3);
+}
+
+.admin-actions .edit-product-page-btn {
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+}
+
+.admin-actions .edit-product-page-btn:hover {
+  background: linear-gradient(135deg, #7e22ce 0%, #6b1ba6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(147, 51, 234, 0.3);
+}
+
 /* ============================================================================
    MULTI-PRODUCT PANEL - Group multiple products in one panel
    ============================================================================ */

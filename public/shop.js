@@ -482,13 +482,23 @@ function productToCard(p) {
         >
           View Reviews
         </button>
-        ${isAdmin ? `<button 
-          class="edit-product-btn"
-          data-id="${escapeAttr(p._id)}"
-          onclick="openEditProductModal('${escapeAttr(p._id)}')"
-        >
-          Edit Product
-        </button>` : ''}
+        ${isAdmin ? `
+        <div class="admin-actions">
+          <button 
+            class="edit-product-btn"
+            data-id="${escapeAttr(p._id)}"
+            onclick="openEditProductModal('${escapeAttr(p._id)}')"
+          >
+            Quick Edit
+          </button>
+          <button 
+            class="edit-product-page-btn"
+            onclick="window.location.href='/admin/edit-product.html?id=${escapeAttr(p._id)}'"
+            title="Open full edit page with advanced options"
+          >
+            Full Edit
+          </button>
+        </div>` : ''}
         <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
       </div>
     </div>
@@ -674,13 +684,23 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
         >
           View Reviews
         </button>
-        ${isAdmin ? `<button 
-          class="edit-product-btn"
-          data-id="${escapeAttr(product._id)}"
-          onclick="openEditProductModal('${escapeAttr(product._id)}')"
-        >
-          Edit Product
-        </button>` : ''}
+        ${isAdmin ? `
+        <div class="admin-actions">
+          <button 
+            class="edit-product-btn"
+            data-id="${escapeAttr(product._id)}"
+            onclick="openEditProductModal('${escapeAttr(product._id)}')"
+          >
+            Quick Edit
+          </button>
+          <button 
+            class="edit-product-page-btn"
+            onclick="window.location.href='/admin/edit-product.html?id=${escapeAttr(product._id)}'"
+            title="Open full edit page with advanced options"
+          >
+            Full Edit
+          </button>
+        </div>` : ''}
         <div id="reviews-container-${escapeAttr(product._id)}" style="display:none;"></div>
       </div>
     </div>
