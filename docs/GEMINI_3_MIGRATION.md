@@ -30,7 +30,7 @@ Update `package.json`:
 ```json
 {
   "dependencies": {
-    "@google/genai": "^1.27.0",
+    "@google/genai": "^1.35.0",
     // Remove: "@google/generative-ai": "^0.24.1"
   }
 }

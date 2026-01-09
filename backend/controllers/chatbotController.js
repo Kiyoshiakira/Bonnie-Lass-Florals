@@ -14,6 +14,7 @@ const ALLOWED_UPDATE_FIELDS = [
 // Constants for Gemini response handling
 const MESSAGE_TRUNCATE_LENGTH = 100;
 const FINISH_REASON_SAFETY = 'SAFETY';
+const GEMINI_MODEL = 'gemini-3-flash-preview'; // Current model in use
 
 // Initialize Gemini API with new @google/genai SDK
 // Supports Gemini 3 Flash Preview and other latest models
@@ -1187,9 +1188,8 @@ exports.sendMessage = async (req, res) => {
     const isAdmin = await checkIsAdmin(req);
     
     // Get the generative model - Using Gemini 3 Flash Preview
-    // Now available with @google/genai SDK v1.35.0+
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-3-flash-preview'
+      model: GEMINI_MODEL
     });
     
     // Generate system prompt with current product context and admin mode if applicable
@@ -1246,8 +1246,8 @@ exports.sendMessage = async (req, res) => {
         });
       }
       
-      if (apiError.message && apiError.message.includes('models/gemini-3-flash-preview')) {
-        logger.error('Model not found error - gemini-3-flash-preview may not be available');
+      if (apiError.message && apiError.message.includes(`models/${GEMINI_MODEL}`)) {
+        logger.error(`Model not found error - ${GEMINI_MODEL} may not be available`);
         return res.status(500).json({ 
           error: 'The chatbot model is temporarily unavailable. Please try again later.',
           success: false
@@ -1408,8 +1408,8 @@ exports.getStatus = async (req, res) => {
     
     res.json({
       status: genAI ? 'active' : 'unavailable',
-      model: 'gemini-3-flash-preview',
-      sdk: '@google/genai v1.35.0',
+      model: GEMINI_MODEL,
+      sdk: '@google/genai',
       configured: !!genAI,
       productCount,
       features: [
