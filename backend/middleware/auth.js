@@ -42,7 +42,7 @@ module.exports = async function (req, res, next) {
       req.session.user = user;
       
       return next();
-    } catch (error) {
+    } catch (_error) {
       return res.status(401).json({ error: "Invalid token" });
     }
   }

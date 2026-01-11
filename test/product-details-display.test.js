@@ -1,12 +1,8 @@
-const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 const { expect } = require('chai');
 
 describe('Product Details Display', function() {
-  let dom;
-  let window;
-  let document;
   let shopJs;
 
   before(function() {
@@ -56,7 +52,6 @@ describe('Product Details Display', function() {
     // Textarea fields should use 'None'
     const textareaFields = ['ingredients', 'nutritionalInfo', 'careInstructions', 'recipe', 'storageInstructions', 'additionalNotes'];
     textareaFields.forEach(field => {
-      const content = field.charAt(0).toUpperCase() + field.slice(1);
       expect(shopJs).to.include(`details.${field} || 'None'`, `Should use 'None' for ${field}`);
     });
     

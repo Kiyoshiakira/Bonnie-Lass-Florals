@@ -171,7 +171,7 @@ router.post('/background', firebaseAdminAuth, async (req, res) => {
     // Validate URL format (basic check)
     try {
       new URL(backgroundUrl);
-    } catch (err) {
+    } catch (_err) {
       return res.status(400).json({ 
         error: 'Invalid URL format.' 
       });
