@@ -22,6 +22,7 @@
 
         @media print {
             .no-print { display: none !important; }
+            .print-only { display: block !important; }
             body { 
                 background-color: white !important;
                 padding: 0 !important;
@@ -46,6 +47,15 @@
                 align-items: center;
                 border-radius: 12px !important;
             }
+            
+            /* Print styles for tally items */
+            .tally-item {
+                border: 2px solid #000 !important;
+                page-break-inside: avoid;
+            }
+            .checkbox-tally {
+                display: flex !important;
+            }
         }
         
         .tab-active { border-bottom: 4px solid #db2777; color: #9d174d; font-weight: 800; }
@@ -62,6 +72,144 @@
         }
         .sync-online { background: #dcfce7; color: #166534; }
         .sync-offline { background: #fee2e2; color: #991b1b; }
+        
+        /* Tally item styles */
+        .tally-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .tally-item-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        
+        .tally-options {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        
+        .tally-option {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .tally-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+        
+        .digital-tally {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .tally-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tally-btn-minus {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        
+        .tally-btn-minus:hover {
+            background: #e2e8f0;
+        }
+        
+        .tally-btn-plus {
+            background: #db2777;
+            color: white;
+        }
+        
+        .tally-btn-plus:hover {
+            background: #be185d;
+        }
+        
+        .tally-count {
+            font-size: 24px;
+            font-weight: 900;
+            color: #1e293b;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .checkbox-tally {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+        }
+        
+        .checkbox-box {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #94a3b8;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .checkbox-box:hover {
+            border-color: #db2777;
+        }
+        
+        .checkbox-box.checked {
+            background: #db2777;
+            border-color: #db2777;
+        }
+        
+        .checkbox-box.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            font-weight: 900;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            .checkbox-box {
+                width: 20px !important;
+                height: 20px !important;
+                border: 2px solid #000 !important;
+                border-radius: 2px !important;
+            }
+            .checkbox-box.checked {
+                background: white !important;
+                border: 2px solid #000 !important;
+            }
+            .checkbox-box.checked::after {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-8">
@@ -344,16 +492,30 @@
         function renderTally() {
             const container = document.getElementById('tally-container');
             container.innerHTML = categories.map(cat => `
-                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <h3 class="font-black text-[10px] uppercase tracking-widest text-slate-400 mb-6 border-b pb-4">${cat.name}</h3>
+                <div class="bg-slate-50 p-6 rounded-3xl border-2 border-slate-200">
+                    <h3 class="font-black text-xs uppercase tracking-widest text-slate-500 mb-6 border-b-2 border-slate-300 pb-4">${cat.name}</h3>
                     <div class="space-y-4">
                         ${cat.items.map(item => `
-                            <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50">
-                                <span class="font-bold text-slate-800 text-sm flex-1 pr-4">${item.name}</span>
-                                <div class="flex items-center gap-3">
-                                    <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold">-</button>
-                                    <span class="font-black text-slate-800 w-6 text-center">${item.sold}</span>
-                                    <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="w-8 h-8 rounded-full bg-pink-600 text-white font-bold">+</button>
+                            <div class="tally-item">
+                                <div class="tally-item-name">${item.name}</div>
+                                <div class="tally-options">
+                                    <div class="tally-option">
+                                        <div class="tally-label no-print">Digital Tally</div>
+                                        <div class="tally-label print-only">Current Count</div>
+                                        <div class="digital-tally">
+                                            <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="tally-btn tally-btn-minus no-print">−</button>
+                                            <span class="tally-count">${item.sold}</span>
+                                            <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="tally-btn tally-btn-plus no-print">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="tally-option">
+                                        <div class="tally-label">Print Tally (16 boxes)</div>
+                                        <div class="checkbox-tally">
+                                            ${Array.from({length: 16}, (_, i) => `
+                                                <div class="checkbox-box" onclick="toggleCheckbox(this)" data-cat="${cat.id}" data-item="${item.id}" data-index="${i}"></div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}
@@ -451,9 +613,13 @@
             customLabels.push({ name, price, type, id: "C-" + Date.now() });
             renderLabels();
         }
+        
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+        }
 
         window.onload = loadFromPB;
-        setInterval(loadFromPB, 10000); 
+        setInterval(loadFromPB, 10000);
     </script>
 </body>
 </html>
