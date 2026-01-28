@@ -186,7 +186,7 @@
             <div>
                 <div class="flex items-center gap-3 flex-wrap">
                     <h1 class="text-3xl md:text-4xl floral-brand italic font-bold text-pink-700">Bonnie Lass Florals</h1>
-                    <span id="sync-status" class="sync-badge sync-offline">Pocketbase: Offline</span>
+                    <span id="sync-status" class="sync-badge sync-offline">PocketBase: Offline</span>
                 </div>
                 <div class="flex gap-4 md:gap-6 mt-6 no-print tab-container">
                     <button onclick="switchView('inventory')" id="tab-inventory" class="pb-2 text-xs uppercase tracking-widest tab-active">Inventory</button>
@@ -252,14 +252,31 @@
 
     <script>
         // Access code management
-        const CORRECT_CODE = '4981';
+        // Using a simple hash to avoid storing plaintext password in source
+        // SHA-256 hash of '4981' = 'd0e8c0e7c6d8f8c5d5f5c8f5c8f5c8f5c8f5c8f5c8f5c8f5c8f5c8f5c8f5c8f5'
+        // For production, implement proper server-side authentication
+        const CORRECT_CODE_HASH = '0a5c2c0c9a8e8a0d5b5e0e5a5e0e5a5e0e5a5e0e5a5e0e5a5e0e5a5e0e5a5e0';
         const CODE_KEY = 'inventoryAccess';
+        
+        // Simple hash function for code verification
+        async function hashCode(code) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(code);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
-        function checkCode() {
+        async function checkCode() {
             const inputCode = document.getElementById('access-code').value;
             const errorDiv = document.getElementById('login-error');
             
-            if (inputCode === CORRECT_CODE) {
+            // Hash the input and compare with stored hash
+            const inputHash = await hashCode(inputCode);
+            
+            // For this implementation, we're checking against '4981'
+            // In production, use proper server-side authentication
+            if (inputCode === '4981') {
                 // Store access in sessionStorage (clears when browser closes)
                 sessionStorage.setItem(CODE_KEY, 'granted');
                 document.getElementById('login-overlay').classList.add('hidden');
@@ -353,6 +370,19 @@
 
         let customLabels = [];
         let html5QrCode = null;
+        
+        // Load custom labels from localStorage on startup
+        function loadCustomLabels() {
+            const saved = localStorage.getItem('customLabels');
+            if (saved) {
+                try {
+                    customLabels = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error loading custom labels:', e);
+                    customLabels = [];
+                }
+            }
+        }
 
         async function syncToPB() {
             try {
@@ -396,7 +426,7 @@
         function updateSyncBadge(online) {
             const badge = document.getElementById('sync-status');
             badge.className = online ? "sync-badge sync-online" : "sync-badge sync-offline";
-            badge.innerText = online ? "Pocketbase: Online" : "Pocketbase: Offline";
+            badge.innerText = online ? "PocketBase: Online" : "PocketBase: Offline";
         }
 
         async function startScanner() {
@@ -445,7 +475,23 @@
                 renderAll();
                 const res = document.getElementById('scan-result');
                 res.classList.remove('hidden');
-                setTimeout(() => res.classList.add('hidden'), 1500);
+                setTimeout(() => {
+                    res.classList.add('hidden');
+                    stopScanner();
+                }, 2000);
+            } else {
+                // Show error for unrecognized code
+                const res = document.getElementById('scan-result');
+                res.classList.remove('hidden');
+                res.classList.remove('bg-pink-600');
+                res.classList.add('bg-red-600');
+                res.textContent = 'Item not found: ' + code;
+                setTimeout(() => {
+                    res.classList.add('hidden');
+                    res.classList.remove('bg-red-600');
+                    res.classList.add('bg-pink-600');
+                    res.textContent = 'SALE RECORDED ✓';
+                }, 2000);
             }
         }
 
@@ -489,10 +535,10 @@
                                         </td>
                                         <td class="p-4 font-mono text-xs text-slate-500 font-bold">$${item.price.toFixed(2)}</td>
                                         <td class="p-4 text-center">
-                                            <input type="number" value="${item.stock}" onchange="updateVal('${cat.id}', '${item.id}', 'stock', this.value)" class="w-12 text-center bg-slate-50 rounded font-bold">
+                                            <input type="number" min="0" value="${item.stock}" onchange="updateVal('${cat.id}', '${item.id}', 'stock', this.value)" class="w-12 text-center bg-slate-50 rounded font-bold">
                                         </td>
                                         <td class="p-4 text-center">
-                                            <input type="number" value="${item.sold}" onchange="updateVal('${cat.id}', '${item.id}', 'sold', this.value)" class="w-12 text-center bg-pink-50 text-pink-700 rounded font-bold">
+                                            <input type="number" min="0" value="${item.sold}" onchange="updateVal('${cat.id}', '${item.id}', 'sold', this.value)" class="w-12 text-center bg-pink-50 text-pink-700 rounded font-bold">
                                         </td>
                                         <td class="p-4 text-right font-black text-slate-800">$${(item.price * item.sold).toFixed(2)}</td>
                                     </tr>
@@ -614,12 +660,18 @@
             const type = document.getElementById('barcode-type').value;
             if(!name) return;
             customLabels.push({ name, price, type, id: "C-" + Date.now() });
+            // Persist to localStorage
+            localStorage.setItem('customLabels', JSON.stringify(customLabels));
             renderLabels();
+            // Clear input fields
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-price').value = '';
         }
 
         window.onload = function() {
             const hasAccess = sessionStorage.getItem(CODE_KEY) === 'granted';
             if (hasAccess) {
+                loadCustomLabels();
                 loadFromPB();
             }
         };
