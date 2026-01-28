@@ -156,8 +156,8 @@
         if (window.firebase && firebase.auth) {
           await firebase.auth().signOut();
         }
-        if (profileDropdown) {
-          profileDropdown.style.display = "none";
+        if (profileCircleContainer) {
+          profileCircleContainer.classList.remove('active');
         }
         window.location.reload();
       };
