@@ -11,147 +11,14 @@
     <link rel="preload" href="../styles.css" as="style">
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="../auth.css">
+    <link rel="stylesheet" href="../inventory-tracker.css">
     <!-- Theme Loader - Load early to minimize FOUC -->
     <script src="../theme-loader.js"></script>
     <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/html5-qrcode" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;600;800&display=swap');
-        
-        body.inventory-tracker { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--floral-cream, #f1faee);
-        }
-        .floral-brand { font-family: 'Playfair Display', serif; }
 
-        /* Login Overlay */
-        #login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #login-overlay.hidden {
-            display: none;
-        }
-
-        .login-box {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-
-        .login-box h2 {
-            color: var(--floral-primary, #1b4332);
-            margin-bottom: 1rem;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 0.75rem;
-            margin: 1rem 0;
-            border: 2px solid var(--floral-green, #52b788);
-            border-radius: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .login-box button {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--floral-primary, #1b4332);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .login-box button:hover {
-            background: var(--floral-primary-2, #2d6a4f);
-        }
-
-        .login-error {
-            color: #d4692d;
-            margin-top: 0.5rem;
-        }
-
-        /* Modern Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        @media print {
-            .no-print { display: none !important; }
-            body { 
-                background-color: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                -webkit-print-color-adjust: exact;
-            }
-            .max-w-6xl { max-width: 100% !important; border: none !important; box-shadow: none !important; }
-            
-            .label-grid {
-                display: grid !important;
-                grid-template-columns: repeat(3, 1fr) !important;
-                gap: 15px !important;
-                padding: 10px !important;
-            }
-            .label-item {
-                border: 1px solid #ddd !important;
-                padding: 15px !important;
-                text-align: center;
-                page-break-inside: avoid;
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                border-radius: 12px !important;
-            }
-        }
-        
-        .tab-active { border-bottom: 4px solid #d946ef; color: #9d174d; font-weight: 800; }
-        .qr-container img { margin: 0 auto; border-radius: 10px; }
-
-        #scanner-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column;
-            align-items: center; justify-content: center; color: white;
-        }
-
-        .sync-badge {
-            font-size: 10px; padding: 4px 10px; border-radius: 99px; font-weight: 900; text-transform: uppercase;
-        }
-        .sync-online { background: #dcfce7; color: #166534; }
-        .sync-offline { background: #fee2e2; color: #991b1b; }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .max-w-6xl {
-                padding: 1rem !important;
-            }
-            header {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
-            .tab-container {
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-        }
-    </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-8 inventory-tracker">
 
