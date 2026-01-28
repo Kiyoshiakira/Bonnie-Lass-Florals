@@ -6,7 +6,6 @@ const { expect } = require('chai');
 describe('Inventory Tracker - Tally View', () => {
     let dom;
     let document;
-    let window;
     let cssContent;
 
     before(() => {
@@ -23,7 +22,6 @@ describe('Inventory Tracker - Tally View', () => {
         
         dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
         document = dom.window.document;
-        window = dom.window;
     });
 
     it('should have the Quick Tally view container', () => {
