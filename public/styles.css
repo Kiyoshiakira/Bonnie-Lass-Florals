@@ -2020,6 +2020,38 @@ footer a:hover {
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
   
+  /* Profile dropdown in mobile menu - adjusted to fit within menu width */
+  #profileDropdown {
+    position: static; /* Remove absolute positioning */
+    width: 100%; /* Full width of container */
+    min-width: auto; /* Remove min-width constraint */
+    margin-top: 0.5rem; /* Add some spacing */
+    box-shadow: none; /* Remove shadow for cleaner mobile look */
+    border: none; /* Remove border for seamless integration */
+    background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+    padding: 0.5em 0; /* Adjust padding */
+  }
+  
+  /* Profile dropdown links in mobile menu */
+  #profileDropdown a,
+  #profileDropdown button {
+    color: #f1faee; /* Light text for dark mobile menu background */
+    padding: 0.8em 1em;
+    border-radius: 0;
+  }
+  
+  #profileDropdown a:hover,
+  #profileDropdown button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffd700; /* Golden yellow on hover */
+  }
+  
+  #userInfoDropdown {
+    color: #f1faee; /* Light text */
+    background: rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
   /* Login button in mobile menu */
   #loginBtn {
     margin: 1rem auto;

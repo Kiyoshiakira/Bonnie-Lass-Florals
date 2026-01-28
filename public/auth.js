@@ -138,14 +138,14 @@
     if (profileCircle) {
       profileCircle.onclick = function(e) {
         e.stopPropagation();
-        profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block";
+        profileCircleContainer.classList.toggle('active');
       };
     }
 
     // Close dropdown when clicking outside
     document.body.onclick = () => {
-      if (profileDropdown) {
-        profileDropdown.style.display = "none";
+      if (profileCircleContainer) {
+        profileCircleContainer.classList.remove('active');
       }
     };
 
