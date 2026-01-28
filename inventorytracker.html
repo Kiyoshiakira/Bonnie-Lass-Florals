@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonnie Lass Florals | Inventory & Sales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;600;800&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        .floral-brand { font-family: 'Playfair Display', serif; }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { 
+                background-color: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+            }
+            .max-w-6xl { max-width: 100% !important; border: none !important; box-shadow: none !important; }
+            
+            .label-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 15px !important;
+                padding: 10px !important;
+            }
+            .label-item {
+                border: 1px solid #ddd !important;
+                padding: 15px !important;
+                text-align: center;
+                page-break-inside: avoid;
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                border-radius: 12px !important;
+            }
+        }
+        
+        .tab-active { border-bottom: 4px solid #db2777; color: #9d174d; font-weight: 800; }
+        .qr-container img { margin: 0 auto; border-radius: 10px; }
+
+        #scanner-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column;
+            align-items: center; justify-content: center; color: white;
+        }
+
+        .sync-badge {
+            font-size: 10px; padding: 4px 10px; border-radius: 99px; font-weight: 900; text-transform: uppercase;
+        }
+        .sync-online { background: #dcfce7; color: #166534; }
+        .sync-offline { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+
+    <!-- Scanner Overlay -->
+    <div id="scanner-modal" class="no-print p-4">
+        <div class="bg-white p-4 rounded-2xl w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-4 text-slate-800">
+                <h3 class="font-black uppercase text-sm">Scanner Active</h3>
+                <button onclick="stopScanner()" class="bg-slate-100 px-4 py-1 rounded-full text-xs font-bold uppercase">Cancel</button>
+            </div>
+            <div id="reader" class="rounded-xl overflow-hidden bg-black aspect-square"></div>
+            <div id="scan-result" class="mt-4 p-4 bg-pink-600 text-white font-bold text-center rounded-xl hidden animate-pulse">
+                SALE RECORDED
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b pb-8 gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-4xl floral-brand italic font-bold text-pink-700">Bonnie Lass Florals</h1>
+                    <span id="sync-status" class="sync-badge sync-offline">Pocketbase: Offline</span>
+                </div>
+                <div class="flex gap-6 mt-6 no-print">
+                    <button onclick="switchView('inventory')" id="tab-inventory" class="pb-2 text-xs uppercase tracking-widest tab-active">Inventory</button>
+                    <button onclick="switchView('sales')" id="tab-sales" class="pb-2 text-xs uppercase tracking-widest text-slate-400">Quick Tally</button>
+                    <button onclick="switchView('labels')" id="tab-labels" class="pb-2 text-xs uppercase tracking-widest text-slate-400">Label Maker</button>
+                </div>
+            </div>
+            <div class="flex flex-col items-end gap-3 no-print w-full md:w-auto">
+                <button onclick="startScanner()" class="w-full md:w-auto bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                    Scan Barcode
+                </button>
+                <button onclick="window.print()" class="w-full md:w-auto bg-pink-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-pink-700 transition">Print View</button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: MASTER INVENTORY -->
+        <div id="view-inventory" class="space-y-12">
+            <section>
+                <h2 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-widest">Executive Summary</h2>
+                <div class="overflow-hidden rounded-2xl border border-slate-200">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-900 text-white uppercase text-[10px] tracking-widest">
+                            <tr>
+                                <th class="p-4">Category</th>
+                                <th class="p-4 text-center">Items</th>
+                                <th class="p-4 text-center">Total Stock</th>
+                                <th class="p-4 text-center">Total Sold</th>
+                                <th class="p-4 text-right">Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-body" class="font-bold text-slate-700"></tbody>
+                    </table>
+                </div>
+            </section>
+            <div id="tables-container" class="space-y-12"></div>
+        </div>
+
+        <!-- VIEW 2: SALES TALLY -->
+        <div id="view-sales" class="hidden">
+            <div id="tally-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+        </div>
+
+        <!-- VIEW 3: LABEL MAKER -->
+        <div id="view-labels" class="hidden">
+            <div class="no-print bg-slate-50 p-8 rounded-3xl border border-slate-200 mb-8">
+                <h3 class="font-black mb-6 uppercase text-xs tracking-widest text-slate-500">Add Custom Label</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="custom-name" placeholder="Label Name" class="p-3 border rounded-xl outline-pink-200">
+                    <input type="number" id="custom-price" placeholder="Price ($)" class="p-3 border rounded-xl outline-pink-200">
+                    <select id="barcode-type" class="p-3 border rounded-xl bg-white">
+                        <option value="QR">Rounded QR (Website)</option>
+                        <option value="BAR">Standard Barcode</option>
+                    </select>
+                    <button onclick="addCustomLabel()" class="bg-pink-100 text-pink-700 font-bold rounded-xl p-3">Add To Sheet</button>
+                </div>
+            </div>
+            <div id="label-grid" class="label-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const PB_URL = 'http://127.0.0.1:8090';
+        const COLLECTION = 'inventory_data';
+        const RECORD_ID = 'inventoryrec001'; 
+
+        let categories = [
+            {
+                name: "1. Hot Sauces & Canned Sauces",
+                id: "hot-sauces",
+                items: [
+                    { name: "Taco Sauce", price: 6, id: "SAU-001", stock: 0, sold: 0 },
+                    { name: "Sassy Sauce", price: 6, id: "SAU-002", stock: 0, sold: 0 },
+                    { name: "Sunrise Heat", price: 6, id: "SAU-003", stock: 0, sold: 0 },
+                    { name: "Roasted Anaheim", price: 6, id: "SAU-004", stock: 0, sold: 0 },
+                    { name: "Hungarian Hawt", price: 6, id: "SAU-005", stock: 0, sold: 0 },
+                    { name: "Red Chili", price: 6, id: "SAU-006", stock: 0, sold: 0 },
+                    { name: "Pear Apple", price: 6, id: "SAU-007", stock: 0, sold: 0 },
+                    { name: "Pumpkinator", price: 6, id: "SAU-008", stock: 0, sold: 0 },
+                    { name: "Spring Fling", price: 6, id: "SAU-009", stock: 0, sold: 0 },
+                    { name: "Jersey Devil", price: 9, id: "SAU-010", stock: 0, sold: 0 },
+                    { name: "Pineapple", price: 9, id: "SAU-011", stock: 0, sold: 0 },
+                    { name: "Sic Semper Scorp.", price: 9, id: "SAU-012", stock: 0, sold: 0 },
+                    { name: "9 Pepper Purgatory", price: 9, id: "SAU-013", stock: 0, sold: 0 },
+                    { name: "OCD Favorite", price: 9, id: "SAU-014", stock: 0, sold: 0 }
+                ]
+            },
+            {
+                name: "2. Spreads, Jams & Bulk",
+                id: "spreads-jams",
+                items: [
+                    { name: "Red Tomato Jam", price: 4, id: "JAM-001", stock: 0, sold: 0 },
+                    { name: "Cayenne Pepper Jelly", price: 4, id: "JAM-002", stock: 0, sold: 0 },
+                    { name: "Pear Butter", price: 6, id: "JAM-003", stock: 0, sold: 0 },
+                    { name: "Thick Spaghetti Sauce", price: 12, id: "BULK-001", stock: 0, sold: 0 }
+                ]
+            },
+            {
+                name: "3. Pickles & Ferments (Pints)",
+                id: "pickles",
+                items: [
+                    { name: "Sauerkraut (Reg)", price: 6, id: "PCK-001", stock: 0, sold: 0 },
+                    { name: "Sauerkraut (Spicy)", price: 6, id: "PCK-002", stock: 0, sold: 0 },
+                    { name: "Dill Pickles", price: 6, id: "PCK-003", stock: 0, sold: 0 },
+                    { name: "Polish Dills", price: 6, id: "PCK-004", stock: 0, sold: 0 },
+                    { name: "Bread And Butter", price: 6, id: "PCK-005", stock: 0, sold: 0 },
+                    { name: "Spicy B&B", price: 6, id: "PCK-006", stock: 0, sold: 0 },
+                    { name: "Zesty B&B", price: 6, id: "PCK-007", stock: 0, sold: 0 },
+                    { name: "Hot Dills", price: 6, id: "PCK-008", stock: 0, sold: 0 }
+                ]
+            },
+            {
+                name: "4. Salts & Spices (Shakers)",
+                id: "salts",
+                items: [
+                    { name: "Vitamix", price: 5, id: "SALT-001", stock: 0, sold: 0 },
+                    { name: "Jalapeño Salt", price: 5, id: "SALT-002", stock: 0, sold: 0 },
+                    { name: "Anaheim Salt", price: 5, id: "SALT-003", stock: 0, sold: 0 },
+                    { name: "Ghost Pepper Salt", price: 7, id: "SALT-004", stock: 0, sold: 0 },
+                    { name: "Dill Seed", price: 5, id: "SALT-005", stock: 0, sold: 0 },
+                    { name: "Chives", price: 5, id: "SALT-006", stock: 0, sold: 0 },
+                    { name: "Fennel Seeds", price: 5, id: "SALT-007", stock: 0, sold: 0 }
+                ]
+            }
+        ];
+
+        let customLabels = [];
+        let html5QrCode = null;
+
+        async function syncToPB() {
+            try {
+                const response = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records/${RECORD_ID}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payload: JSON.stringify(categories) })
+                });
+                if (response.ok) updateSyncBadge(true);
+            } catch (e) { updateSyncBadge(false); }
+        }
+
+        async function loadFromPB() {
+            try {
+                const response = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records/${RECORD_ID}`);
+                if (response.ok) {
+                    const record = await response.json();
+                    if (record.payload) {
+                        categories = JSON.parse(record.payload);
+                        renderAll();
+                    }
+                    updateSyncBadge(true);
+                } else if (response.status === 404) {
+                    await fetch(`${PB_URL}/api/collections/${COLLECTION}/records`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: RECORD_ID, payload: JSON.stringify(categories) })
+                    });
+                }
+            } catch (e) { updateSyncBadge(false); }
+        }
+
+        function updateSyncBadge(online) {
+            const badge = document.getElementById('sync-status');
+            badge.className = online ? "sync-badge sync-online" : "sync-badge sync-offline";
+            badge.innerText = online ? "Pocketbase: Online" : "Pocketbase: Offline";
+        }
+
+        async function startScanner() {
+            document.getElementById('scanner-modal').style.display = 'flex';
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
+                handleScan(text);
+            });
+        }
+
+        async function stopScanner() {
+            if (html5QrCode) await html5QrCode.stop();
+            document.getElementById('scanner-modal').style.display = 'none';
+        }
+
+        function handleScan(code) {
+            let found = false;
+            categories.forEach(cat => {
+                cat.items.forEach(item => {
+                    if (item.id === code) {
+                        item.sold++;
+                        found = true;
+                    }
+                });
+            });
+            if (found) {
+                syncToPB();
+                renderAll();
+                const res = document.getElementById('scan-result');
+                res.classList.remove('hidden');
+                setTimeout(() => res.classList.add('hidden'), 1500);
+            }
+        }
+
+        function switchView(view) {
+            ['inventory', 'sales', 'labels'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+                document.getElementById(`tab-${v}`).className = v === view ? 'pb-2 text-xs uppercase tracking-widest tab-active' : 'pb-2 text-xs uppercase tracking-widest text-slate-400';
+            });
+            renderAll();
+        }
+
+        function renderAll() {
+            renderInventory();
+            renderTally();
+            renderSummary();
+            if (!document.getElementById('view-labels').classList.contains('hidden')) renderLabels();
+        }
+
+        function renderInventory() {
+            const container = document.getElementById('tables-container');
+            container.innerHTML = categories.map(cat => `
+                <section>
+                    <h2 class="text-xs font-black text-slate-500 mb-4 uppercase tracking-widest border-l-4 border-pink-500 pl-3">${cat.name}</h2>
+                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 uppercase text-[10px] font-black text-slate-400">
+                                <tr>
+                                    <th class="p-4">Product</th>
+                                    <th class="p-4 w-24">Price</th>
+                                    <th class="p-4 w-20 text-center">Stock</th>
+                                    <th class="p-4 w-20 text-center">Sold</th>
+                                    <th class="p-4 w-28 text-right">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${cat.items.map(item => `
+                                    <tr class="border-t border-slate-100 hover:bg-slate-50 transition">
+                                        <td class="p-4">
+                                            <div class="font-bold text-slate-800">${item.name}</div>
+                                            <div class="text-[10px] font-mono text-slate-400">${item.id}</div>
+                                        </td>
+                                        <td class="p-4 font-mono text-xs text-slate-500 font-bold">$${item.price.toFixed(2)}</td>
+                                        <td class="p-4 text-center">
+                                            <input type="number" value="${item.stock}" onchange="updateVal('${cat.id}', '${item.id}', 'stock', this.value)" class="w-12 text-center bg-slate-50 rounded font-bold">
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <input type="number" value="${item.sold}" onchange="updateVal('${cat.id}', '${item.id}', 'sold', this.value)" class="w-12 text-center bg-pink-50 text-pink-700 rounded font-bold">
+                                        </td>
+                                        <td class="p-4 text-right font-black text-slate-800">$${(item.price * item.sold).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            `).join('');
+        }
+
+        function renderTally() {
+            const container = document.getElementById('tally-container');
+            container.innerHTML = categories.map(cat => `
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <h3 class="font-black text-[10px] uppercase tracking-widest text-slate-400 mb-6 border-b pb-4">${cat.name}</h3>
+                    <div class="space-y-4">
+                        ${cat.items.map(item => `
+                            <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50">
+                                <span class="font-bold text-slate-800 text-sm flex-1 pr-4">${item.name}</span>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold">-</button>
+                                    <span class="font-black text-slate-800 w-6 text-center">${item.sold}</span>
+                                    <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="w-8 h-8 rounded-full bg-pink-600 text-white font-bold">+</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSummary() {
+            const body = document.getElementById('summary-body');
+            let totals = { items: 0, stock: 0, sold: 0, revenue: 0 };
+            
+            body.innerHTML = categories.map(cat => {
+                let catSum = { items: cat.items.length, stock: 0, sold: 0, rev: 0 };
+                cat.items.forEach(i => {
+                    catSum.stock += i.stock;
+                    catSum.sold += i.sold;
+                    catSum.rev += (i.price * i.sold);
+                });
+                totals.items += catSum.items; totals.stock += catSum.stock; totals.sold += catSum.sold; totals.revenue += catSum.rev;
+                
+                return `
+                    <tr class="border-t border-slate-100">
+                        <td class="p-4">${cat.name.split('. ')[1] || cat.name}</td>
+                        <td class="p-4 text-center">${catSum.items}</td>
+                        <td class="p-4 text-center text-slate-400">${catSum.stock}</td>
+                        <td class="p-4 text-center text-pink-600">${catSum.sold}</td>
+                        <td class="p-4 text-right">$${catSum.rev.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('') + `
+                <tr class="bg-slate-900 text-white font-black">
+                    <td class="p-4 rounded-bl-2xl">TOTALS</td>
+                    <td class="p-4 text-center">${totals.items}</td>
+                    <td class="p-4 text-center text-slate-400">${totals.stock}</td>
+                    <td class="p-4 text-center text-pink-400">${totals.sold}</td>
+                    <td class="p-4 text-right rounded-br-2xl text-pink-400">$${totals.revenue.toFixed(2)}</td>
+                </tr>
+            `;
+        }
+
+        function renderLabels() {
+            const grid = document.getElementById('label-grid');
+            grid.innerHTML = '';
+            const printable = [];
+            categories.forEach(cat => cat.items.forEach(i => printable.push({...i, type: 'QR'})));
+            customLabels.forEach(l => printable.push(l));
+
+            printable.forEach((item, idx) => {
+                const domId = `label-code-${idx}`;
+                const div = document.createElement('div');
+                div.className = "label-item bg-white p-6 border border-slate-200 text-center relative";
+                div.innerHTML = `
+                    <div class="text-[9px] uppercase font-bold text-slate-400 mb-2">Bonnie Lass Florals</div>
+                    <div class="text-sm font-black text-slate-800 mb-2 leading-tight">${item.name}</div>
+                    <div id="${domId}" class="qr-container py-2"></div>
+                    <div class="flex justify-between items-center w-full mt-3 border-t pt-3">
+                        <div class="text-lg font-black text-pink-700">$${item.price}</div>
+                        <div class="border border-black px-2 py-1 text-[9px] font-black">SOLD [ ]</div>
+                    </div>
+                `;
+                grid.appendChild(div);
+                if (item.type === 'QR') {
+                    new QRCode(document.getElementById(domId), { text: "https://bonnielassflorals.com", width: 85, height: 85, colorDark: "#334155" });
+                } else {
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.id = `svg-${domId}`;
+                    document.getElementById(domId).appendChild(svg);
+                    JsBarcode(`#svg-${domId}`, item.id || "000", { height: 35, width: 1.5, fontSize: 10 });
+                }
+            });
+        }
+
+        function updateVal(catId, itemId, field, val) {
+            const cat = categories.find(c => c.id === catId);
+            const item = cat.items.find(i => i.id === itemId);
+            item[field] = parseInt(val) || 0;
+            syncToPB();
+            renderAll();
+        }
+
+        function quickTally(catId, itemId, delta) {
+            const cat = categories.find(c => c.id === catId);
+            const item = cat.items.find(i => i.id === itemId);
+            item.sold = Math.max(0, item.sold + delta);
+            syncToPB();
+            renderAll();
+        }
+
+        function addCustomLabel() {
+            const name = document.getElementById('custom-name').value;
+            const price = parseFloat(document.getElementById('custom-price').value) || 0;
+            const type = document.getElementById('barcode-type').value;
+            if(!name) return;
+            customLabels.push({ name, price, type, id: "C-" + Date.now() });
+            renderLabels();
+        }
+
+        window.onload = loadFromPB;
+        setInterval(loadFromPB, 10000); 
+    </script>
+</body>
+</html>
