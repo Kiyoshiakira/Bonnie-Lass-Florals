@@ -175,6 +175,11 @@
             border-color: #db2777;
         }
         
+        .checkbox-box:focus {
+            outline: 3px solid #db2777;
+            outline-offset: 2px;
+        }
+        
         .checkbox-box.checked {
             background: #db2777;
             border-color: #db2777;
@@ -503,16 +508,25 @@
                                         <div class="tally-label no-print">Digital Tally</div>
                                         <div class="tally-label print-only">Current Count</div>
                                         <div class="digital-tally">
-                                            <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="tally-btn tally-btn-minus no-print">−</button>
-                                            <span class="tally-count">${item.sold}</span>
-                                            <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="tally-btn tally-btn-plus no-print">+</button>
+                                            <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="tally-btn tally-btn-minus no-print" aria-label="Decrease count for ${item.name}">−</button>
+                                            <span class="tally-count" aria-label="Current count">${item.sold}</span>
+                                            <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="tally-btn tally-btn-plus no-print" aria-label="Increase count for ${item.name}">+</button>
                                         </div>
                                     </div>
                                     <div class="tally-option">
                                         <div class="tally-label">Print Tally (16 boxes)</div>
-                                        <div class="checkbox-tally">
+                                        <div class="checkbox-tally" role="group" aria-label="Tally checkboxes for ${item.name}">
                                             ${Array.from({length: 16}, (_, i) => `
-                                                <div class="checkbox-box" onclick="toggleCheckbox(this)" data-cat="${cat.id}" data-item="${item.id}" data-index="${i}"></div>
+                                                <div class="checkbox-box" 
+                                                     role="checkbox" 
+                                                     aria-checked="false" 
+                                                     aria-label="Tally box ${i + 1} for ${item.name}"
+                                                     tabindex="0"
+                                                     onclick="toggleCheckbox(this)" 
+                                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCheckbox(this);}"
+                                                     data-cat="${cat.id}" 
+                                                     data-item="${item.id}" 
+                                                     data-index="${i}"></div>
                                             `).join('')}
                                         </div>
                                     </div>
@@ -616,6 +630,8 @@
         
         function toggleCheckbox(element) {
             element.classList.toggle('checked');
+            const isChecked = element.classList.contains('checked');
+            element.setAttribute('aria-checked', isChecked ? 'true' : 'false');
         }
 
         window.onload = loadFromPB;
