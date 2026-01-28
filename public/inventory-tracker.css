@@ -473,12 +473,6 @@ body.inventory-tracker {
     display: none;
 }
 
-@media print {
-    .print-only {
-        display: block !important;
-    }
-}
-
 /* ===================================================================
    MOBILE RESPONSIVENESS
    =================================================================== */

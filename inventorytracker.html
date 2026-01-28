@@ -33,7 +33,7 @@
             <div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-4xl floral-brand italic font-bold text-pink-700">Bonnie Lass Florals</h1>
-                    <span id="sync-status" class="sync-badge sync-offline">Pocketbase: Offline</span>
+                    <span id="sync-status" class="sync-badge sync-offline">PocketBase: Offline</span>
                 </div>
                 <div class="flex gap-6 mt-6 no-print">
                     <button onclick="switchView('inventory')" id="tab-inventory" class="pb-2 text-xs uppercase tracking-widest tab-active">Inventory</button>
@@ -198,7 +198,7 @@
         function updateSyncBadge(online) {
             const badge = document.getElementById('sync-status');
             badge.className = online ? "sync-badge sync-online" : "sync-badge sync-offline";
-            badge.innerText = online ? "Pocketbase: Online" : "Pocketbase: Offline";
+            badge.innerText = online ? "PocketBase: Online" : "PocketBase: Offline";
         }
 
         async function startScanner() {
