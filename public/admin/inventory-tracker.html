@@ -49,25 +49,51 @@
 
     <div class="max-w-6xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200">
         
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b pb-8 gap-4">
-            <div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl md:text-4xl floral-brand italic font-bold text-pink-700">Bonnie Lass Florals</h1>
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-10 gap-6 border-b-2 border-slate-200">
+            <div class="flex-1">
+                <div class="flex items-center gap-4 flex-wrap mb-2">
+                    <h1 class="text-4xl md:text-5xl floral-brand italic font-bold bg-gradient-to-r from-pink-700 to-pink-600 bg-clip-text text-transparent">Bonnie Lass Florals</h1>
                     <span id="sync-status" class="sync-badge sync-offline">PocketBase: Offline</span>
                 </div>
-                <div class="flex gap-4 md:gap-6 mt-6 no-print tab-container">
-                    <button onclick="switchView('inventory')" id="tab-inventory" class="pb-2 text-xs uppercase tracking-widest tab-active">Inventory</button>
-                    <button onclick="switchView('sales')" id="tab-sales" class="pb-2 text-xs uppercase tracking-widest text-slate-400">Quick Tally</button>
-                    <button onclick="switchView('labels')" id="tab-labels" class="pb-2 text-xs uppercase tracking-widest text-slate-400">Label Maker</button>
+                <p class="text-slate-500 text-sm font-medium mb-6">Professional Inventory Management System</p>
+                <div class="flex gap-3 md:gap-4 no-print tab-container flex-wrap">
+                    <button onclick="switchView('inventory')" id="tab-inventory" class="tab-button tab-active">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Inventory
+                    </button>
+                    <button onclick="switchView('sales')" id="tab-sales" class="tab-button">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                        Box Tally
+                    </button>
+                    <button onclick="switchView('labels')" id="tab-labels" class="tab-button">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        Label Maker
+                    </button>
                 </div>
             </div>
             <div class="flex flex-col items-end gap-3 no-print w-full md:w-auto">
-                <button onclick="startScanner()" class="w-full md:w-auto bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition">
+                <button onclick="startScanner()" class="w-full md:w-auto bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-md hover:shadow-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
                     Scan Barcode
                 </button>
-                <button onclick="window.print()" class="w-full md:w-auto bg-pink-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-pink-700 transition">Print View</button>
-                <a href="../index.html" class="w-full md:w-auto bg-slate-200 text-slate-800 px-6 py-3 rounded-2xl font-bold text-center hover:bg-slate-300 transition">Back to Home</a>
+                <button onclick="window.print()" class="w-full md:w-auto bg-pink-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-pink-700 transition-all shadow-md hover:shadow-lg">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    Print View
+                </button>
+                <a href="../index.html" class="w-full md:w-auto bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-bold text-center hover:bg-slate-200 transition-all border-2 border-slate-300">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Home
+                </a>
             </div>
         </header>
 
@@ -365,7 +391,12 @@
         function switchView(view) {
             ['inventory', 'sales', 'labels'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
-                document.getElementById(`tab-${v}`).className = v === view ? 'pb-2 text-xs uppercase tracking-widest tab-active' : 'pb-2 text-xs uppercase tracking-widest text-slate-400';
+                const tab = document.getElementById(`tab-${v}`);
+                if (v === view) {
+                    tab.classList.add('tab-active');
+                } else {
+                    tab.classList.remove('tab-active');
+                }
             });
             renderAll();
         }
@@ -420,16 +451,39 @@
         function renderTally() {
             const container = document.getElementById('tally-container');
             container.innerHTML = categories.map(cat => `
-                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <h3 class="font-black text-[10px] uppercase tracking-widest text-slate-400 mb-6 border-b pb-4">${cat.name}</h3>
+                <div class="bg-slate-50 p-6 rounded-3xl border-2 border-slate-200">
+                    <h3 class="font-black text-xs uppercase tracking-widest text-slate-500 mb-6 border-b-2 border-slate-300 pb-4">${cat.name}</h3>
                     <div class="space-y-4">
                         ${cat.items.map(item => `
-                            <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50">
-                                <span class="font-bold text-slate-800 text-sm flex-1 pr-4">${item.name}</span>
-                                <div class="flex items-center gap-3">
-                                    <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold">-</button>
-                                    <span class="font-black text-slate-800 w-6 text-center">${item.sold}</span>
-                                    <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="w-8 h-8 rounded-full bg-pink-600 text-white font-bold">+</button>
+                            <div class="tally-item">
+                                <div class="tally-item-name">${item.name}</div>
+                                <div class="tally-options">
+                                    <div class="tally-option">
+                                        <div class="tally-label no-print">Digital Tally</div>
+                                        <div class="tally-label print-only">Current Count</div>
+                                        <div class="digital-tally">
+                                            <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="tally-btn tally-btn-minus no-print" aria-label="Decrease count for ${item.name}">−</button>
+                                            <span class="tally-count" aria-label="Current count">${item.sold}</span>
+                                            <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="tally-btn tally-btn-plus no-print" aria-label="Increase count for ${item.name}">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="tally-option">
+                                        <div class="tally-label">Print Tally (16 boxes)</div>
+                                        <div class="checkbox-tally" role="group" aria-label="Tally checkboxes for ${item.name}">
+                                            ${Array.from({length: 16}, (_, i) => `
+                                                <div class="checkbox-box" 
+                                                     role="checkbox" 
+                                                     aria-checked="false" 
+                                                     aria-label="Tally box ${i + 1} for ${item.name}"
+                                                     tabindex="0"
+                                                     onclick="toggleCheckbox(this)" 
+                                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCheckbox(this);}"
+                                                     data-cat="${cat.id}" 
+                                                     data-item="${item.id}" 
+                                                     data-index="${i}"></div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}
@@ -533,6 +587,12 @@
             // Clear input fields
             document.getElementById('custom-name').value = '';
             document.getElementById('custom-price').value = '';
+        }
+        
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+            const isChecked = element.classList.contains('checked');
+            element.setAttribute('aria-checked', isChecked ? 'true' : 'false');
         }
 
         window.onload = function() {
