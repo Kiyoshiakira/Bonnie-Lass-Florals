@@ -1,0 +1,509 @@
+/* ===================================================================
+   Bonnie Lass Florals - Inventory Tracker Styles
+   Enhanced layout with boxed sections and print-ready tally sheets
+   =================================================================== */
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;600;800&display=swap');
+
+/* ===================================================================
+   BASE STYLES
+   =================================================================== */
+
+body.inventory-tracker {
+    font-family: 'Inter', sans-serif;
+    background: var(--floral-cream, #f1faee);
+}
+
+.floral-brand {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ===================================================================
+   LOGIN OVERLAY (Admin version)
+   =================================================================== */
+
+#login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#login-overlay.hidden {
+    display: none;
+}
+
+.login-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.login-box h2 {
+    color: var(--floral-primary, #1b4332);
+    margin-bottom: 1rem;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border: 2px solid var(--floral-green, #52b788);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.login-box button {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--floral-primary, #1b4332);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.login-box button:hover {
+    background: var(--floral-primary-2, #2d6a4f);
+}
+
+.login-error {
+    color: #d4692d;
+    margin-top: 0.5rem;
+}
+
+/* ===================================================================
+   NAVIGATION & TABS
+   =================================================================== */
+
+.tab-active {
+    border-bottom: 4px solid #db2777;
+    color: #9d174d;
+    font-weight: 800;
+}
+
+/* ===================================================================
+   SYNC STATUS BADGE
+   =================================================================== */
+
+.sync-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.sync-online {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.sync-offline {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ===================================================================
+   SCANNER MODAL
+   =================================================================== */
+
+#scanner-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* ===================================================================
+   QUICK TALLY SECTION - Enhanced Boxed Layout
+   =================================================================== */
+
+/* Category containers with clear boxed design */
+#tally-container > div {
+    background: white;
+    border: 3px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+#tally-container > div:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+/* Category header styling */
+#tally-container > div > h3 {
+    font-weight: 900;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #475569;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid #e2e8f0;
+}
+
+/* Tally item card styles */
+.tally-item {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+}
+
+.tally-item:hover {
+    background: white;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.tally-item-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.tally-options {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.tally-option {
+    flex: 1;
+    min-width: 220px;
+}
+
+.tally-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #64748b;
+    margin-bottom: 14px;
+}
+
+/* Digital Tally Controls */
+.digital-tally {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tally-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tally-btn-minus {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.tally-btn-minus:hover {
+    background: #e2e8f0;
+    transform: scale(1.05);
+}
+
+.tally-btn-plus {
+    background: #db2777;
+    color: white;
+}
+
+.tally-btn-plus:hover {
+    background: #be185d;
+    transform: scale(1.05);
+}
+
+.tally-count {
+    font-size: 24px;
+    font-weight: 900;
+    color: #1e293b;
+    min-width: 50px;
+    text-align: center;
+}
+
+/* Print Tally Checkbox Grid */
+.checkbox-tally {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+}
+
+.checkbox-box {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #94a3b8;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    background: white;
+}
+
+.checkbox-box:hover {
+    border-color: #db2777;
+    transform: scale(1.1);
+}
+
+.checkbox-box:focus {
+    outline: 3px solid #db2777;
+    outline-offset: 2px;
+}
+
+.checkbox-box.checked {
+    background: #db2777;
+    border-color: #db2777;
+}
+
+.checkbox-box.checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+/* ===================================================================
+   LABEL MAKER SECTION - Enhanced Boxed Layout
+   =================================================================== */
+
+/* Label maker input form */
+#view-labels > div:first-child {
+    background: white;
+    border: 3px solid #e2e8f0;
+    padding: 32px;
+    border-radius: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Label grid styling */
+.label-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.label-item {
+    background: white;
+    border: 3px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.label-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.qr-container img {
+    margin: 0 auto;
+    border-radius: 10px;
+}
+
+/* ===================================================================
+   PRINT STYLES - Optimized for Print-Ready Tally Sheets
+   =================================================================== */
+
+@media print {
+    /* Hide non-printable elements */
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    /* Body print optimization */
+    body {
+        background-color: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .max-w-6xl {
+        max-width: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Tally items for print */
+    .tally-item {
+        background: white !important;
+        border: 2px solid #000 !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        margin-bottom: 12px !important;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+    }
+    
+    .tally-item-name {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        margin-bottom: 12px !important;
+    }
+    
+    /* Checkbox grid for print */
+    .checkbox-tally {
+        display: grid !important;
+        grid-template-columns: repeat(8, 1fr) !important;
+        gap: 8px !important;
+    }
+    
+    .checkbox-box {
+        width: 20px !important;
+        height: 20px !important;
+        border: 2px solid #000 !important;
+        border-radius: 3px !important;
+        background: white !important;
+    }
+    
+    .checkbox-box.checked {
+        background: white !important;
+        border: 2px solid #000 !important;
+    }
+    
+    .checkbox-box.checked::after {
+        display: none !important;
+    }
+    
+    /* Label grid for print */
+    .label-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 15px !important;
+        padding: 10px !important;
+    }
+    
+    .label-item {
+        border: 2px solid #000 !important;
+        padding: 15px !important;
+        text-align: center;
+        page-break-inside: avoid;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        border-radius: 12px !important;
+        background: white !important;
+        box-shadow: none !important;
+    }
+    
+    /* Category containers for print */
+    #tally-container > div {
+        background: white !important;
+        border: 2px solid #000 !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        margin-bottom: 16px !important;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+    }
+}
+
+/* ===================================================================
+   UTILITY CLASSES
+   =================================================================== */
+
+.print-only {
+    display: none;
+}
+
+/* ===================================================================
+   MOBILE RESPONSIVENESS
+   =================================================================== */
+
+@media (max-width: 768px) {
+    .max-w-6xl {
+        padding: 1rem !important;
+    }
+    
+    header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .tab-container {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    /* Adjust tally checkbox grid for mobile */
+    .checkbox-tally {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    /* Stack tally options on mobile */
+    .tally-options {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .tally-option {
+        min-width: 100%;
+    }
+}

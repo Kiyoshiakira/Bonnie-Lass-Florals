@@ -6,16 +6,22 @@ const { expect } = require('chai');
 describe('Inventory Tracker - Tally View', () => {
     let dom;
     let document;
-    let window;
+    let cssContent;
 
     before(() => {
         const html = fs.readFileSync(
             path.join(__dirname, '..', 'inventorytracker.html'),
             'utf-8'
         );
+        
+        // Read the external CSS file
+        cssContent = fs.readFileSync(
+            path.join(__dirname, '..', 'public', 'inventory-tracker.css'),
+            'utf-8'
+        );
+        
         dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
         document = dom.window.document;
-        window = dom.window;
     });
 
     it('should have the Quick Tally view container', () => {
@@ -29,49 +35,32 @@ describe('Inventory Tracker - Tally View', () => {
     });
 
     it('should have tally-item class defined in styles', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
-        expect(styleContent).to.include('.tally-item');
+        expect(cssContent).to.include('.tally-item');
     });
 
     it('should have tally-item-name class defined in styles', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
-        expect(styleContent).to.include('.tally-item-name');
-        expect(styleContent).to.include('font-size: 18px'); // Larger font for accessibility
+        expect(cssContent).to.include('.tally-item-name');
+        expect(cssContent).to.include('font-size: 18px'); // Larger font for accessibility
     });
 
     it('should have checkbox-tally class defined in styles', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
-        expect(styleContent).to.include('.checkbox-tally');
+        expect(cssContent).to.include('.checkbox-tally');
     });
 
     it('should have checkbox-box class defined in styles', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
-        expect(styleContent).to.include('.checkbox-box');
-        expect(styleContent).to.include('28px'); // Size specification
+        expect(cssContent).to.include('.checkbox-box');
+        // Check for checkbox size (now 32px in enhanced layout)
+        expect(cssContent).to.match(/\.checkbox-box[\s\S]*?width:\s*\d+px/);
     });
 
     it('should have print-specific styles for checkboxes', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
-        expect(styleContent).to.include('@media print');
-        expect(styleContent).to.include('.checkbox-tally');
+        expect(cssContent).to.include('@media print');
+        expect(cssContent).to.include('.checkbox-tally');
     });
 
     it('should have digital tally button styles', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
-        expect(styleContent).to.include('.tally-btn');
-        expect(styleContent).to.include('44px'); // Button size for accessibility
+        expect(cssContent).to.include('.tally-btn');
+        expect(cssContent).to.include('44px'); // Button size for accessibility
     });
 
     it('should have the toggleCheckbox function defined', () => {
@@ -106,11 +95,8 @@ describe('Inventory Tracker - Tally View', () => {
     });
 
     it('should have accessibility-friendly sizing', () => {
-        const styleContent = Array.from(document.querySelectorAll('style'))
-            .map(s => s.textContent)
-            .join('\n');
         // Check for larger, more readable font sizes
-        expect(styleContent).to.include('font-size: 18px'); // Item names
-        expect(styleContent).to.include('font-size: 24px'); // Count display
+        expect(cssContent).to.include('font-size: 18px'); // Item names
+        expect(cssContent).to.include('font-size: 24px'); // Count display
     });
 });

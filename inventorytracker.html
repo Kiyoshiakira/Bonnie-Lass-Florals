@@ -4,220 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bonnie Lass Florals | Inventory & Sales</title>
+    <link rel="stylesheet" href="public/inventory-tracker.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Inter:wght@400;600;800&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; }
-        .floral-brand { font-family: 'Playfair Display', serif; }
 
-        /* Modern Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body { 
-                background-color: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                -webkit-print-color-adjust: exact;
-            }
-            .max-w-6xl { max-width: 100% !important; border: none !important; box-shadow: none !important; }
-            
-            .label-grid {
-                display: grid !important;
-                grid-template-columns: repeat(3, 1fr) !important;
-                gap: 15px !important;
-                padding: 10px !important;
-            }
-            .label-item {
-                border: 1px solid #ddd !important;
-                padding: 15px !important;
-                text-align: center;
-                page-break-inside: avoid;
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                border-radius: 12px !important;
-            }
-            
-            /* Print styles for tally items */
-            .tally-item {
-                border: 2px solid #000 !important;
-                page-break-inside: avoid;
-            }
-            .checkbox-tally {
-                display: flex !important;
-            }
-        }
-        
-        .tab-active { border-bottom: 4px solid #db2777; color: #9d174d; font-weight: 800; }
-        .qr-container img { margin: 0 auto; border-radius: 10px; }
-
-        #scanner-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column;
-            align-items: center; justify-content: center; color: white;
-        }
-
-        .sync-badge {
-            font-size: 10px; padding: 4px 10px; border-radius: 99px; font-weight: 900; text-transform: uppercase;
-        }
-        .sync-online { background: #dcfce7; color: #166534; }
-        .sync-offline { background: #fee2e2; color: #991b1b; }
-        
-        /* Tally item styles */
-        .tally-item {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .tally-item-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 16px;
-            line-height: 1.4;
-        }
-        
-        .tally-options {
-            display: flex;
-            gap: 24px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-        
-        .tally-option {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .tally-label {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #64748b;
-            margin-bottom: 12px;
-        }
-        
-        .digital-tally {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .tally-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 20px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .tally-btn-minus {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        
-        .tally-btn-minus:hover {
-            background: #e2e8f0;
-        }
-        
-        .tally-btn-plus {
-            background: #db2777;
-            color: white;
-        }
-        
-        .tally-btn-plus:hover {
-            background: #be185d;
-        }
-        
-        .tally-count {
-            font-size: 24px;
-            font-weight: 900;
-            color: #1e293b;
-            min-width: 40px;
-            text-align: center;
-        }
-        
-        .checkbox-tally {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-        }
-        
-        .checkbox-box {
-            width: 28px;
-            height: 28px;
-            border: 2px solid #94a3b8;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-        
-        .checkbox-box:hover {
-            border-color: #db2777;
-        }
-        
-        .checkbox-box:focus {
-            outline: 3px solid #db2777;
-            outline-offset: 2px;
-        }
-        
-        .checkbox-box.checked {
-            background: #db2777;
-            border-color: #db2777;
-        }
-        
-        .checkbox-box.checked::after {
-            content: '✓';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 18px;
-            font-weight: 900;
-        }
-        
-        .print-only {
-            display: none;
-        }
-        
-        @media print {
-            .checkbox-box {
-                width: 20px !important;
-                height: 20px !important;
-                border: 2px solid #000 !important;
-                border-radius: 2px !important;
-            }
-            .checkbox-box.checked {
-                background: white !important;
-                border: 2px solid #000 !important;
-            }
-            .checkbox-box.checked::after {
-                display: none;
-            }
-        }
-    </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+<body class="inventory-tracker bg-slate-50 min-h-screen p-4 md:p-8">
 
     <!-- Scanner Overlay -->
     <div id="scanner-modal" class="no-print p-4">
@@ -239,7 +33,7 @@
             <div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-4xl floral-brand italic font-bold text-pink-700">Bonnie Lass Florals</h1>
-                    <span id="sync-status" class="sync-badge sync-offline">Pocketbase: Offline</span>
+                    <span id="sync-status" class="sync-badge sync-offline">PocketBase: Offline</span>
                 </div>
                 <div class="flex gap-6 mt-6 no-print">
                     <button onclick="switchView('inventory')" id="tab-inventory" class="pb-2 text-xs uppercase tracking-widest tab-active">Inventory</button>
@@ -404,7 +198,7 @@
         function updateSyncBadge(online) {
             const badge = document.getElementById('sync-status');
             badge.className = online ? "sync-badge sync-online" : "sync-badge sync-offline";
-            badge.innerText = online ? "Pocketbase: Online" : "Pocketbase: Offline";
+            badge.innerText = online ? "PocketBase: Online" : "PocketBase: Offline";
         }
 
         async function startScanner() {
