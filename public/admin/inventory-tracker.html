@@ -199,7 +199,8 @@
 
         const PB_URL = 'http://127.0.0.1:8090';
         const COLLECTION = 'inventory_data';
-        const RECORD_ID = 'inventoryrec001'; 
+        const RECORD_ID = 'inventoryrec001';
+        const TALLY_BOXES_COUNT = 16; // Number of checkbox boxes for print tally
 
         let categories = [
             {
@@ -263,6 +264,18 @@
 
         let customLabels = [];
         let html5QrCode = null;
+        let checkboxStates = {}; // Store checkbox tally states by item ID
+        
+        // HTML escape function to prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
         
         // Load custom labels from localStorage on startup
         function loadCustomLabels() {
@@ -452,41 +465,43 @@
             const container = document.getElementById('tally-container');
             container.innerHTML = categories.map(cat => `
                 <div class="bg-slate-50 p-6 rounded-3xl border-2 border-slate-200">
-                    <h3 class="font-black text-xs uppercase tracking-widest text-slate-500 mb-6 border-b-2 border-slate-300 pb-4">${cat.name}</h3>
+                    <h3 class="font-black text-xs uppercase tracking-widest text-slate-500 mb-6 border-b-2 border-slate-300 pb-4">${escapeHtml(cat.name)}</h3>
                     <div class="space-y-4">
-                        ${cat.items.map(item => `
+                        ${cat.items.map(item => {
+                            const itemKey = `${cat.id}-${item.id}`;
+                            const checkedBoxes = checkboxStates[itemKey] || [];
+                            return `
                             <div class="tally-item">
-                                <div class="tally-item-name">${item.name}</div>
+                                <div class="tally-item-name">${escapeHtml(item.name)}</div>
                                 <div class="tally-options">
                                     <div class="tally-option">
                                         <div class="tally-label no-print">Digital Tally</div>
                                         <div class="tally-label print-only">Current Count</div>
                                         <div class="digital-tally">
-                                            <button onclick="quickTally('${cat.id}', '${item.id}', -1)" class="tally-btn tally-btn-minus no-print" aria-label="Decrease count for ${item.name}">−</button>
+                                            <button onclick="quickTally('${escapeHtml(cat.id)}', '${escapeHtml(item.id)}', -1)" class="tally-btn tally-btn-minus no-print" aria-label="Decrease count for ${escapeHtml(item.name)}">−</button>
                                             <span class="tally-count" aria-label="Current count">${item.sold}</span>
-                                            <button onclick="quickTally('${cat.id}', '${item.id}', 1)" class="tally-btn tally-btn-plus no-print" aria-label="Increase count for ${item.name}">+</button>
+                                            <button onclick="quickTally('${escapeHtml(cat.id)}', '${escapeHtml(item.id)}', 1)" class="tally-btn tally-btn-plus no-print" aria-label="Increase count for ${escapeHtml(item.name)}">+</button>
                                         </div>
                                     </div>
                                     <div class="tally-option">
-                                        <div class="tally-label">Print Tally (16 boxes)</div>
-                                        <div class="checkbox-tally" role="group" aria-label="Tally checkboxes for ${item.name}">
-                                            ${Array.from({length: 16}, (_, i) => `
-                                                <div class="checkbox-box" 
+                                        <div class="tally-label">Print Tally (${TALLY_BOXES_COUNT} boxes)</div>
+                                        <div class="checkbox-tally" role="group" aria-label="Tally checkboxes for ${escapeHtml(item.name)}">
+                                            ${Array.from({length: TALLY_BOXES_COUNT}, (_, i) => {
+                                                const isChecked = checkedBoxes.includes(i);
+                                                return `
+                                                <div class="checkbox-box ${isChecked ? 'checked' : ''}" 
                                                      role="checkbox" 
-                                                     aria-checked="false" 
-                                                     aria-label="Tally box ${i + 1} for ${item.name}"
+                                                     aria-checked="${isChecked}" 
+                                                     aria-label="Tally box ${i + 1} for ${escapeHtml(item.name)}"
                                                      tabindex="0"
-                                                     onclick="toggleCheckbox(this)" 
-                                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCheckbox(this);}"
-                                                     data-cat="${cat.id}" 
-                                                     data-item="${item.id}" 
-                                                     data-index="${i}"></div>
-                                            `).join('')}
+                                                     onclick="toggleCheckbox(this, '${itemKey}', ${i})" 
+                                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCheckbox(this, '${itemKey}', ${i});}"></div>
+                                            `}).join('')}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>
             `).join('');
@@ -589,16 +604,42 @@
             document.getElementById('custom-price').value = '';
         }
         
-        function toggleCheckbox(element) {
+        function toggleCheckbox(element, itemKey, index) {
             element.classList.toggle('checked');
             const isChecked = element.classList.contains('checked');
             element.setAttribute('aria-checked', isChecked ? 'true' : 'false');
+            
+            // Persist checkbox state
+            if (!checkboxStates[itemKey]) {
+                checkboxStates[itemKey] = [];
+            }
+            if (isChecked) {
+                checkboxStates[itemKey].push(index);
+            } else {
+                checkboxStates[itemKey] = checkboxStates[itemKey].filter(i => i !== index);
+            }
+            // Save to localStorage
+            localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
+        }
+        
+        // Load checkbox states from localStorage
+        function loadCheckboxStates() {
+            const saved = localStorage.getItem('checkboxStates');
+            if (saved) {
+                try {
+                    checkboxStates = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error loading checkbox states:', e);
+                    checkboxStates = {};
+                }
+            }
         }
 
         window.onload = function() {
             const hasAccess = sessionStorage.getItem(CODE_KEY) === 'granted';
             if (hasAccess) {
                 loadCustomLabels();
+                loadCheckboxStates();
                 loadFromPB();
             }
         };
