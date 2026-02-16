@@ -1187,11 +1187,6 @@ exports.sendMessage = async (req, res) => {
     // Check if user is admin
     const isAdmin = await checkIsAdmin(req);
     
-    // Get the generative model - Using Gemini 3 Flash Preview
-    const model = genAI.getGenerativeModel({ 
-      model: GEMINI_MODEL
-    });
-    
     // Generate system prompt with current product context and admin mode if applicable
     const systemPrompt = await generateSystemPrompt(isAdmin);
     
@@ -1206,8 +1201,9 @@ exports.sendMessage = async (req, res) => {
       ? 'I understand completely. I am your exceptionally intelligent assistant for Bonnie Lass Florals, equipped with advanced natural language understanding. For customers, I provide warm, helpful information about handmade floral arrangements, crafts, and cottage food products. As an admin user, I have enhanced capabilities - I can intelligently parse your natural language commands, automatically detect and map information to the correct fields, understand context and intent, and help you manage products with smart, conversational interactions. I recognize various ways you might phrase commands and can extract structured data from conversational input. Just tell me what you need in your own words, and I\'ll understand.'
       : 'I understand completely. I am your exceptionally intelligent assistant for Bonnie Lass Florals. I have advanced natural language understanding to help you find the perfect handmade floral arrangements, crafts, or cottage food products. I understand various ways you might phrase questions and can infer your needs from context. Just ask me anything in your own words, and I\'ll provide helpful, accurate information.';
     
-    // Start chat with history - Enhanced generation config for better intelligence
-    const chat = model.startChat({
+    // Create chat with history - Enhanced generation config for better intelligence
+    const chat = genAI.chats.create({
+      model: GEMINI_MODEL,
       history: [
         {
           role: 'user',
@@ -1230,7 +1226,7 @@ exports.sendMessage = async (req, res) => {
     // Send message and get response
     let result;
     try {
-      result = await chat.sendMessage(message);
+      result = await chat.sendMessage({ message });
     } catch (apiError) {
       logger.error('Gemini API error:', {
         error: apiError.message,
@@ -1258,7 +1254,8 @@ exports.sendMessage = async (req, res) => {
       throw apiError;
     }
     
-    const response = result.response;
+    // In the new SDK, result is the response object directly
+    const response = result;
     
     // Check if response was blocked or filtered
     if (response.promptFeedback && response.promptFeedback.blockReason) {
@@ -1275,7 +1272,8 @@ exports.sendMessage = async (req, res) => {
     // Get response text with error handling
     let text = '';
     try {
-      text = response.text();
+      // In the new SDK, text is a property not a method
+      text = response.text;
     } catch (error) {
       logger.error('Error extracting text from Gemini response:', error);
       // Check if there are candidates with finish reason
