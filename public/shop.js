@@ -390,13 +390,32 @@ function handleAddToCart(event) {
     return;
   }
   
+  // Read selected option from the option dropdown (if product has options)
+  let selectedOption = '';
+  if (product.options && product.options.length > 0) {
+    const optionSelect = document.getElementById(`option-${productId}`);
+    selectedOption = optionSelect ? optionSelect.value : '';
+    if (!selectedOption) {
+      if (typeof showNotification === 'function') {
+        showNotification('Please choose an option before adding to cart.', 'error', 3000);
+      }
+      // Highlight the dropdown to draw attention
+      if (optionSelect) {
+        optionSelect.style.border = '2px solid #ef4444';
+        setTimeout(() => { optionSelect.style.border = '1px solid #c4b5e8'; }, 2000);
+      }
+      return;
+    }
+  }
+  
   // Call the existing addToCart function from cart.js
   if (typeof addToCart === 'function') {
     addToCart({
       name: product.name,
       price: product.price,
       id: product._id,
-      image: product.image
+      image: product.image,
+      selectedOption: selectedOption ? selectedOption : undefined
     });
   }
 }
@@ -425,9 +444,15 @@ function productToCard(p) {
   const productDesc = escapeHtml(p.description || '');
   const productPrice = p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A';
   
-  // Escape options if present
+  // Render options as a customer-selectable dropdown when options exist
   const optionsHtml = p.options && p.options.length 
-    ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${p.options.map(escapeHtml).join(', ')}</div>` 
+    ? `<div class="product-option-selector" style="margin-bottom:0.5em;">
+        <label for="option-${escapeAttr(p._id)}" style="font-size:0.9em;font-weight:600;color:#421e7c;display:block;margin-bottom:0.25em;">Choose Option:</label>
+        <select id="option-${escapeAttr(p._id)}" class="product-option-select" data-product-id="${escapeAttr(p._id)}" style="width:100%;padding:0.4em 0.6em;border:1px solid #c4b5e8;border-radius:6px;font-size:0.9em;color:#421e7c;background:#faf7ff;cursor:pointer;">
+          <option value="">-- Select an option --</option>
+          ${p.options.map(opt => `<option value="${escapeAttr(opt)}">${escapeHtml(opt)}</option>`).join('')}
+        </select>
+      </div>` 
     : '';
   
   // Generate image carousel or single image
@@ -627,9 +652,15 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
   const productDesc = escapeHtml(product.description || '');
   const productPrice = product.price && !isNaN(product.price) ? Number(product.price).toFixed(2) : 'N/A';
   
-  // Escape options if present
+  // Render options as a customer-selectable dropdown when options exist
   const optionsHtml = product.options && product.options.length 
-    ? `<div style="font-size:0.9em;color:#666;margin-bottom:0.5em;"><strong>Options:</strong> ${product.options.map(escapeHtml).join(', ')}</div>` 
+    ? `<div class="product-option-selector" style="margin-bottom:0.5em;">
+        <label for="option-${escapeAttr(product._id)}" style="font-size:0.9em;font-weight:600;color:#421e7c;display:block;margin-bottom:0.25em;">Choose Option:</label>
+        <select id="option-${escapeAttr(product._id)}" class="product-option-select" data-product-id="${escapeAttr(product._id)}" style="width:100%;padding:0.4em 0.6em;border:1px solid #c4b5e8;border-radius:6px;font-size:0.9em;color:#421e7c;background:#faf7ff;cursor:pointer;">
+          <option value="">-- Select an option --</option>
+          ${product.options.map(opt => `<option value="${escapeAttr(opt)}">${escapeHtml(opt)}</option>`).join('')}
+        </select>
+      </div>` 
     : '';
   
   // Generate image carousel or single image
