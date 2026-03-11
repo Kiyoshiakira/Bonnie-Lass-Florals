@@ -2135,11 +2135,14 @@ footer a:hover {
     flex-wrap: wrap;
   }
 
-  /* ---- Cart: card-based layout on mobile ---- */
+  /* ---- Cart: compact card layout on mobile ---- */
+
+  /* Turn off horizontal scroll now that we're using cards */
   .cart-table-wrapper {
     overflow-x: visible;
   }
 
+  /* Make table elements behave as blocks */
   #cart-items table,
   #cart-items tbody,
   #cart-items tfoot {
@@ -2147,77 +2150,156 @@ footer a:hover {
     width: 100%;
   }
 
+  /* Hide column headers — labels are shown inline via ::before */
   #cart-items thead {
-    display: none; /* Column headers replaced by data-label pseudo-elements */
+    display: none;
   }
 
+  /*
+   * Each row becomes a 2-column grid card:
+   *
+   *  ┌──────────────────────────────────────┐
+   *  │ [img] Product name          (col 1-2)│
+   *  ├─────────────────┬────────────────────┤
+   *  │ Price: $x.xx    │    Subtotal: $x.xx │
+   *  ├─────────────────┼────────────────────┤
+   *  │ [−] qty [+]     │          [Remove]  │
+   *  └─────────────────┴────────────────────┘
+   */
   #cart-items tbody tr {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
     background: #fff;
     border: 1px solid #e4d8f7;
     border-radius: 14px;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    box-shadow: 0 2px 10px rgba(45, 106, 79, 0.1);
+    margin-bottom: 0.9rem;
+    padding: 0.85rem;
+    box-shadow: 0 2px 10px rgba(45, 106, 79, 0.08);
+    gap: 0;
   }
 
-  #cart-items td {
+  /* Product cell — spans both columns */
+  #cart-items tbody td:nth-child(1) {
+    grid-column: 1 / -1;
+    grid-row: 1;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.45rem 0 !important;
+    gap: 0.7rem;
+    padding: 0 0 0.65rem 0 !important;
     border-bottom: 1px solid #f0f0f0;
-    text-align: left !important;
-    font-size: 0.98rem;
-  }
-
-  #cart-items td:last-child {
-    border-bottom: none;
-    padding-top: 0.6rem !important;
-    justify-content: flex-end;
-  }
-
-  /* Show column label before each cell value */
-  #cart-items td[data-label]::before {
-    content: attr(data-label);
+    font-size: 0.92rem;
     font-weight: 600;
-    color: #2d6a4f;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-    margin-right: 0.5rem;
+    color: #421e7c;
   }
 
-  /* Product cell: stack image and name */
-  #cart-items td[data-label="Product"] {
+  /* Price cell — left column, row 2 */
+  #cart-items tbody td:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    justify-content: center;
+    padding: 0.5rem 0.3rem 0.4rem 0 !important;
+    font-size: 0.82rem;
+    color: #555;
+    border-bottom: 1px solid #f0f0f0;
   }
 
-  #cart-items td[data-label="Product"]::before {
+  #cart-items tbody td:nth-child(2)::before {
+    content: "Price";
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2d6a4f;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.15rem;
+  }
+
+  /* Subtotal cell — right column, row 2 */
+  #cart-items tbody td:nth-child(4) {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0.5rem 0 0.4rem 0.3rem !important;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #421e7c;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  #cart-items tbody td:nth-child(4)::before {
+    content: "Subtotal";
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2d6a4f;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.15rem;
+  }
+
+  /* Quantity cell — left column, row 3 */
+  #cart-items tbody td:nth-child(3) {
+    grid-column: 1;
+    grid-row: 3;
+    display: flex;
+    align-items: center;
+    padding: 0.55rem 0 0 0 !important;
+  }
+
+  /* Remove cell — right column, row 3 */
+  #cart-items tbody td:nth-child(5) {
+    grid-column: 2;
+    grid-row: 3;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.55rem 0 0 0 !important;
+  }
+
+  /* Shrink quantity buttons slightly on mobile */
+  #cart-items .cart-quantity-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  #cart-items .cart-quantity-display {
+    min-width: 28px;
+    font-size: 0.95rem;
+  }
+
+  /* Shrink thumbnail on mobile */
+  #cart-items .cart-item-thumbnail {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
     margin-right: 0;
   }
 
-  #cart-items td[data-label="Product"] > div {
-    flex-wrap: wrap;
-    gap: 0.6rem;
-  }
-
-  /* Total row in tfoot */
+  /* Order total row */
   #cart-items tfoot tr {
     display: flex;
     justify-content: flex-end;
-    align-items: center;
+    align-items: baseline;
     gap: 0.5rem;
-    border-top: 2px solid #e4d8f7;
-    padding-top: 0.8rem;
+    background: #f1faee;
+    border: 1px solid #95d5b2;
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    margin-top: 0.3rem;
   }
 
   #cart-items tfoot td {
     display: inline;
-    padding: 0.5rem 0 !important;
+    padding: 0 !important;
     border: none;
+    font-size: 0.95rem;
   }
 }
 

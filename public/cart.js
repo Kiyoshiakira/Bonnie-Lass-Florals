@@ -93,7 +93,7 @@ function renderCart() {
           </div>
         </td>
         <td data-label="Subtotal" style="text-align:right;padding:1rem;font-weight:bold;color:#421e7c;">$${subtotal.toFixed(2)}</td>
-        <td style="text-align:center;padding:1rem;">
+        <td data-label="Remove" style="text-align:center;padding:1rem;">
           <button onclick="removeFromCart(${idx})" style="color:#fff;background:#ef4444;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;transition:background 0.2s;">Remove</button>
         </td>
       </tr>
