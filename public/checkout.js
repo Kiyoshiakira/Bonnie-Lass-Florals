@@ -45,7 +45,10 @@ function renderCartSummary() {
         <td style="padding:0.8rem;">
           <div style="display:flex;align-items:center;gap:0.8rem;">
             ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail">` : ''}
-            <span style="font-weight:500;color:#421e7c;">${item.name}</span>
+            <div>
+              <span style="font-weight:500;color:#421e7c;">${item.name}</span>
+              ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${item.selectedOption}</strong></div>` : ''}
+            </div>
           </div>
         </td>
         <td style="text-align:center;padding:0.8rem;color:#666;">${qty}</td>

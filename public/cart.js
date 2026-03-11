@@ -5,8 +5,12 @@ function getCart() {
 function addToCart(item) {
   const cart = getCart();
   
-  // Check if item already exists in cart
-  const existingItemIndex = cart.findIndex(i => i.id === item.id);
+  // Items with the same product id AND same selected option are considered duplicates.
+  // Different options (or one with/without an option) are treated as separate cart entries.
+  const existingItemIndex = cart.findIndex(i =>
+    i.id === item.id &&
+    (i.selectedOption || '') === (item.selectedOption || '')
+  );
   
   if (existingItemIndex >= 0) {
     // Increment quantity if item exists
@@ -22,7 +26,8 @@ function addToCart(item) {
   
   // Show notification
   if (typeof showNotification === 'function') {
-    showNotification(`${item.name} added to cart!`, 'success', 3000);
+    const optionLabel = item.selectedOption ? ` – ${item.selectedOption}` : '';
+    showNotification(`${item.name}${optionLabel} added to cart!`, 'success', 3000);
   }
 }
 
@@ -81,7 +86,10 @@ function renderCart() {
         <td data-label="Product" style="padding:1rem;">
           <div style="display:flex;align-items:center;gap:1rem;">
             ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
-            <span style="font-weight:500;color:#421e7c;">${item.name}</span>
+            <div>
+              <span style="font-weight:500;color:#421e7c;">${item.name}</span>
+              ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${item.selectedOption}</strong></div>` : ''}
+            </div>
           </div>
         </td>
         <td data-label="Price" style="text-align:right;padding:1rem;color:#666;">$${price.toFixed(2)}</td>
