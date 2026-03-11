@@ -56,6 +56,7 @@ function renderCart() {
   
   let total = 0;
   let html = `
+    <div class="cart-table-wrapper">
     <table style="width:100%;border-collapse:collapse;margin-bottom:1em;">
       <thead>
         <tr style="border-bottom:2px solid #e4d8f7;">
@@ -77,22 +78,22 @@ function renderCart() {
     
     html += `
       <tr style="border-bottom:1px solid #f0f0f0;">
-        <td style="padding:1rem;">
+        <td data-label="Product" style="padding:1rem;">
           <div style="display:flex;align-items:center;gap:1rem;">
             ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
             <span style="font-weight:500;color:#421e7c;">${item.name}</span>
           </div>
         </td>
-        <td style="text-align:right;padding:1rem;color:#666;">$${price.toFixed(2)}</td>
-        <td style="text-align:center;padding:1rem;">
+        <td data-label="Price" style="text-align:right;padding:1rem;color:#666;">$${price.toFixed(2)}</td>
+        <td data-label="Quantity" style="text-align:center;padding:1rem;">
           <div class="cart-quantity-controls">
             <button class="cart-quantity-btn" onclick="updateQuantity(${idx}, -1)">-</button>
             <span class="cart-quantity-display">${qty}</span>
             <button class="cart-quantity-btn" onclick="updateQuantity(${idx}, 1)">+</button>
           </div>
         </td>
-        <td style="text-align:right;padding:1rem;font-weight:bold;color:#421e7c;">$${subtotal.toFixed(2)}</td>
-        <td style="text-align:center;padding:1rem;">
+        <td data-label="Subtotal" style="text-align:right;padding:1rem;font-weight:bold;color:#421e7c;">$${subtotal.toFixed(2)}</td>
+        <td data-label="Remove" style="text-align:center;padding:1rem;">
           <button onclick="removeFromCart(${idx})" style="color:#fff;background:#ef4444;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;transition:background 0.2s;">Remove</button>
         </td>
       </tr>
@@ -109,6 +110,7 @@ function renderCart() {
         </tr>
       </tfoot>
     </table>
+    </div>
   `;
   container.innerHTML = html;
 }
