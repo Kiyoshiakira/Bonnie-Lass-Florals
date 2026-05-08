@@ -1273,6 +1273,17 @@ footer a:hover {
   padding: 0 1em 1em;
 }
 
+.product-bottom-section > .more-details-btn,
+.product-bottom-section > .add-to-cart {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 .product-card button {
   background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
   color: #fff; /* White text on dark green */
@@ -2889,13 +2900,13 @@ select:focus-visible {
 }
 
 .more-details-btn {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
   background: #fff;
   color: #2d6a4f;
   border: 1px solid #95d5b2;
   border-radius: 10px;
   padding: 0.6em 1em;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85em;
   width: 100%;
   transition: all 0.2s ease;
