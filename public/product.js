@@ -388,24 +388,49 @@ function setupProductShare(product, productUrl, imageUrl) {
 async function loadRelatedProducts(product) {
   const section = document.getElementById('related-products-section');
   const grid = document.getElementById('related-products-grid');
-  if (!section || !grid || !product || !product._id) return;
+  if (!section || !grid || !product || !product._id || !product.type) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/products?page=1&limit=1000`);
-    if (!res.ok) return;
-    const data = await res.json();
-    const products = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : []);
+    const related = [];
+    const limit = 100;
+    let page = 1;
+    let hasMorePages = true;
 
-    const related = products
-      .filter(p => p && p._id && p._id !== product._id && p.type === product.type && (p.stock || 0) > 0)
-      .slice(0, 4);
+    while (related.length < 4 && hasMorePages && page <= 5) {
+      const res = await fetch(`${API_BASE}/api/products?page=${page}&limit=${limit}`);
+      if (!res.ok) break;
+
+      const data = await res.json();
+      const products = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : []);
+
+      if (products.length === 0) break;
+
+      const matches = products.filter(p =>
+        p &&
+        p._id &&
+        p._id !== product._id &&
+        typeof p.type === 'string' &&
+        p.type === product.type &&
+        (p.stock || 0) > 0
+      );
+
+      related.push(...matches);
+
+      if (Array.isArray(data?.products) && data?.pagination) {
+        hasMorePages = data.pagination.page < data.pagination.totalPages;
+      } else {
+        hasMorePages = products.length === limit;
+      }
+
+      page += 1;
+    }
 
     if (related.length === 0) {
       section.style.display = 'none';
       return;
     }
 
-    const cards = related.map(p => {
+    const cards = related.slice(0, 4).map(p => {
       const id = escapeAttr(p._id);
       const name = escapeHtml(p.name || 'Product');
       const rawImage = (p.images && p.images[0]) || p.image || '/img/default-product.png';
