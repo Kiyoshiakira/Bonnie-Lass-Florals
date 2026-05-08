@@ -647,9 +647,9 @@ function productToCard(p) {
       </div>
     `;
   } else {
-    // Single image
+    // Single image - wrapped in a link to the product page
     const imageUrl = images[0] && images[0].trim() ? escapeAttr(images[0]) : '/img/default-product.png';
-    imageHtml = generateResponsiveImage(imageUrl, productName);
+    imageHtml = `<a href="product.html?id=${escapeAttr(p._id)}" class="product-img-link" tabindex="-1" aria-hidden="true">${generateResponsiveImage(imageUrl, productName)}</a>`;
   }
   
   return `
@@ -657,7 +657,7 @@ function productToCard(p) {
       <div class="product-top-section">
         ${imageHtml}
         <div class="product-info">
-          <div class="product-title">${productName}</div>
+          <div class="product-title"><a href="product.html?id=${escapeAttr(p._id)}" class="product-title-link">${productName}</a></div>
           <div class="product-price">$${productPrice}</div>
           <div class="product-stock ${stockClass}">${stockText}</div>
           <div id="product-rating-${escapeAttr(p._id)}"></div>
@@ -859,9 +859,9 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
       </div>
     `;
   } else {
-    // Single image
+    // Single image - wrapped in a link to the product page
     const imageUrl = images[0] && images[0].trim() ? escapeAttr(images[0]) : '/img/default-product.png';
-    imageHtml = generateResponsiveImage(imageUrl, productName);
+    imageHtml = `<a href="product.html?id=${escapeAttr(product._id)}" class="product-img-link" tabindex="-1" aria-hidden="true">${generateResponsiveImage(imageUrl, productName)}</a>`;
   }
   
   return `
@@ -869,7 +869,7 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
       <div class="product-top-section">
         ${imageHtml}
         <div class="product-info">
-          <div class="product-title">${productName}</div>
+          <div class="product-title"><a href="product.html?id=${escapeAttr(product._id)}" class="product-title-link">${productName}</a></div>
           <div class="product-price">$${productPrice}</div>
           <div class="product-stock ${stockClass}">${stockText}</div>
           <div id="product-rating-${escapeAttr(product._id)}"></div>

@@ -2,6 +2,30 @@ function getCart() {
   return JSON.parse(localStorage.getItem('cart')) || [];
 }
 
+// HTML escape helper to prevent XSS when inserting values into innerHTML
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Attribute escape helper for safe URL/attribute values
+function escapeAttr(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function addToCart(item) {
   const cart = getCart();
   
@@ -97,11 +121,13 @@ function renderCart() {
       <tr style="border-bottom:1px solid #f0f0f0;">
         <td data-label="Product" style="padding:1rem;">
           <div style="display:flex;align-items:center;gap:1rem;">
-            ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
+            ${item.image ? `<img src="${escapeAttr(item.image)}" alt="${escapeAttr(item.name)}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
             <div>
-              <span style="font-weight:500;color:#421e7c;">${item.name}</span>
-              ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${item.selectedOption}</strong></div>` : ''}
-              ${item.selectedFlavors && item.selectedFlavors.length ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">🌶️ Flavors: <strong>${item.selectedFlavors.join(', ')}</strong></div>` : ''}
+              ${item.id
+                ? `<a href="product.html?id=${escapeAttr(item.id)}" class="cart-product-link">${escapeHtml(item.name)}</a>`
+                : `<span style="font-weight:500;color:#421e7c;">${escapeHtml(item.name)}</span>`}
+              ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${escapeHtml(item.selectedOption)}</strong></div>` : ''}
+              ${item.selectedFlavors && item.selectedFlavors.length ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">🌶️ Flavors: <strong>${item.selectedFlavors.map(f => escapeHtml(f)).join(', ')}</strong></div>` : ''}
             </div>
           </div>
         </td>
