@@ -87,7 +87,9 @@ function renderCart() {
           <div style="display:flex;align-items:center;gap:1rem;">
             ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
             <div>
-              <span style="font-weight:500;color:#421e7c;">${item.name}</span>
+              ${item.id
+                ? `<a href="product.html?id=${item.id}" style="font-weight:500;color:#421e7c;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${item.name}</a>`
+                : `<span style="font-weight:500;color:#421e7c;">${item.name}</span>`}
               ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${item.selectedOption}</strong></div>` : ''}
             </div>
           </div>
