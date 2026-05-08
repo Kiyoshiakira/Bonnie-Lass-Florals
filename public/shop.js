@@ -431,14 +431,14 @@ function renderSamplerFlavorSelector(product) {
 
   return `
     <div class="sampler-flavor-selector" id="sampler-flavors-${pid}">
-      <span class="sampler-flavor-selector-label">🌶️ Choose Your Hot Sauce Flavors:</span>
+      <span class="sampler-flavor-selector-label"><span aria-hidden="true">🌶️</span> Choose Your Hot Sauce Flavors:</span>
       <div class="sampler-flavor-list" id="sampler-list-${pid}">
         ${checkboxes}
       </div>
       <div class="sampler-flavor-actions">
         <button type="button" onclick="samplerSelectAll('${pid}')">Select All</button>
         <button type="button" onclick="samplerClearAll('${pid}')">Clear All</button>
-        <span class="sampler-flavor-count" id="sampler-count-${pid}">0 selected</span>
+        <span class="sampler-flavor-count" id="sampler-count-${pid}">0 flavors selected</span>
       </div>
       <div class="sampler-flavor-hint">Select at least one flavor before adding to cart.</div>
     </div>
@@ -459,13 +459,13 @@ function samplerClearAll(productId) {
   samplerUpdateCount(productId);
 }
 
-/** Update the "N selected" count label */
+/** Update the "N flavors selected" count label */
 function samplerUpdateCount(productId) {
   const checked = document.querySelectorAll(
     `.sampler-flavor-check[data-product-id="${productId}"]:checked`
   ).length;
   const countEl = document.getElementById(`sampler-count-${productId}`);
-  if (countEl) countEl.textContent = `${checked} selected`;
+  if (countEl) countEl.textContent = `${checked} ${checked === 1 ? 'flavor' : 'flavors'} selected`;
 }
 
 // ============================================================================
