@@ -14,6 +14,7 @@ const { normalizeProduct } = require('../utils/media');
 // Pagination constants
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const VALID_PRODUCT_TYPES = new Set(['decor', 'food']);
 
 // Cache control constants (in seconds)
 const CACHE_MAX_AGE = 300; // 5 minutes
@@ -125,12 +126,17 @@ router.get('/', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
+    const type = (req.query.type || '').trim().toLowerCase();
+    const filters = {};
+    if (VALID_PRODUCT_TYPES.has(type)) {
+      filters.type = type;
+    }
     
     // Get total count for pagination metadata
-    const total = await Product.countDocuments();
+    const total = await Product.countDocuments(filters);
     
     // Fetch paginated products
-    const products = await Product.find()
+    const products = await Product.find(filters)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
