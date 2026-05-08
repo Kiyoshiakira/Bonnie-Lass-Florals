@@ -590,14 +590,14 @@ function handleAddToCart(event) {
 function productToCard(p) {
   const stock = p.stock !== undefined ? p.stock : 0;
   let stockClass = '';
-  let stockText = `Stock: ${stock}`;
+  let stockText = 'In Stock';
   
   if (stock === 0) {
     stockClass = 'out-of-stock';
     stockText = 'Out of Stock';
   } else if (stock <= 5) {
     stockClass = 'low-stock';
-    stockText = `Low Stock: ${stock} left`;
+    stockText = 'Low Stock';
   }
   
   const isOutOfStock = stock === 0;
@@ -608,7 +608,6 @@ function productToCard(p) {
     : (p.image ? [p.image] : ['/img/default-product.png']);
   
   const productName = escapeHtml(p.name);
-  const productDesc = escapeHtml(p.description || '');
   const productPrice = p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A';
   
   // Render options as a customer-selectable dropdown when options exist
@@ -665,27 +664,19 @@ function productToCard(p) {
         </div>
       </div>
       <div class="product-bottom-section">
-        <div class="product-desc">${productDesc}</div>
-        <button 
+        <a 
           class="more-details-btn"
-          onclick="showProductDetails('${escapeAttr(p._id)}')"
-          title="View detailed product information"
+          href="product.html?id=${escapeAttr(p._id)}"
+          title="View full product page"
         >
-          More Details
-        </button>
+          View Product
+        </a>
         <button 
           class="add-to-cart"
           data-id="${escapeAttr(p._id)}"
           ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
         >
           ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-        </button>
-        <button 
-          class="view-reviews-btn"
-          style="margin-top:0.5rem;background:linear-gradient(135deg,#52b788 0%,#40916c 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
-          onclick="toggleReviews('${escapeAttr(p._id)}')"
-        >
-          View Reviews
         </button>
         ${isAdmin ? `
         <div class="admin-actions">
@@ -704,7 +695,6 @@ function productToCard(p) {
             Full Edit
           </button>
         </div>` : ''}
-        <div id="reviews-container-${escapeAttr(p._id)}" style="display:none;"></div>
       </div>
     </div>
   `;
@@ -802,14 +792,14 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
   
   const stock = product.stock !== undefined ? product.stock : 0;
   let stockClass = '';
-  let stockText = `Stock: ${stock}`;
+  let stockText = 'In Stock';
   
   if (stock === 0) {
     stockClass = 'out-of-stock';
     stockText = 'Out of Stock';
   } else if (stock <= 5) {
     stockClass = 'low-stock';
-    stockText = `Low Stock: ${stock} left`;
+    stockText = 'Low Stock';
   }
   
   const isOutOfStock = stock === 0;
@@ -820,7 +810,6 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
     : (product.image ? [product.image] : ['/img/default-product.png']);
   
   const productName = escapeHtml(product.name);
-  const productDesc = escapeHtml(product.description || '');
   const productPrice = product.price && !isNaN(product.price) ? Number(product.price).toFixed(2) : 'N/A';
   
   // Render options as a customer-selectable dropdown when options exist
@@ -877,27 +866,19 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
         </div>
       </div>
       <div class="product-bottom-section">
-        <div class="product-desc">${productDesc}</div>
-        <button 
+        <a 
           class="more-details-btn"
-          onclick="showProductDetails('${escapeAttr(product._id)}')"
-          title="View detailed product information"
+          href="product.html?id=${escapeAttr(product._id)}"
+          title="View full product page"
         >
-          More Details
-        </button>
+          View Product
+        </a>
         <button 
           class="add-to-cart"
           data-id="${escapeAttr(product._id)}"
           ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}
         >
           ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-        </button>
-        <button 
-          class="view-reviews-btn"
-          style="margin-top:0.5rem;background:linear-gradient(135deg,#52b788 0%,#40916c 100%);color:#fff;border:none;border-radius:8px;padding:0.4em 1em;font-weight:600;font-size:0.85em;cursor:pointer;width:100%;"
-          onclick="toggleReviews('${escapeAttr(product._id)}')"
-        >
-          View Reviews
         </button>
         ${isAdmin ? `
         <div class="admin-actions">
@@ -916,7 +897,6 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
             Full Edit
           </button>
         </div>` : ''}
-        <div id="reviews-container-${escapeAttr(product._id)}" style="display:none;"></div>
       </div>
     </div>
   `;
