@@ -109,7 +109,7 @@ function renderCart() {
       <tr style="border-bottom:1px solid #f0f0f0;">
         <td data-label="Product" style="padding:1rem;">
           <div style="display:flex;align-items:center;gap:1rem;">
-            ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
+            ${item.image ? `<img src="${escapeAttr(item.image)}" alt="${escapeAttr(item.name)}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
             <div>
               ${item.id
                 ? `<a href="product.html?id=${escapeAttr(item.id)}" class="cart-product-link">${escapeHtml(item.name)}</a>`
