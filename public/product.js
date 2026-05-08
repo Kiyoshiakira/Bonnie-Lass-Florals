@@ -3,6 +3,8 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
   ? 'http://localhost:5000'
   : 'https://bonnie-lass-florals.onrender.com';
 const SITE_BASE_URL = 'https://bonnielassflorals.com';
+const RELATED_PRODUCTS_PAGE_SIZE = 40;
+const MAX_RELATED_PRODUCT_PAGES = 5;
 
 // HTML escape helper to prevent XSS
 function escapeHtml(unsafe) {
@@ -392,12 +394,11 @@ async function loadRelatedProducts(product) {
 
   try {
     const related = [];
-    const limit = 100;
     let page = 1;
     let hasMorePages = true;
 
-    while (related.length < 4 && hasMorePages && page <= 5) {
-      const res = await fetch(`${API_BASE}/api/products?page=${page}&limit=${limit}`);
+    while (related.length < 4 && hasMorePages && page <= MAX_RELATED_PRODUCT_PAGES) {
+      const res = await fetch(`${API_BASE}/api/products?page=${page}&limit=${RELATED_PRODUCTS_PAGE_SIZE}`);
       if (!res.ok) break;
 
       const data = await res.json();
@@ -419,7 +420,7 @@ async function loadRelatedProducts(product) {
       if (Array.isArray(data?.products) && data?.pagination) {
         hasMorePages = data.pagination.page < data.pagination.totalPages;
       } else {
-        hasMorePages = products.length === limit;
+        hasMorePages = products.length === RELATED_PRODUCTS_PAGE_SIZE;
       }
 
       page += 1;
