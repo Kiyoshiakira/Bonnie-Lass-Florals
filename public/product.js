@@ -5,6 +5,7 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
 const SITE_BASE_URL = 'https://bonnielassflorals.com';
 const RELATED_PRODUCTS_PAGE_SIZE = 40;
 const MAX_RELATED_PRODUCT_PAGES = 5;
+const MAX_RELATED_PRODUCTS_DISPLAY = 4;
 
 // HTML escape helper to prevent XSS
 function escapeHtml(unsafe) {
@@ -398,7 +399,7 @@ async function loadRelatedProducts(product) {
     let page = 1;
     let hasMorePages = true;
 
-    while (related.length < 4 && hasMorePages && page <= MAX_RELATED_PRODUCT_PAGES) {
+    while (related.length < MAX_RELATED_PRODUCTS_DISPLAY && hasMorePages && page <= MAX_RELATED_PRODUCT_PAGES) {
       const res = await fetch(
         `${API_BASE}/api/products?page=${page}&limit=${RELATED_PRODUCTS_PAGE_SIZE}&type=${encodeURIComponent(product.type)}`
       );
@@ -434,7 +435,7 @@ async function loadRelatedProducts(product) {
       return;
     }
 
-    const cards = related.slice(0, 4).map(p => {
+    const cards = related.slice(0, MAX_RELATED_PRODUCTS_DISPLAY).map(p => {
       const id = escapeAttr(p._id);
       const name = escapeHtml(p.name || 'Product');
       const rawImage = (p.images && p.images[0]) || p.image || '/img/default-product.png';

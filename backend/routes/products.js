@@ -14,6 +14,7 @@ const { normalizeProduct } = require('../utils/media');
 // Pagination constants
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const VALID_PRODUCT_TYPES = new Set(['decor', 'food']);
 
 // Cache control constants (in seconds)
 const CACHE_MAX_AGE = 300; // 5 minutes
@@ -127,7 +128,7 @@ router.get('/', async (req, res) => {
     const skip = (page - 1) * limit;
     const type = (req.query.type || '').trim().toLowerCase();
     const filters = {};
-    if (type === 'decor' || type === 'food') {
+    if (VALID_PRODUCT_TYPES.has(type)) {
       filters.type = type;
     }
     
