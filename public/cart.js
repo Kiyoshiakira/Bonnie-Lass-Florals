@@ -31,10 +31,19 @@ function addToCart(item) {
   
   // Items with the same product id AND same selected option are considered duplicates.
   // Different options (or one with/without an option) are treated as separate cart entries.
-  const existingItemIndex = cart.findIndex(i =>
-    i.id === item.id &&
-    (i.selectedOption || '') === (item.selectedOption || '')
-  );
+  // For sampler kits with selectedFlavors, serialize the sorted flavor list for comparison.
+  const itemFlavorsKey = item.selectedFlavors
+    ? [...item.selectedFlavors].sort().join('|')
+    : '';
+
+  const existingItemIndex = cart.findIndex(i => {
+    if (i.id !== item.id) return false;
+    if (item.selectedFlavors) {
+      const iFlavorsKey = i.selectedFlavors ? [...i.selectedFlavors].sort().join('|') : '';
+      return iFlavorsKey === itemFlavorsKey;
+    }
+    return (i.selectedOption || '') === (item.selectedOption || '');
+  });
   
   if (existingItemIndex >= 0) {
     // Increment quantity if item exists
@@ -51,7 +60,10 @@ function addToCart(item) {
   // Show notification
   if (typeof showNotification === 'function') {
     const optionLabel = item.selectedOption ? ` – ${item.selectedOption}` : '';
-    showNotification(`${item.name}${optionLabel} added to cart!`, 'success', 3000);
+    const flavorsLabel = item.selectedFlavors && item.selectedFlavors.length
+      ? ` (${item.selectedFlavors.length} flavor${item.selectedFlavors.length > 1 ? 's' : ''} selected)`
+      : '';
+    showNotification(`${item.name}${optionLabel}${flavorsLabel} added to cart!`, 'success', 3000);
   }
 }
 
@@ -115,6 +127,7 @@ function renderCart() {
                 ? `<a href="product.html?id=${escapeAttr(item.id)}" class="cart-product-link">${escapeHtml(item.name)}</a>`
                 : `<span style="font-weight:500;color:#421e7c;">${escapeHtml(item.name)}</span>`}
               ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${escapeHtml(item.selectedOption)}</strong></div>` : ''}
+              ${item.selectedFlavors && item.selectedFlavors.length ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">🌶️ Flavors: <strong>${item.selectedFlavors.map(f => escapeHtml(f)).join(', ')}</strong></div>` : ''}
             </div>
           </div>
         </td>
