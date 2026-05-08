@@ -12,6 +12,10 @@ permissions:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      CI: true
     
     steps:
       - name: Checkout code
