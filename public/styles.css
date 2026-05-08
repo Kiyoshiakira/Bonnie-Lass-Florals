@@ -1195,6 +1195,17 @@ footer a:hover {
   line-height: 0;
 }
 
+/* Cart product name link */
+.cart-product-link {
+  font-weight: 500;
+  color: #421e7c;
+  text-decoration: none;
+}
+
+.cart-product-link:hover {
+  text-decoration: underline;
+}
+
 .product-price {
   color: #2d6a4f; /* Emerald green */
   font-weight: bold;

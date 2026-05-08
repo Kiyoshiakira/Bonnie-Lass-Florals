@@ -2,6 +2,30 @@ function getCart() {
   return JSON.parse(localStorage.getItem('cart')) || [];
 }
 
+// HTML escape helper to prevent XSS when inserting values into innerHTML
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Attribute escape helper for safe URL/attribute values
+function escapeAttr(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function addToCart(item) {
   const cart = getCart();
   
@@ -88,9 +112,9 @@ function renderCart() {
             ${item.image ? `<img src="${item.image}" alt="${item.name}" class="cart-item-thumbnail" width="60" height="60" loading="lazy">` : ''}
             <div>
               ${item.id
-                ? `<a href="product.html?id=${item.id}" style="font-weight:500;color:#421e7c;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${item.name}</a>`
-                : `<span style="font-weight:500;color:#421e7c;">${item.name}</span>`}
-              ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${item.selectedOption}</strong></div>` : ''}
+                ? `<a href="product.html?id=${escapeAttr(item.id)}" class="cart-product-link">${escapeHtml(item.name)}</a>`
+                : `<span style="font-weight:500;color:#421e7c;">${escapeHtml(item.name)}</span>`}
+              ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${escapeHtml(item.selectedOption)}</strong></div>` : ''}
             </div>
           </div>
         </td>
