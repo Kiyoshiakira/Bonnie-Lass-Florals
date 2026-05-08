@@ -48,6 +48,7 @@ function renderCartSummary() {
             <div>
               <span style="font-weight:500;color:#421e7c;">${item.name}</span>
               ${item.selectedOption ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">Option: <strong>${item.selectedOption}</strong></div>` : ''}
+              ${item.selectedFlavors && item.selectedFlavors.length ? `<div style="font-size:0.85em;color:#6b7280;margin-top:0.15em;">🌶️ Flavors: <strong>${item.selectedFlavors.join(', ')}</strong></div>` : ''}
             </div>
           </div>
         </td>
