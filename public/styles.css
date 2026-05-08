@@ -1178,9 +1178,9 @@ footer a:hover {
   line-height: 1.3;
 }
 
-/* Product name link - inherits card title styling, adds hover underline */
+/* Product name link - visible link color matching cart, underlines on hover */
 .product-title-link {
-  color: inherit;
+  color: #421e7c;
   text-decoration: none;
 }
 

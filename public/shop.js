@@ -629,13 +629,13 @@ function productToCard(p) {
   // Generate image carousel or single image
   let imageHtml;
   if (images.length > 1) {
-    // Multi-image carousel
+    // Multi-image carousel - each image wrapped in a link to the product page
     const carouselId = `carousel-${escapeAttr(p._id)}`;
     imageHtml = `
       <div class="product-image-carousel" id="${carouselId}">
         ${images.map((img, idx) => {
           const imageUrl = img && img.trim() ? escapeAttr(img) : '/img/default-product.png';
-          return generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`);
+          return `<a href="product.html?id=${escapeAttr(p._id)}" class="product-img-link" tabindex="-1" aria-hidden="true">${generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`)}</a>`;
         }).join('')}
         ${images.length > 1 ? `
           <button class="carousel-prev" onclick="prevImage('${carouselId}')">‹</button>
@@ -841,13 +841,13 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
   // Generate image carousel or single image
   let imageHtml;
   if (images.length > 1) {
-    // Multi-image carousel
+    // Multi-image carousel - each image wrapped in a link to the product page
     const carouselId = `carousel-${escapeAttr(product._id)}`;
     imageHtml = `
       <div class="product-image-carousel" id="${carouselId}">
         ${images.map((img, idx) => {
           const imageUrl = img && img.trim() ? escapeAttr(img) : '/img/default-product.png';
-          return generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`);
+          return `<a href="product.html?id=${escapeAttr(product._id)}" class="product-img-link" tabindex="-1" aria-hidden="true">${generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`)}</a>`;
         }).join('')}
         ${images.length > 1 ? `
           <button class="carousel-prev" onclick="prevImage('${carouselId}')">‹</button>
