@@ -138,7 +138,8 @@ function setProductStructuredData(product, productUrl, imageUrl) {
   const normalizedPrice = product.price != null && !isNaN(product.price)
     ? Number(product.price).toFixed(2)
     : undefined;
-  const stock = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
+  const numericStock = Number(product.stock);
+  const stock = Number.isFinite(numericStock) ? numericStock : 0;
   const description = typeof product.description === 'string'
     ? product.description.slice(0, 400)
     : '';
@@ -398,7 +399,9 @@ async function loadRelatedProducts(product) {
     let hasMorePages = true;
 
     while (related.length < 4 && hasMorePages && page <= MAX_RELATED_PRODUCT_PAGES) {
-      const res = await fetch(`${API_BASE}/api/products?page=${page}&limit=${RELATED_PRODUCTS_PAGE_SIZE}`);
+      const res = await fetch(
+        `${API_BASE}/api/products?page=${page}&limit=${RELATED_PRODUCTS_PAGE_SIZE}&type=${encodeURIComponent(product.type)}`
+      );
       if (!res.ok) break;
 
       const data = await res.json();

@@ -125,12 +125,17 @@ router.get('/', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
+    const type = (req.query.type || '').trim().toLowerCase();
+    const filters = {};
+    if (type === 'decor' || type === 'food') {
+      filters.type = type;
+    }
     
     // Get total count for pagination metadata
-    const total = await Product.countDocuments();
+    const total = await Product.countDocuments(filters);
     
     // Fetch paginated products
-    const products = await Product.find()
+    const products = await Product.find(filters)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
