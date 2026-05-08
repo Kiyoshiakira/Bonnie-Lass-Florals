@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Product details - Bonnie Lass Florals">
+  <link rel="canonical" href="https://bonnielassflorals.com/product.html">
+  <meta property="og:title" content="Product - Bonnie Lass Florals">
+  <meta property="og:description" content="View product details, reviews, and add to cart at Bonnie Lass Florals.">
+  <meta property="og:type" content="product">
+  <meta property="og:url" content="https://bonnielassflorals.com/product.html">
+  <meta property="og:image" content="https://bonnielassflorals.com/img/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Product - Bonnie Lass Florals">
+  <meta name="twitter:description" content="View product details, reviews, and add to cart at Bonnie Lass Florals.">
+  <meta name="twitter:image" content="https://bonnielassflorals.com/img/logo.png">
   <title>Product - Bonnie Lass Florals</title>
   <!-- Preconnect to external domains for faster resource loading -->
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -99,6 +109,33 @@
       letter-spacing: 0.5px;
       box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
       max-width: 300px;
+    }
+    .product-share {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .product-share-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .product-share-buttons button {
+      border: 1px solid #d0e7da;
+      background: #fff;
+      border-radius: 10px;
+      padding: 0.45rem 0.85rem;
+      cursor: pointer;
+      color: #1b4332;
+      font-weight: 600;
+    }
+    .product-share-buttons button:hover {
+      background: #f1faee;
+    }
+    .product-share-note {
+      color: #555;
+      font-size: 0.9rem;
     }
 
     .product-detail-add-btn:hover:not(:disabled) {
@@ -200,6 +237,43 @@
     .product-detail-reviews-section h2 {
       font-size: 1.5rem;
       margin-bottom: 1rem;
+    }
+    .related-products-section {
+      margin-top: 2.5rem;
+      border-top: 3px solid #95d5b2;
+      padding-top: 1.5rem;
+    }
+    .related-products-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .related-products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .related-product-card {
+      border: 1px solid #d7efe2;
+      border-radius: 12px;
+      padding: 0.8rem;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      box-shadow: 0 2px 8px rgba(27, 67, 50, 0.07);
+    }
+    .related-product-card a {
+      color: #1b4332;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .related-product-card a:hover {
+      color: #2d6a4f;
+      text-decoration: underline;
+    }
+    .related-product-price {
+      color: #2d6a4f;
+      font-weight: 700;
     }
 
     /* ---- Loading / Error states ---- */
@@ -324,6 +398,15 @@
           <div id="product-detail-options"></div>
           <div id="product-detail-description"></div>
           <button class="product-detail-add-btn" id="product-detail-add-to-cart">Add to Cart</button>
+          <div id="product-share-section" class="product-share" style="display:none;">
+            <strong>Share this product</strong>
+            <div class="product-share-buttons">
+              <button type="button" id="share-copy-link">Copy Link</button>
+              <button type="button" id="share-facebook">Facebook</button>
+              <button type="button" id="share-pinterest">Pinterest</button>
+            </div>
+            <div class="product-share-note">Help others discover Bonnie Lass Florals.</div>
+          </div>
           <a href="shop.html" class="back-to-shop" id="back-to-shop-link">← Back to Shop</a>
         </div>
       </div>
@@ -335,6 +418,11 @@
       <div class="product-detail-reviews-section" id="product-detail-reviews-section" style="display:none;">
         <h2>Reviews</h2>
         <div id="product-detail-reviews"></div>
+      </div>
+
+      <div class="related-products-section" id="related-products-section" style="display:none;">
+        <h2>You May Also Like</h2>
+        <div class="related-products-grid" id="related-products-grid"></div>
       </div>
     </div>
   </section>

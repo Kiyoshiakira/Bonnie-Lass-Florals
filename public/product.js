@@ -2,6 +2,7 @@
 const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'http://localhost:5000'
   : 'https://bonnie-lass-florals.onrender.com';
+const SITE_BASE_URL = 'https://bonnielassflorals.com';
 
 // HTML escape helper to prevent XSS
 function escapeHtml(unsafe) {
@@ -101,6 +102,71 @@ function showNotFound() {
   document.title = 'Product Not Found - Bonnie Lass Florals';
 }
 
+function upsertMetaTag(attr, value, content) {
+  if (!value || !content) return;
+  let tag = document.querySelector(`meta[${attr}="${value}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attr, value);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setCanonicalUrl(url) {
+  if (!url) return;
+  let link = document.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+  link.setAttribute('href', url);
+}
+
+function setProductStructuredData(product, productUrl, imageUrl) {
+  let schema = document.getElementById('product-schema');
+  if (!schema) {
+    schema = document.createElement('script');
+    schema.id = 'product-schema';
+    schema.type = 'application/ld+json';
+    document.head.appendChild(schema);
+  }
+
+  const normalizedPrice = product.price != null && !isNaN(product.price)
+    ? Number(product.price).toFixed(2)
+    : undefined;
+  const stock = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
+  const description = typeof product.description === 'string'
+    ? product.description.slice(0, 400)
+    : '';
+
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name || 'Product',
+    description,
+    image: imageUrl ? [imageUrl] : undefined,
+    sku: product._id || undefined,
+    url: productUrl,
+    brand: {
+      '@type': 'Brand',
+      name: 'Bonnie Lass Florals'
+    },
+    offers: {
+      '@type': 'Offer',
+      url: productUrl,
+      priceCurrency: 'USD',
+      price: normalizedPrice,
+      availability: stock > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock'
+    }
+  };
+
+  schema.textContent = JSON.stringify(data);
+}
+
 // Fetch and render the product
 async function loadProduct() {
   const params = new URLSearchParams(window.location.search);
@@ -131,6 +197,8 @@ function renderProduct(product) {
   document.getElementById('product-detail').style.display = 'block';
 
   const productName = product.name || 'Product';
+  const productId = product._id ? String(product._id) : '';
+  const productUrl = `${SITE_BASE_URL}/product.html?id=${encodeURIComponent(productId)}`;
 
   // Update page title and breadcrumb
   document.title = `${productName} - Bonnie Lass Florals`;
@@ -151,6 +219,21 @@ function renderProduct(product) {
   const images = (product.images && product.images.length > 0)
     ? product.images
     : (product.image ? [product.image] : ['/img/default-product.png']);
+  const primaryImage = images[0] || '/img/default-product.png';
+  const absolutePrimaryImage = /^https?:\/\//i.test(primaryImage)
+    ? primaryImage
+    : `${SITE_BASE_URL}${primaryImage.startsWith('/') ? '' : '/'}${primaryImage}`;
+
+  setCanonicalUrl(productUrl);
+  upsertMetaTag('property', 'og:title', `${productName} - Bonnie Lass Florals`);
+  upsertMetaTag('property', 'og:description', product.description || 'Shop handmade products from Bonnie Lass Florals.');
+  upsertMetaTag('property', 'og:type', 'product');
+  upsertMetaTag('property', 'og:url', productUrl);
+  upsertMetaTag('property', 'og:image', absolutePrimaryImage);
+  upsertMetaTag('name', 'twitter:title', `${productName} - Bonnie Lass Florals`);
+  upsertMetaTag('name', 'twitter:description', product.description || 'Shop handmade products from Bonnie Lass Florals.');
+  upsertMetaTag('name', 'twitter:image', absolutePrimaryImage);
+  setProductStructuredData(product, productUrl, absolutePrimaryImage);
 
   const imagesContainer = document.getElementById('product-detail-images');
   const productNameEscaped = escapeAttr(productName);
@@ -242,6 +325,8 @@ function renderProduct(product) {
 
   // ---- Extended details accordion ----
   renderExtendedDetails(product);
+  setupProductShare(product, productUrl, absolutePrimaryImage);
+  loadRelatedProducts(product);
 
   // ---- Rating stars (async) ----
   if (window.fetchReviewStats) {
@@ -266,6 +351,81 @@ function renderProduct(product) {
     }).catch(err => {
       console.error('Error loading reviews:', err);
     });
+  }
+}
+
+function setupProductShare(product, productUrl, imageUrl) {
+  const shareSection = document.getElementById('product-share-section');
+  const copyBtn = document.getElementById('share-copy-link');
+  const facebookBtn = document.getElementById('share-facebook');
+  const pinterestBtn = document.getElementById('share-pinterest');
+  if (!shareSection || !copyBtn || !facebookBtn || !pinterestBtn) return;
+
+  shareSection.style.display = 'flex';
+
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      if (typeof showNotification === 'function') {
+        showNotification('Product link copied to clipboard!', 'success', 2500);
+      }
+    } catch {
+      window.prompt('Copy this product link:', productUrl);
+    }
+  };
+
+  facebookBtn.onclick = () => {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
+    window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');
+  };
+
+  pinterestBtn.onclick = () => {
+    const url = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(productUrl)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(product.name || 'Bonnie Lass Florals product')}`;
+    window.open(url, '_blank', 'noopener,noreferrer,width=800,height=600');
+  };
+}
+
+async function loadRelatedProducts(product) {
+  const section = document.getElementById('related-products-section');
+  const grid = document.getElementById('related-products-grid');
+  if (!section || !grid || !product || !product._id) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/products?page=1&limit=1000`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const products = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : []);
+
+    const related = products
+      .filter(p => p && p._id && p._id !== product._id && p.type === product.type && (p.stock || 0) > 0)
+      .slice(0, 4);
+
+    if (related.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    const cards = related.map(p => {
+      const id = escapeAttr(p._id);
+      const name = escapeHtml(p.name || 'Product');
+      const rawImage = (p.images && p.images[0]) || p.image || '/img/default-product.png';
+      const image = escapeAttr(rawImage);
+      const price = p.price != null && !isNaN(p.price) ? `$${Number(p.price).toFixed(2)}` : '';
+      return `
+        <article class="related-product-card">
+          <a href="product.html?id=${id}" aria-label="View ${name}">
+            <img src="${image}" alt="${name}" width="220" height="180" loading="lazy" decoding="async" style="width:100%;height:180px;object-fit:cover;border-radius:10px;background:#f8f9fa;">
+          </a>
+          <a href="product.html?id=${id}">${name}</a>
+          <div class="related-product-price">${escapeHtml(price)}</div>
+        </article>
+      `;
+    }).join('');
+
+    grid.innerHTML = cards;
+    section.style.display = 'block';
+  } catch (err) {
+    console.error('Failed to load related products:', err);
   }
 }
 
