@@ -340,6 +340,136 @@ function escapeAttr(unsafe) {
     .replace(/>/g, '&gt;');
 }
 
+// ============================================================================
+// SAMPLER KIT HELPERS
+// ============================================================================
+
+/**
+ * Returns true if this product is a sampler/selection kit (food type only).
+ * Matches product names that contain "kit" (case-insensitive).
+ * @param {Object} product
+ * @returns {boolean}
+ */
+function isSamplerKit(product) {
+  if (!product || product.type !== 'food') return false;
+  return /kit/i.test(product.name || '');
+}
+
+/**
+ * Returns the list of sauce flavor names available for a sampler kit.
+ * Priority order:
+ *   1. Other food products sharing the same non-empty productGroup.
+ *   2. The kit's own options[] array (admin-managed list).
+ *   3. Hard-coded fallback from the inventory tracker list.
+ * @param {Object} samplerProduct
+ * @returns {string[]} sorted array of flavor name strings
+ */
+function getSamplerFlavors(samplerProduct) {
+  // 1. Look for sibling products in the same productGroup
+  if (samplerProduct.productGroup && samplerProduct.productGroup.trim()) {
+    const group = samplerProduct.productGroup.trim();
+    const siblings = allProducts.filter(p =>
+      p._id !== samplerProduct._id &&
+      p.type === 'food' &&
+      p.productGroup && p.productGroup.trim() === group &&
+      !isSamplerKit(p)
+    );
+    if (siblings.length > 0) {
+      return siblings.map(p => p.name).sort((a, b) => a.localeCompare(b));
+    }
+  }
+
+  // 2. Use the product's own options array if populated
+  if (samplerProduct.options && samplerProduct.options.length > 0) {
+    return [...samplerProduct.options].sort((a, b) => a.localeCompare(b));
+  }
+
+  // 3. Fallback: all non-kit food products
+  const foodProducts = allProducts.filter(p =>
+    p._id !== samplerProduct._id &&
+    p.type === 'food' &&
+    !isSamplerKit(p)
+  );
+  if (foodProducts.length > 0) {
+    return foodProducts.map(p => p.name).sort((a, b) => a.localeCompare(b));
+  }
+
+  // 4. Static fallback (matches inventory tracker list)
+  return [
+    '9 Pepper Purgatory',
+    'Hungarian Hawt',
+    'Jersey Devil',
+    'OCD Favorite',
+    'Pear Apple',
+    'Pineapple',
+    'Pumpkinator',
+    'Red Chili',
+    'Roasted Anaheim',
+    'Sassy Sauce',
+    'Sic Semper Scorp.',
+    'Spring Fling',
+    'Sunrise Heat',
+    'Taco Sauce',
+  ];
+}
+
+/**
+ * Render the flavor checkbox selector HTML for a sampler kit.
+ * @param {Object} product
+ * @returns {string} HTML string
+ */
+function renderSamplerFlavorSelector(product) {
+  const flavors = getSamplerFlavors(product);
+  const pid = escapeAttr(product._id);
+
+  const checkboxes = flavors.map(flavor =>
+    `<label class="sampler-flavor-item">
+      <input type="checkbox" class="sampler-flavor-check" data-product-id="${pid}" value="${escapeAttr(flavor)}">
+      <span>${escapeHtml(flavor)}</span>
+    </label>`
+  ).join('');
+
+  return `
+    <div class="sampler-flavor-selector" id="sampler-flavors-${pid}">
+      <span class="sampler-flavor-selector-label">🌶️ Choose Your Hot Sauce Flavors:</span>
+      <div class="sampler-flavor-list" id="sampler-list-${pid}">
+        ${checkboxes}
+      </div>
+      <div class="sampler-flavor-actions">
+        <button type="button" onclick="samplerSelectAll('${pid}')">Select All</button>
+        <button type="button" onclick="samplerClearAll('${pid}')">Clear All</button>
+        <span class="sampler-flavor-count" id="sampler-count-${pid}">0 selected</span>
+      </div>
+      <div class="sampler-flavor-hint">Select at least one flavor before adding to cart.</div>
+    </div>
+  `;
+}
+
+/** Select all flavor checkboxes for a sampler kit */
+function samplerSelectAll(productId) {
+  document.querySelectorAll(`.sampler-flavor-check[data-product-id="${productId}"]`)
+    .forEach(cb => { cb.checked = true; });
+  samplerUpdateCount(productId);
+}
+
+/** Clear all flavor checkboxes for a sampler kit */
+function samplerClearAll(productId) {
+  document.querySelectorAll(`.sampler-flavor-check[data-product-id="${productId}"]`)
+    .forEach(cb => { cb.checked = false; });
+  samplerUpdateCount(productId);
+}
+
+/** Update the "N selected" count label */
+function samplerUpdateCount(productId) {
+  const checked = document.querySelectorAll(
+    `.sampler-flavor-check[data-product-id="${productId}"]:checked`
+  ).length;
+  const countEl = document.getElementById(`sampler-count-${productId}`);
+  if (countEl) countEl.textContent = `${checked} selected`;
+}
+
+// ============================================================================
+
 // Event delegation handler for add-to-cart buttons
 let addToCartHandlersSetup = false;
 function setupAddToCartHandlers() {
@@ -365,14 +495,22 @@ function setupDropdownHandlers() {
 }
 
 function handleDropdownChange(event) {
+  // Handle product panel dropdown changes
   const dropdown = event.target.closest('.product-dropdown');
-  if (!dropdown) return; // Change was not on a product dropdown
-  
-  const panelId = dropdown.dataset.panelId;
-  const selectedIndex = dropdown.value;
-  
-  if (panelId && selectedIndex) {
-    switchProduct(panelId, selectedIndex);
+  if (dropdown) {
+    const panelId = dropdown.dataset.panelId;
+    const selectedIndex = dropdown.value;
+    if (panelId && selectedIndex) {
+      switchProduct(panelId, selectedIndex);
+    }
+    return;
+  }
+
+  // Handle sampler flavor checkbox changes - update counter
+  const flavorCheck = event.target.closest('.sampler-flavor-check');
+  if (flavorCheck) {
+    const productId = flavorCheck.dataset.productId;
+    if (productId) samplerUpdateCount(productId);
   }
 }
 
@@ -387,6 +525,35 @@ function handleAddToCart(event) {
   const product = allProducts.find(p => p._id === productId);
   if (!product) {
     console.error('Product not found:', productId);
+    return;
+  }
+
+  // --- Sampler kit: collect flavor checkbox selections ---
+  if (isSamplerKit(product)) {
+    const checked = document.querySelectorAll(
+      `.sampler-flavor-check[data-product-id="${productId}"]:checked`
+    );
+    if (checked.length === 0) {
+      if (typeof showNotification === 'function') {
+        showNotification('Please choose at least one sauce flavor before adding to cart.', 'error', 3000);
+      }
+      const selectorEl = document.getElementById(`sampler-flavors-${productId}`);
+      if (selectorEl) {
+        selectorEl.style.border = '2px solid #ef4444';
+        setTimeout(() => { selectorEl.style.border = '1px solid #c4b5e8'; }, 2000);
+      }
+      return;
+    }
+    const selectedFlavors = Array.from(checked).map(cb => cb.value);
+    if (typeof addToCart === 'function') {
+      addToCart({
+        name: product.name,
+        price: product.price,
+        id: product._id,
+        image: product.image,
+        selectedFlavors: selectedFlavors
+      });
+    }
     return;
   }
   
@@ -445,15 +612,19 @@ function productToCard(p) {
   const productPrice = p.price && !isNaN(p.price) ? Number(p.price).toFixed(2) : 'N/A';
   
   // Render options as a customer-selectable dropdown when options exist
-  const optionsHtml = p.options && p.options.length 
-    ? `<div class="product-option-selector" style="margin-bottom:0.5em;">
+  // For sampler kits, show the flavor checkbox selector instead
+  let optionsHtml = '';
+  if (isSamplerKit(p)) {
+    optionsHtml = renderSamplerFlavorSelector(p);
+  } else if (p.options && p.options.length) {
+    optionsHtml = `<div class="product-option-selector" style="margin-bottom:0.5em;">
         <label for="option-${escapeAttr(p._id)}" style="font-size:0.9em;font-weight:600;color:#421e7c;display:block;margin-bottom:0.25em;">Choose Option:</label>
         <select id="option-${escapeAttr(p._id)}" class="product-option-select" data-product-id="${escapeAttr(p._id)}" style="width:100%;padding:0.4em 0.6em;border:1px solid #c4b5e8;border-radius:6px;font-size:0.9em;color:#421e7c;background:#faf7ff;cursor:pointer;">
           <option value="">-- Select an option --</option>
           ${p.options.map(opt => `<option value="${escapeAttr(opt)}">${escapeHtml(opt)}</option>`).join('')}
         </select>
-      </div>` 
-    : '';
+      </div>`;
+  }
   
   // Generate image carousel or single image
   let imageHtml;
@@ -653,15 +824,19 @@ function generateProductContent(product, index, panelId, allGroupProducts = null
   const productPrice = product.price && !isNaN(product.price) ? Number(product.price).toFixed(2) : 'N/A';
   
   // Render options as a customer-selectable dropdown when options exist
-  const optionsHtml = product.options && product.options.length 
-    ? `<div class="product-option-selector" style="margin-bottom:0.5em;">
+  // For sampler kits, show the flavor checkbox selector instead
+  let optionsHtml = '';
+  if (isSamplerKit(product)) {
+    optionsHtml = renderSamplerFlavorSelector(product);
+  } else if (product.options && product.options.length) {
+    optionsHtml = `<div class="product-option-selector" style="margin-bottom:0.5em;">
         <label for="option-${escapeAttr(product._id)}" style="font-size:0.9em;font-weight:600;color:#421e7c;display:block;margin-bottom:0.25em;">Choose Option:</label>
         <select id="option-${escapeAttr(product._id)}" class="product-option-select" data-product-id="${escapeAttr(product._id)}" style="width:100%;padding:0.4em 0.6em;border:1px solid #c4b5e8;border-radius:6px;font-size:0.9em;color:#421e7c;background:#faf7ff;cursor:pointer;">
           <option value="">-- Select an option --</option>
           ${product.options.map(opt => `<option value="${escapeAttr(opt)}">${escapeHtml(opt)}</option>`).join('')}
         </select>
-      </div>` 
-    : '';
+      </div>`;
+  }
   
   // Generate image carousel or single image
   let imageHtml;

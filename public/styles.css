@@ -2915,3 +2915,95 @@ select:focus-visible {
     font-size: 1rem;
   }
 }
+
+/* ============================================================================
+   SAMPLER KIT FLAVOR SELECTOR
+   ============================================================================ */
+.sampler-flavor-selector {
+  margin-bottom: 0.75em;
+  padding: 0.75em;
+  background: #faf7ff;
+  border: 1px solid #c4b5e8;
+  border-radius: 8px;
+}
+
+.sampler-flavor-selector-label {
+  font-size: 0.9em;
+  font-weight: 700;
+  color: #421e7c;
+  display: block;
+  margin-bottom: 0.5em;
+}
+
+.sampler-flavor-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3em 0.75em;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 0.25em;
+}
+
+.sampler-flavor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.85em;
+  color: #421e7c;
+  cursor: pointer;
+  padding: 0.2em 0.3em;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.sampler-flavor-item:hover {
+  background: #ede9fe;
+}
+
+.sampler-flavor-item input[type="checkbox"] {
+  accent-color: #d946ef;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.sampler-flavor-hint {
+  font-size: 0.78em;
+  color: #6b7280;
+  margin-top: 0.4em;
+}
+
+.sampler-flavor-actions {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.5em;
+}
+
+.sampler-flavor-actions button {
+  background: none;
+  border: 1px solid #c4b5e8;
+  border-radius: 5px;
+  color: #7c3aed;
+  font-size: 0.75em;
+  padding: 0.2em 0.6em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sampler-flavor-actions button:hover {
+  background: #ede9fe;
+}
+
+.sampler-flavor-count {
+  font-size: 0.78em;
+  color: #7c3aed;
+  margin-left: auto;
+  align-self: center;
+}
+
+@media (max-width: 480px) {
+  .sampler-flavor-list {
+    grid-template-columns: 1fr;
+  }
+}
