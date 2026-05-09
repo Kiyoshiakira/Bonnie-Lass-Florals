@@ -46,6 +46,17 @@
   --floral-shadow: 0 4px 12px rgba(27, 67, 50, 0.35); /* Standard box shadow */
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -794,7 +805,7 @@ footer a:hover {
    NAVIGATION & DROPDOWN PROFILE - Modern, accessible navigation
    ============================================================================ */
 
-/* Hamburger Menu Icon - Hidden on desktop, shown on mobile (≤800px) */
+/* Hamburger Menu Icon - Hidden on desktop, shown on mobile/tablet (≤1024px) */
 /* Created dynamically by mobile-nav.js and inserted before nav element */
 .hamburger {
   display: none; /* Hidden by default on desktop */
@@ -1979,8 +1990,8 @@ footer a:hover {
   }
 }
 
-/* Mobile devices (≤800px) - Show hamburger menu and hide desktop navigation */
-@media (max-width: 800px) {
+/* Mobile/tablet devices (≤1024px) - Show hamburger menu and hide desktop navigation */
+@media (max-width: 1024px) {
   section {
     padding: 18px 6vw;
     margin-top: 36px;
@@ -2019,7 +2030,7 @@ footer a:hover {
     top: 0;
     right: -100%; /* Initially hidden off-screen */
     height: 100vh;
-    width: 280px;
+    width: min(82vw, 340px);
     /* Green gradient for mobile menu */
     background: linear-gradient(180deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
     flex-direction: column;
@@ -2341,6 +2352,22 @@ footer a:hover {
     padding: 0 !important;
     border: none;
     font-size: 0.95rem;
+  }
+}
+
+/* Improve touch target size on touch devices */
+@media (hover: none), (pointer: coarse) {
+  nav a,
+  .cta-btn,
+  #loginBtn,
+  .filter-reset,
+  .product-card button,
+  .more-details-btn,
+  .product-detail-add-btn,
+  #contactForm button,
+  #uploadForm button[type="submit"],
+  #loginModalContent button {
+    min-height: 44px;
   }
 }
 
