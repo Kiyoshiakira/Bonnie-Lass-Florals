@@ -387,7 +387,13 @@ function setupProductShare(product, productUrl, imageUrl) {
   redditBtn.onclick = () => {
     const title = encodeURIComponent(product.name ? `${product.name} - Bonnie Lass Florals` : 'Bonnie Lass Florals');
     const url = `https://www.reddit.com/submit?url=${encodeURIComponent(productUrl)}&title=${title}`;
-    window.open(url, '_blank', 'noopener,noreferrer,width=900,height=700');
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   pinterestBtn.onclick = () => {
