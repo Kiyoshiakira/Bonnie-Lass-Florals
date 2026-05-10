@@ -724,6 +724,68 @@
         font-weight: 500;
       }
 
+      /* Share panel styling */
+      .chatbot-share-panel {
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        border: 1px solid #86efac;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-top: 6px;
+      }
+
+      .chatbot-share-panel p {
+        margin: 0 0 10px 0;
+        font-size: 13px;
+        color: #166534;
+        font-weight: 600;
+      }
+
+      .chatbot-share-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .chatbot-share-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: opacity 0.2s, transform 0.15s;
+      }
+
+      .chatbot-share-btn:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+      }
+
+      .chatbot-share-btn.fb {
+        background: #1877f2;
+        color: #fff;
+      }
+
+      .chatbot-share-btn.reddit {
+        background: #ff4500;
+        color: #fff;
+      }
+
+      .chatbot-share-btn.instagram {
+        background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        color: #fff;
+      }
+
+      .chatbot-share-note {
+        font-size: 11px;
+        color: #6b7280;
+        margin: 4px 0 0 0;
+      }
+
       /* Error message styling */
       .chatbot-error {
         background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
@@ -1366,6 +1428,13 @@
     // Clear input
     input.value = '';
     input.style.height = 'auto';
+
+    // Intercept social-share requests and handle them client-side
+    if (message && detectShareIntent(message)) {
+      const platforms = getRequestedPlatforms(message);
+      addShareMessage(platforms);
+      return;
+    }
     
     // Send to API
     sendMessage(apiMessage);
@@ -1386,6 +1455,122 @@
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+
+  /**
+   * Detect if the user's message is a social-share request.
+   * Returns true when the message contains a share keyword together with
+   * at least one social-platform keyword (or a generic share pronoun).
+   */
+  function detectShareIntent(message) {
+    const lower = message.toLowerCase();
+    const hasShareWord = /\bshare\b|\bpost\b/.test(lower);
+    const hasPlatform = /\breddit\b|\bfacebook\b|\bfb\b|\binstagram\b|\binsta\b/.test(lower);
+    const hasGenericObject = /\bshare\s+(this|it)\b/.test(lower);
+    return hasShareWord && (hasPlatform || hasGenericObject);
+  }
+
+  /**
+   * Determine which platforms the user mentioned (defaults to all three).
+   */
+  function getRequestedPlatforms(message) {
+    const lower = message.toLowerCase();
+    const platforms = [];
+    if (/\bfacebook\b|\bfb\b/.test(lower)) platforms.push('facebook');
+    if (/\binstagram\b|\binsta\b/.test(lower)) platforms.push('instagram');
+    if (/\breddit\b/.test(lower)) platforms.push('reddit');
+    // If none specified explicitly, show all
+    return platforms.length > 0 ? platforms : ['facebook', 'instagram', 'reddit'];
+  }
+
+  /**
+   * Append a share-button panel as an assistant message in the chat.
+   */
+  function addShareMessage(platforms) {
+    const shareUrl = window.location.href;
+    const shareTitle = document.title || 'Bonnie Lass Florals';
+
+    const messagesContainer = document.getElementById('chatbot-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chatbot-message assistant';
+
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'chatbot-avatar-small';
+    avatarDiv.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="9" cy="10" r="1.5" fill="white"/>
+        <circle cx="15" cy="10" r="1.5" fill="white"/>
+        <path d="M12 17c2 0 3.5-1 4-2.5H8c.5 1.5 2 2.5 4 2.5z" fill="white"/>
+      </svg>
+    `;
+    messageDiv.appendChild(avatarDiv);
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'chatbot-message-content';
+
+    const panel = document.createElement('div');
+    panel.className = 'chatbot-share-panel';
+
+    const intro = document.createElement('p');
+    intro.textContent = 'Here\'s where you can share this page \uD83C\uDF38';
+    panel.appendChild(intro);
+
+    const btnsRow = document.createElement('div');
+    btnsRow.className = 'chatbot-share-buttons';
+
+    if (platforms.includes('facebook')) {
+      const btn = document.createElement('button');
+      btn.className = 'chatbot-share-btn fb';
+      btn.innerHTML = '\uD83D\uDCD8 Facebook';
+      btn.addEventListener('click', () => {
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');
+      });
+      btnsRow.appendChild(btn);
+    }
+
+    if (platforms.includes('reddit')) {
+      const btn = document.createElement('button');
+      btn.className = 'chatbot-share-btn reddit';
+      btn.innerHTML = '\uD83D\uDD36 Reddit';
+      btn.addEventListener('click', () => {
+        const url = `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}`;
+        window.open(url, '_blank', 'noopener,noreferrer,width=900,height=700');
+      });
+      btnsRow.appendChild(btn);
+    }
+
+    if (platforms.includes('instagram')) {
+      const btn = document.createElement('button');
+      btn.className = 'chatbot-share-btn instagram';
+      btn.innerHTML = '\uD83D\uDCF8 Instagram';
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          btn.textContent = '\u2705 Link copied!';
+          setTimeout(() => { btn.innerHTML = '\uD83D\uDCF8 Instagram'; }, 2500);
+        } catch {
+          window.prompt('Copy this link to share on Instagram:', shareUrl);
+        }
+      });
+      btnsRow.appendChild(btn);
+    }
+
+    panel.appendChild(btnsRow);
+
+    if (platforms.includes('instagram')) {
+      const note = document.createElement('p');
+      note.className = 'chatbot-share-note';
+      note.textContent = 'Instagram: copy the link above and paste it in your bio or caption.';
+      panel.appendChild(note);
+    }
+
+    contentDiv.appendChild(panel);
+    messageDiv.appendChild(contentDiv);
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
   /**
