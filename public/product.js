@@ -362,8 +362,9 @@ function setupProductShare(product, productUrl, imageUrl) {
   const shareSection = document.getElementById('product-share-section');
   const copyBtn = document.getElementById('share-copy-link');
   const facebookBtn = document.getElementById('share-facebook');
+  const redditBtn = document.getElementById('share-reddit');
   const pinterestBtn = document.getElementById('share-pinterest');
-  if (!shareSection || !copyBtn || !facebookBtn || !pinterestBtn) return;
+  if (!shareSection || !copyBtn || !facebookBtn || !redditBtn || !pinterestBtn) return;
 
   shareSection.style.display = 'flex';
 
@@ -381,6 +382,12 @@ function setupProductShare(product, productUrl, imageUrl) {
   facebookBtn.onclick = () => {
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
     window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');
+  };
+
+  redditBtn.onclick = () => {
+    const title = encodeURIComponent(product.name ? `${product.name} - Bonnie Lass Florals` : 'Bonnie Lass Florals');
+    const url = `https://www.reddit.com/submit?url=${encodeURIComponent(productUrl)}&title=${title}`;
+    window.open(url, '_blank', 'noopener,noreferrer,width=900,height=700');
   };
 
   pinterestBtn.onclick = () => {
