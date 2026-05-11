@@ -15,7 +15,7 @@ const ALLOWED_UPDATE_FIELDS = [
 const MESSAGE_TRUNCATE_LENGTH = 100;
 const FINISH_REASON_SAFETY = 'SAFETY';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'; // Prefer stable default, allow env override
-const GEMINI_FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+const GEMINI_FALLBACK_MODELS = ['gemini-2.0-flash'];
 const ADMIN_TOKEN_VERIFY_TIMEOUT_MS = 8000;
 const GEMINI_REQUEST_TIMEOUT_MS = 30000;
 
@@ -1417,7 +1417,7 @@ exports.sendMessage = async (req, res) => {
           });
         }
 
-        if (apiError.message && apiError.message.includes('timed out')) {
+        if (apiError.message && apiError.message.toLowerCase().includes('timeout')) {
           return res.status(504).json({
             error: 'The chatbot took too long to respond. Please try again.',
             success: false
