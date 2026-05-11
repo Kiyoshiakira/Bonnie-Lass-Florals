@@ -7,6 +7,9 @@ const RELATED_PRODUCTS_PAGE_SIZE = 40;
 const MAX_RELATED_PRODUCT_PAGES = 5;
 const MAX_RELATED_PRODUCTS_DISPLAY = 4;
 
+// Food products loaded on-demand for sampler kit flavor list
+let samplerFoodProducts = [];
+
 // HTML escape helper to prevent XSS
 function escapeHtml(unsafe) {
   if (!unsafe) return '';
@@ -171,6 +174,129 @@ function setProductStructuredData(product, productUrl, imageUrl) {
   schema.textContent = JSON.stringify(data);
 }
 
+/**
+ * Returns true if this product is a sampler/selection kit (food type only).
+ * Matches product names that contain "kit" (case-insensitive).
+ */
+function isSamplerKit(product) {
+  if (!product || product.type !== 'food') return false;
+  return /kit/i.test(product.name || '');
+}
+
+/**
+ * Returns the list of sauce flavor names available for a sampler kit.
+ * Priority order:
+ *   1. Other food products sharing the same non-empty productGroup.
+ *   2. The kit's own options[] array (admin-managed list).
+ *   3. All other non-kit food products loaded from the API.
+ *   4. Hard-coded static fallback.
+ * @param {Object} samplerProduct
+ * @returns {string[]} sorted array of flavor name strings
+ */
+function getSamplerFlavors(samplerProduct) {
+  // 1. Look for sibling products in the same productGroup
+  if (samplerProduct.productGroup && samplerProduct.productGroup.trim()) {
+    const group = samplerProduct.productGroup.trim();
+    const siblings = samplerFoodProducts.filter(p =>
+      p._id !== samplerProduct._id &&
+      p.type === 'food' &&
+      p.productGroup && p.productGroup.trim() === group &&
+      !isSamplerKit(p)
+    );
+    if (siblings.length > 0) {
+      return siblings.map(p => p.name).sort((a, b) => a.localeCompare(b));
+    }
+  }
+
+  // 2. Use the product's own options array if populated
+  if (samplerProduct.options && samplerProduct.options.length > 0) {
+    return [...samplerProduct.options].sort((a, b) => a.localeCompare(b));
+  }
+
+  // 3. Fallback: all non-kit food products loaded from the API
+  const foodProducts = samplerFoodProducts.filter(p =>
+    p._id !== samplerProduct._id &&
+    p.type === 'food' &&
+    !isSamplerKit(p)
+  );
+  if (foodProducts.length > 0) {
+    return foodProducts.map(p => p.name).sort((a, b) => a.localeCompare(b));
+  }
+
+  // 4. Static fallback
+  return [
+    '9 Pepper Purgatory',
+    'Hungarian Hawt',
+    'Jersey Devil',
+    'OCD Favorite',
+    'Pear Apple',
+    'Pineapple',
+    'Pumpkinator',
+    'Red Chili',
+    'Roasted Anaheim',
+    'Sassy Sauce',
+    'Sic Semper Scorp.',
+    'Spring Fling',
+    'Sunrise Heat',
+    'Taco Sauce',
+  ];
+}
+
+/**
+ * Render the flavor checkbox selector HTML for a sampler kit on the product detail page.
+ * @param {Object} product
+ * @returns {string} HTML string
+ */
+function renderSamplerFlavorSelector(product) {
+  const flavors = getSamplerFlavors(product);
+  const pid = escapeAttr(product._id);
+
+  const checkboxes = flavors.map(flavor =>
+    `<label class="sampler-flavor-item">
+      <input type="checkbox" class="sampler-flavor-check" data-product-id="${pid}" value="${escapeAttr(flavor)}">
+      <span>${escapeHtml(flavor)}</span>
+    </label>`
+  ).join('');
+
+  return `
+    <div class="sampler-flavor-selector" id="sampler-flavors-${pid}">
+      <span class="sampler-flavor-selector-label"><span aria-hidden="true">🌶️</span> Choose Your Hot Sauce Flavors:</span>
+      <div class="sampler-flavor-list" id="sampler-list-${pid}">
+        ${checkboxes}
+      </div>
+      <div class="sampler-flavor-actions">
+        <button type="button" onclick="samplerSelectAll('${pid}')">Select All</button>
+        <button type="button" onclick="samplerClearAll('${pid}')">Clear All</button>
+        <span class="sampler-flavor-count" id="sampler-count-${pid}">0 flavors selected</span>
+      </div>
+      <div class="sampler-flavor-hint">Select at least one flavor before adding to cart.</div>
+    </div>
+  `;
+}
+
+/** Select all flavor checkboxes for a sampler kit */
+function samplerSelectAll(productId) {
+  document.querySelectorAll(`.sampler-flavor-check[data-product-id="${productId}"]`)
+    .forEach(cb => { cb.checked = true; });
+  samplerUpdateCount(productId);
+}
+
+/** Clear all flavor checkboxes for a sampler kit */
+function samplerClearAll(productId) {
+  document.querySelectorAll(`.sampler-flavor-check[data-product-id="${productId}"]`)
+    .forEach(cb => { cb.checked = false; });
+  samplerUpdateCount(productId);
+}
+
+/** Update the "N flavors selected" count label */
+function samplerUpdateCount(productId) {
+  const checked = document.querySelectorAll(
+    `.sampler-flavor-check[data-product-id="${productId}"]:checked`
+  ).length;
+  const countEl = document.getElementById(`sampler-count-${productId}`);
+  if (countEl) countEl.textContent = `${checked} ${checked === 1 ? 'flavor' : 'flavors'} selected`;
+}
+
 // Fetch and render the product
 async function loadProduct() {
   const params = new URLSearchParams(window.location.search);
@@ -188,6 +314,27 @@ async function loadProduct() {
       return;
     }
     const product = await res.json();
+
+    // For sampler kits, pre-fetch all food products so getSamplerFlavors()
+    // can discover the available sauce flavors (including productGroup siblings).
+    if (isSamplerKit(product)) {
+      try {
+        let page = 1;
+        let hasMore = true;
+        while (hasMore && page <= MAX_RELATED_PRODUCT_PAGES) {
+          const foodRes = await fetch(`${API_BASE}/api/products?type=food&limit=100&page=${page}`);
+          if (!foodRes.ok) break;
+          const data = await foodRes.json();
+          const batch = Array.isArray(data?.products) ? data.products : (Array.isArray(data) ? data : []);
+          samplerFoodProducts = samplerFoodProducts.concat(batch);
+          hasMore = data?.pagination ? page < data.pagination.totalPages : false;
+          page += 1;
+        }
+      } catch (e) {
+        console.warn(`Could not load food products for sampler flavor list (product: ${product.name || productId}):`, e);
+      }
+    }
+
     renderProduct(product);
   } catch (err) {
     console.error('Error loading product:', err);
@@ -294,9 +441,16 @@ function renderProduct(product) {
     stockEl.className = 'product-stock';
   }
 
-  // ---- Options dropdown ----
+  // ---- Options / flavor selector ----
   const optionsContainer = document.getElementById('product-detail-options');
-  if (product.options && product.options.length > 0) {
+  if (isSamplerKit(product)) {
+    optionsContainer.innerHTML = renderSamplerFlavorSelector(product);
+    // Wire up checkbox changes to update the flavor count
+    optionsContainer.addEventListener('change', function(e) {
+      const cb = e.target.closest('.sampler-flavor-check');
+      if (cb && cb.dataset.productId) samplerUpdateCount(cb.dataset.productId);
+    });
+  } else if (product.options && product.options.length > 0) {
     const optionItems = product.options
       .map(opt => `<option value="${escapeAttr(opt)}">${escapeHtml(opt)}</option>`)
       .join('');
@@ -468,6 +622,36 @@ async function loadRelatedProducts(product) {
 
 // Handle add-to-cart from the product detail page
 function handleAddToCart(product) {
+  // --- Sampler kit: require at least one flavor selection ---
+  if (isSamplerKit(product)) {
+    const productId = product._id;
+    const checked = document.querySelectorAll(
+      `.sampler-flavor-check[data-product-id="${productId}"]:checked`
+    );
+    if (checked.length === 0) {
+      if (typeof showNotification === 'function') {
+        showNotification('Please choose at least one sauce flavor before adding to cart.', 'error', 3000);
+      }
+      const selectorEl = document.getElementById(`sampler-flavors-${productId}`);
+      if (selectorEl) {
+        selectorEl.style.border = '2px solid #ef4444';
+        setTimeout(() => { selectorEl.style.border = '1px solid #c4b5e8'; }, 2000);
+      }
+      return;
+    }
+    const selectedFlavors = Array.from(checked).map(cb => cb.value);
+    if (typeof addToCart === 'function') {
+      addToCart({
+        name: product.name,
+        price: product.price,
+        id: product._id,
+        image: (product.images && product.images[0]) || product.image || '',
+        selectedFlavors: selectedFlavors
+      });
+    }
+    return;
+  }
+
   let selectedOption = '';
 
   if (product.options && product.options.length > 0) {
@@ -541,3 +725,7 @@ document.addEventListener('DOMContentLoaded', loadProduct);
 window.nextImage = nextImage;
 window.prevImage = prevImage;
 window.goToImage = goToImage;
+
+// Expose sampler kit functions to global scope for onclick handlers in generated HTML
+window.samplerSelectAll = samplerSelectAll;
+window.samplerClearAll = samplerClearAll;
