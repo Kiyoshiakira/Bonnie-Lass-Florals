@@ -20,11 +20,17 @@
   let isChatbotOpen = false;
   let isLoading = false;
   let selectedFiles = []; // Array to store selected files for upload
+  let isChatbotInitialized = false;
+  const CHATBOT_REQUEST_TIMEOUT_MS = 35000;
 
   /**
    * Create chatbot HTML structure
    */
   function createChatbotHTML() {
+    if (document.getElementById('chatbot-widget')) {
+      return;
+    }
+
     const chatbotHTML = `
       <div id="chatbot-widget">
         <!-- Chatbot Toggle Button -->
@@ -134,7 +140,12 @@
    * Add CSS styles for the chatbot
    */
   function addChatbotStyles() {
+    if (document.getElementById('chatbot-styles')) {
+      return;
+    }
+
     const style = document.createElement('style');
+    style.id = 'chatbot-styles';
     style.textContent = `
       #chatbot-widget {
         position: fixed;
@@ -1329,14 +1340,22 @@
         headers['Authorization'] = `Bearer ${authToken}`;
       }
       
-      const response = await fetch(`${CHATBOT_API}/message`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          message,
-          chatHistory: chatHistory.slice(0, -1) // Don't include the current message
-        })
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CHATBOT_REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        response = await fetch(`${CHATBOT_API}/message`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            message,
+            chatHistory: chatHistory.slice(0, -1) // Don't include the current message
+          }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       
       hideLoading();
       
@@ -1386,7 +1405,10 @@
       
       // Show user-friendly error messages
       let errorMessage = error.message;
-      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      if (error.name === 'AbortError') {
+        errorMessage = 'The chatbot request timed out. Please try again.';
+        showConnectionStatus('⚠️ Request timeout - Please try again', true);
+      } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
         errorMessage = 'Unable to connect to the chatbot service. Please check your internet connection.';
         showConnectionStatus('⚠️ Connection issue - Please check your internet', true);
       }
@@ -1577,6 +1599,11 @@
    * Initialize chatbot
    */
   function initChatbot() {
+    if (isChatbotInitialized) {
+      return;
+    }
+    isChatbotInitialized = true;
+
     // Add styles
     addChatbotStyles();
     

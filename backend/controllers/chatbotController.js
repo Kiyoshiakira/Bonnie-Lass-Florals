@@ -14,7 +14,10 @@ const ALLOWED_UPDATE_FIELDS = [
 // Constants for Gemini response handling
 const MESSAGE_TRUNCATE_LENGTH = 100;
 const FINISH_REASON_SAFETY = 'SAFETY';
-const GEMINI_MODEL = 'gemini-3-flash-preview'; // Current model in use
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'; // Prefer stable default, allow env override
+const GEMINI_FALLBACK_MODELS = ['gemini-2.0-flash'];
+const ADMIN_TOKEN_VERIFY_TIMEOUT_MS = 8000;
+const GEMINI_REQUEST_TIMEOUT_MS = 30000;
 
 // Initialize Gemini API with new @google/genai SDK
 // Supports Gemini 3 Flash Preview and other latest models
@@ -432,7 +435,18 @@ async function checkIsAdmin(req) {
         return false;
       }
       const token = parts[1];
-      const decoded = await admin.auth().verifyIdToken(token);
+      let verifyTimeoutId;
+      const adminVerifyTimeoutMessage = `Firebase admin token verification exceeded ${ADMIN_TOKEN_VERIFY_TIMEOUT_MS}ms timeout`;
+      const decoded = await Promise.race([
+        admin.auth().verifyIdToken(token),
+        new Promise((_, reject) => {
+          verifyTimeoutId = setTimeout(() => reject(new Error(adminVerifyTimeoutMessage)), ADMIN_TOKEN_VERIFY_TIMEOUT_MS);
+        })
+      ]).finally(() => {
+        if (verifyTimeoutId) {
+          clearTimeout(verifyTimeoutId);
+        }
+      });
       return isAdminEmail(decoded.email);
     }
     
@@ -443,7 +457,10 @@ async function checkIsAdmin(req) {
     
     return false;
   } catch (error) {
-    logger.error('Error checking admin status:', error);
+    logger.error('Error checking admin status:', {
+      message: error.message,
+      name: error.name
+    });
     return false;
   }
 }
@@ -464,6 +481,50 @@ function parseAdminAction(responseText) {
     logger.error('Error parsing admin action:', error);
     return null;
   }
+}
+
+/**
+ * Extract text from Gemini response across SDK response shapes
+ */
+async function extractResponseText(response) {
+  if (!response) {
+    return '';
+  }
+
+  if (typeof response.text === 'string') {
+    return response.text;
+  }
+
+  if (typeof response.text === 'function') {
+    const textResult = await response.text();
+    return typeof textResult === 'string' ? textResult : '';
+  }
+
+  if (Array.isArray(response.candidates)) {
+    for (const candidate of response.candidates) {
+      if (candidate && candidate.content && Array.isArray(candidate.content.parts)) {
+        const candidateText = candidate.content.parts
+          .map(part => (part && typeof part.text === 'string' ? part.text : ''))
+          .join('')
+          .trim();
+        if (candidateText) {
+          return candidateText;
+        }
+      }
+    }
+  }
+
+  return '';
+}
+
+function isModelUnavailableError(apiError, modelName) {
+  if (!apiError) return false;
+  const errorMessage = (apiError.message || '').toLowerCase();
+  return Boolean(
+    apiError.status === 404 ||
+    errorMessage.includes(`models/${modelName}`.toLowerCase()) ||
+    errorMessage.includes('model not found')
+  );
 }
 
 /**
@@ -1299,57 +1360,82 @@ exports.sendMessage = async (req, res) => {
       ? 'I understand completely. I am your exceptionally intelligent assistant for Bonnie Lass Florals, equipped with advanced natural language understanding. For customers, I provide warm, helpful information about handmade floral arrangements, crafts, and cottage food products. As an admin user, I have enhanced capabilities - I can intelligently parse your natural language commands, automatically detect and map information to the correct fields, understand context and intent, and help you manage products with smart, conversational interactions. I recognize various ways you might phrase commands and can extract structured data from conversational input. Just tell me what you need in your own words, and I\'ll understand.'
       : 'I understand completely. I am your exceptionally intelligent assistant for Bonnie Lass Florals. I have advanced natural language understanding to help you find the perfect handmade floral arrangements, crafts, or cottage food products. I understand various ways you might phrase questions and can infer your needs from context. Just ask me anything in your own words, and I\'ll provide helpful, accurate information.';
     
-    // Create chat with history - Enhanced generation config for better intelligence
-    const chat = genAI.chats.create({
-      model: GEMINI_MODEL,
-      history: [
-        {
-          role: 'user',
-          parts: [{ text: systemPrompt }]
-        },
-        {
-          role: 'model',
-          parts: [{ text: initialAcknowledgment }]
-        },
-        ...formattedHistory
-      ],
-      generationConfig: {
-        temperature: 0.9,  // Increased from 0.7 for more creative, intelligent responses
-        topP: 0.95,        // Increased from 0.8 for better diversity in understanding
-        topK: 50,          // Increased from 40 for more nuanced understanding
-        maxOutputTokens: 2048,  // Increased from 1024 for more detailed, comprehensive responses
-      },
-    });
-    
-    // Send message and get response
     let result;
-    try {
-      result = await chat.sendMessage({ message });
-    } catch (apiError) {
-      logger.error('Gemini API error:', {
-        error: apiError.message,
-        status: apiError.status || 'unknown',
-        details: apiError.details || 'none'
+    let modelInUse = null;
+    const modelCandidates = [...new Set([GEMINI_MODEL, ...GEMINI_FALLBACK_MODELS].filter(Boolean))];
+
+    for (const modelName of modelCandidates) {
+      try {
+        // Create chat with history - Enhanced generation config for better intelligence
+        const chat = genAI.chats.create({
+          model: modelName,
+          history: [
+            {
+              role: 'user',
+              parts: [{ text: systemPrompt }]
+            },
+            {
+              role: 'model',
+              parts: [{ text: initialAcknowledgment }]
+            },
+            ...formattedHistory
+          ],
+          generationConfig: {
+            temperature: 0.9,  // Increased from 0.7 for more creative, intelligent responses
+            topP: 0.95,        // Increased from 0.8 for better diversity in understanding
+            topK: 50,          // Increased from 40 for more nuanced understanding
+            maxOutputTokens: 2048,  // Increased from 1024 for more detailed, comprehensive responses
+          },
+        });
+
+        let chatTimeoutId;
+        const geminiTimeoutMessage = `Gemini request exceeded ${GEMINI_REQUEST_TIMEOUT_MS}ms timeout`;
+        result = await Promise.race([
+          chat.sendMessage({ message }),
+          new Promise((_, reject) => {
+            chatTimeoutId = setTimeout(() => reject(new Error(geminiTimeoutMessage)), GEMINI_REQUEST_TIMEOUT_MS);
+          })
+        ]).finally(() => {
+          if (chatTimeoutId) {
+            clearTimeout(chatTimeoutId);
+          }
+        });
+        modelInUse = modelName;
+        break;
+      } catch (apiError) {
+        logger.error('Gemini API error:', {
+          model: modelName,
+          error: apiError.message,
+          status: apiError.status || 'unknown',
+          details: apiError.details || 'none'
+        });
+
+        if (apiError.message && apiError.message.includes('API_KEY_INVALID')) {
+          return res.status(500).json({ 
+            error: 'Chatbot configuration error. Please contact support.',
+            success: false
+          });
+        }
+
+        if (apiError.message && apiError.message.toLowerCase().includes('timeout')) {
+          return res.status(504).json({
+            error: 'The chatbot took too long to respond. Please try again.',
+            success: false
+          });
+        }
+
+        if (!isModelUnavailableError(apiError, modelName)) {
+          throw apiError;
+        }
+      }
+    }
+
+    if (!result) {
+      logger.error(`All Gemini models unavailable: ${modelCandidates.join(', ')}`);
+      return res.status(500).json({ 
+        error: 'The chatbot model is temporarily unavailable. Please try again later.',
+        success: false
       });
-      
-      // Handle specific API errors
-      if (apiError.message && apiError.message.includes('API_KEY_INVALID')) {
-        return res.status(500).json({ 
-          error: 'Chatbot configuration error. Please contact support.',
-          success: false
-        });
-      }
-      
-      if (apiError.message && apiError.message.includes(`models/${GEMINI_MODEL}`)) {
-        logger.error(`Model not found error - ${GEMINI_MODEL} may not be available`);
-        return res.status(500).json({ 
-          error: 'The chatbot model is temporarily unavailable. Please try again later.',
-          success: false
-        });
-      }
-      
-      // Re-throw to be caught by outer catch
-      throw apiError;
     }
     
     // In the new SDK, result is the response object directly
@@ -1370,8 +1456,7 @@ exports.sendMessage = async (req, res) => {
     // Get response text with error handling
     let text = '';
     try {
-      // In the new SDK, text is a property not a method
-      text = response.text;
+      text = await extractResponseText(response);
     } catch (error) {
       logger.error('Error extracting text from Gemini response:', error);
       // Check if there are candidates with finish reason
@@ -1466,7 +1551,8 @@ exports.sendMessage = async (req, res) => {
       messageLength: message.length, 
       responseLength: text.length,
       isAdmin,
-      actionExecuted: !!actionResult
+      actionExecuted: !!actionResult,
+      modelInUse
     });
     
     res.json({ 
