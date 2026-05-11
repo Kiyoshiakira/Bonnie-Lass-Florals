@@ -1362,8 +1362,7 @@ exports.sendMessage = async (req, res) => {
     
     let result;
     let modelInUse = null;
-    const modelCandidates = [GEMINI_MODEL, ...GEMINI_FALLBACK_MODELS]
-      .filter((modelName, index, arr) => modelName && arr.indexOf(modelName) === index);
+    const modelCandidates = [...new Set([GEMINI_MODEL, ...GEMINI_FALLBACK_MODELS].filter(Boolean))];
 
     for (const modelName of modelCandidates) {
       try {
