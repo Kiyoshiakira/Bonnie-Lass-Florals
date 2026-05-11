@@ -1180,7 +1180,7 @@ async function executeAdminAction(actionData) {
           productForAddOption = await Product.findById(productId);
         } else if (productName) {
           const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          productForAddOption = await Product.findOne({ name: productName });
+          productForAddOption = await Product.findOne({ name: escapedName });
           if (!productForAddOption) {
             productForAddOption = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
           }
@@ -1220,7 +1220,7 @@ async function executeAdminAction(actionData) {
           productForRemoveOption = await Product.findById(productId);
         } else if (productName) {
           const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          productForRemoveOption = await Product.findOne({ name: productName });
+          productForRemoveOption = await Product.findOne({ name: escapedName });
           if (!productForRemoveOption) {
             productForRemoveOption = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
           }
