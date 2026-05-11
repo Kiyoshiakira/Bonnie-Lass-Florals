@@ -15,6 +15,8 @@ const ALLOWED_UPDATE_FIELDS = [
 const MESSAGE_TRUNCATE_LENGTH = 100;
 const FINISH_REASON_SAFETY = 'SAFETY';
 const GEMINI_MODEL = 'gemini-3-flash-preview'; // Current model in use
+const ADMIN_TOKEN_VERIFY_TIMEOUT_MS = 8000;
+const GEMINI_REQUEST_TIMEOUT_MS = 30000;
 
 // Initialize Gemini API with new @google/genai SDK
 // Supports Gemini 3 Flash Preview and other latest models
@@ -432,7 +434,12 @@ async function checkIsAdmin(req) {
         return false;
       }
       const token = parts[1];
-      const decoded = await admin.auth().verifyIdToken(token);
+      const decoded = await Promise.race([
+        admin.auth().verifyIdToken(token),
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Admin token verification timed out')), ADMIN_TOKEN_VERIFY_TIMEOUT_MS);
+        })
+      ]);
       return isAdminEmail(decoded.email);
     }
     
@@ -443,7 +450,10 @@ async function checkIsAdmin(req) {
     
     return false;
   } catch (error) {
-    logger.error('Error checking admin status:', error);
+    logger.error('Error checking admin status:', {
+      message: error.message,
+      name: error.name
+    });
     return false;
   }
 }
@@ -1358,7 +1368,12 @@ exports.sendMessage = async (req, res) => {
     // Send message and get response
     let result;
     try {
-      result = await chat.sendMessage({ message });
+      result = await Promise.race([
+        chat.sendMessage({ message }),
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Gemini request timed out')), GEMINI_REQUEST_TIMEOUT_MS);
+        })
+      ]);
     } catch (apiError) {
       logger.error('Gemini API error:', {
         error: apiError.message,
@@ -1378,6 +1393,13 @@ exports.sendMessage = async (req, res) => {
         logger.error(`Model not found error - ${GEMINI_MODEL} may not be available`);
         return res.status(500).json({ 
           error: 'The chatbot model is temporarily unavailable. Please try again later.',
+          success: false
+        });
+      }
+
+      if (apiError.message && apiError.message.includes('timed out')) {
+        return res.status(504).json({
+          error: 'The chatbot took too long to respond. Please try again.',
           success: false
         });
       }

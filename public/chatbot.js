@@ -21,6 +21,7 @@
   let isLoading = false;
   let selectedFiles = []; // Array to store selected files for upload
   let isChatbotInitialized = false;
+  const CHATBOT_REQUEST_TIMEOUT_MS = 35000;
 
   /**
    * Create chatbot HTML structure
@@ -1339,14 +1340,22 @@
         headers['Authorization'] = `Bearer ${authToken}`;
       }
       
-      const response = await fetch(`${CHATBOT_API}/message`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          message,
-          chatHistory: chatHistory.slice(0, -1) // Don't include the current message
-        })
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CHATBOT_REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        response = await fetch(`${CHATBOT_API}/message`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            message,
+            chatHistory: chatHistory.slice(0, -1) // Don't include the current message
+          }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       
       hideLoading();
       
@@ -1396,7 +1405,10 @@
       
       // Show user-friendly error messages
       let errorMessage = error.message;
-      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      if (error.name === 'AbortError') {
+        errorMessage = 'The chatbot request timed out. Please try again.';
+        showConnectionStatus('⚠️ Request timeout - Please try again', true);
+      } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
         errorMessage = 'Unable to connect to the chatbot service. Please check your internet connection.';
         showConnectionStatus('⚠️ Connection issue - Please check your internet', true);
       }
