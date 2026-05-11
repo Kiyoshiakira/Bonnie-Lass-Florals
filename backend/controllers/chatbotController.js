@@ -335,7 +335,23 @@ Use these commands to manage the store. I understand both formal command syntax 
     - "add Peanut Butter Cookies to Cookies panel"
     - "put Spring Wreath in the Seasonal Wreaths group"
 
-ADVANCED NATURAL LANGUAGE PROCESSING:
+13. ADD OPTION TO PRODUCT
+    Format: "add option [value] to [product name or ID]"
+    Natural language examples:
+    - "Add Sriracha to the sampler kit options"
+    - "Add Mango Habanero as a flavor option for Sauce Sampler Kit"
+    - "Add Ghost Pepper to sampler flavors"
+    
+    Return action: "add_option" with productName (or productId) and optionValue (string)
+
+14. REMOVE OPTION FROM PRODUCT
+    Format: "remove option [value] from [product name or ID]"
+    Natural language examples:
+    - "Remove Pineapple from the sampler kit options"
+    - "Delete Taco Sauce from the sampler flavors"
+    - "Take out Pear Apple from sampler kit flavor choices"
+    
+    Return action: "remove_option" with productName (or productId) and optionValue (string)
 When handling admin commands, I:
 1. Parse your natural language request with deep understanding of intent
 2. Extract key information (product names, prices, field values) from conversational text
@@ -371,7 +387,7 @@ SMART RESPONSE FORMAT:
 Smart field placement: I ALWAYS return JSON action blocks with this structure, populated from natural language:
 \`\`\`json
 {
-  "action": "create|update|delete|bulk_update|bulk_delete|search|stats|low_stock|out_of_stock|list_products|add_photos|remove_photos|merge_products|add_to_group",
+  "action": "create|update|delete|bulk_update|bulk_delete|search|stats|low_stock|out_of_stock|list_products|add_photos|remove_photos|merge_products|add_to_group|add_option|remove_option",
   "productData": { /* for create */ },
   "productId": "optional",
   "productName": "optional",
@@ -382,7 +398,8 @@ Smart field placement: I ALWAYS return JSON action blocks with this structure, p
   "imagesToRemove": [ /* array of image URLs or indices for remove_photos */ ],
   "productNames": [ /* array of product names for merge_products and add_to_group */ ],
   "productIds": [ /* array of product IDs for merge_products and add_to_group */ ],
-  "groupName": "string /* group name for merge_products and add_to_group */"
+  "groupName": "string /* group name for merge_products and add_to_group */",
+  "optionValue": "string /* single option/flavor value for add_option and remove_option */"
 }
 \`\`\`
 
@@ -1155,6 +1172,87 @@ async function executeAdminAction(actionData) {
           products: productsToAdd.map(p => ({ name: p.name, _id: p._id }))
         };
       
+      case 'add_option':
+        // Add a single option/flavor to a product's options array
+        let productForAddOption;
+
+        if (productId) {
+          productForAddOption = await Product.findById(productId);
+        } else if (productName) {
+          const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          productForAddOption = await Product.findOne({ name: productName });
+          if (!productForAddOption) {
+            productForAddOption = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+          }
+        }
+
+        if (!productForAddOption) {
+          return { success: false, error: 'Product not found' };
+        }
+
+        const { optionValue: addOptionValue } = actionData;
+        if (!addOptionValue || typeof addOptionValue !== 'string' || addOptionValue.trim() === '') {
+          return { success: false, error: 'Option value is required and must be a non-empty string' };
+        }
+
+        const trimmedAddOption = addOptionValue.trim();
+        const currentOptions = productForAddOption.options || [];
+
+        if (currentOptions.some(o => o.toLowerCase() === trimmedAddOption.toLowerCase())) {
+          return { success: false, error: `Option "${trimmedAddOption}" already exists on this product` };
+        }
+
+        productForAddOption.options = [...currentOptions, trimmedAddOption];
+        await productForAddOption.save();
+
+        return {
+          success: true,
+          message: `Successfully added option "${trimmedAddOption}" to "${productForAddOption.name}". Current options: ${productForAddOption.options.join(', ')}`,
+          product: productForAddOption,
+          options: productForAddOption.options
+        };
+
+      case 'remove_option':
+        // Remove a single option/flavor from a product's options array
+        let productForRemoveOption;
+
+        if (productId) {
+          productForRemoveOption = await Product.findById(productId);
+        } else if (productName) {
+          const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          productForRemoveOption = await Product.findOne({ name: productName });
+          if (!productForRemoveOption) {
+            productForRemoveOption = await Product.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+          }
+        }
+
+        if (!productForRemoveOption) {
+          return { success: false, error: 'Product not found' };
+        }
+
+        const { optionValue: removeOptionValue } = actionData;
+        if (!removeOptionValue || typeof removeOptionValue !== 'string' || removeOptionValue.trim() === '') {
+          return { success: false, error: 'Option value is required and must be a non-empty string' };
+        }
+
+        const trimmedRemoveOption = removeOptionValue.trim();
+        const optionsBeforeRemoval = productForRemoveOption.options || [];
+        const matchIndex = optionsBeforeRemoval.findIndex(o => o.toLowerCase() === trimmedRemoveOption.toLowerCase());
+
+        if (matchIndex === -1) {
+          return { success: false, error: `Option "${trimmedRemoveOption}" not found on this product` };
+        }
+
+        productForRemoveOption.options = optionsBeforeRemoval.filter((_, i) => i !== matchIndex);
+        await productForRemoveOption.save();
+
+        return {
+          success: true,
+          message: `Successfully removed option "${trimmedRemoveOption}" from "${productForRemoveOption.name}". Remaining options: ${productForRemoveOption.options.length > 0 ? productForRemoveOption.options.join(', ') : '(none)'}`,
+          product: productForRemoveOption,
+          options: productForRemoveOption.options
+        };
+
       default:
         return { success: false, error: 'Unknown action' };
     }
