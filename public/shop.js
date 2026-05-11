@@ -359,8 +359,9 @@ function isSamplerKit(product) {
  * Returns the list of sauce flavor names available for a sampler kit.
  * Priority order:
  *   1. Other food products sharing the same non-empty productGroup.
- *   2. The kit's own options[] array (admin-managed list).
- *   3. Hard-coded fallback from the inventory tracker list.
+ *   2. All other non-kit food products.
+ *   3. The kit's own options[] array (admin-managed list).
+ *   4. Hard-coded fallback from the inventory tracker list.
  * @param {Object} samplerProduct
  * @returns {string[]} sorted array of flavor name strings
  */
@@ -379,12 +380,7 @@ function getSamplerFlavors(samplerProduct) {
     }
   }
 
-  // 2. Use the product's own options array if populated
-  if (samplerProduct.options && samplerProduct.options.length > 0) {
-    return [...samplerProduct.options].sort((a, b) => a.localeCompare(b));
-  }
-
-  // 3. Fallback: all non-kit food products
+  // 2. Fallback: all non-kit food products
   const foodProducts = allProducts.filter(p =>
     p._id !== samplerProduct._id &&
     p.type === 'food' &&
@@ -392,6 +388,11 @@ function getSamplerFlavors(samplerProduct) {
   );
   if (foodProducts.length > 0) {
     return foodProducts.map(p => p.name).sort((a, b) => a.localeCompare(b));
+  }
+
+  // 3. Use the product's own options array if populated
+  if (samplerProduct.options && samplerProduct.options.length > 0) {
+    return [...samplerProduct.options].sort((a, b) => a.localeCompare(b));
   }
 
   // 4. Static fallback (matches inventory tracker list)
