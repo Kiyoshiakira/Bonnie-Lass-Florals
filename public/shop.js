@@ -358,15 +358,20 @@ function isSamplerKit(product) {
 /**
  * Returns the list of sauce flavor names available for a sampler kit.
  * Priority order:
- *   1. Other food products sharing the same non-empty productGroup.
- *   2. All other non-kit food products.
- *   3. The kit's own options[] array (admin-managed list).
+ *   1. The kit's own options[] array (admin-managed list).
+ *   2. Other food products sharing the same non-empty productGroup.
+ *   3. All other non-kit food products.
  *   4. Hard-coded fallback from the inventory tracker list.
  * @param {Object} samplerProduct
  * @returns {string[]} sorted array of flavor name strings
  */
 function getSamplerFlavors(samplerProduct) {
-  // 1. Look for sibling products in the same productGroup
+  // 1. Use the product's own options array if populated (admin-managed)
+  if (samplerProduct.options && samplerProduct.options.length > 0) {
+    return [...samplerProduct.options].sort((a, b) => a.localeCompare(b));
+  }
+
+  // 2. Look for sibling products in the same productGroup
   if (samplerProduct.productGroup && samplerProduct.productGroup.trim()) {
     const group = samplerProduct.productGroup.trim();
     const siblings = allProducts.filter(p =>
@@ -380,7 +385,7 @@ function getSamplerFlavors(samplerProduct) {
     }
   }
 
-  // 2. Fallback: all non-kit food products
+  // 3. Fallback: all non-kit food products
   const foodProducts = allProducts.filter(p =>
     p._id !== samplerProduct._id &&
     p.type === 'food' &&
@@ -388,11 +393,6 @@ function getSamplerFlavors(samplerProduct) {
   );
   if (foodProducts.length > 0) {
     return foodProducts.map(p => p.name).sort((a, b) => a.localeCompare(b));
-  }
-
-  // 3. Use the product's own options array if populated
-  if (samplerProduct.options && samplerProduct.options.length > 0) {
-    return [...samplerProduct.options].sort((a, b) => a.localeCompare(b));
   }
 
   // 4. Static fallback (matches inventory tracker list)
