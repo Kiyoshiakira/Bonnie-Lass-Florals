@@ -439,7 +439,7 @@ async function checkIsAdmin(req) {
       const decoded = await Promise.race([
         admin.auth().verifyIdToken(token),
         new Promise((_, reject) => {
-          verifyTimeoutId = setTimeout(() => reject(new Error('Admin token verification timed out')), ADMIN_TOKEN_VERIFY_TIMEOUT_MS);
+          verifyTimeoutId = setTimeout(() => reject(new Error(`Firebase admin token verification exceeded ${ADMIN_TOKEN_VERIFY_TIMEOUT_MS}ms timeout`)), ADMIN_TOKEN_VERIFY_TIMEOUT_MS);
         })
       ]).finally(() => {
         if (verifyTimeoutId) {
@@ -1392,7 +1392,7 @@ exports.sendMessage = async (req, res) => {
         result = await Promise.race([
           chat.sendMessage({ message }),
           new Promise((_, reject) => {
-            chatTimeoutId = setTimeout(() => reject(new Error('Gemini request timed out')), GEMINI_REQUEST_TIMEOUT_MS);
+            chatTimeoutId = setTimeout(() => reject(new Error(`Gemini request exceeded ${GEMINI_REQUEST_TIMEOUT_MS}ms timeout`)), GEMINI_REQUEST_TIMEOUT_MS);
           })
         ]).finally(() => {
           if (chatTimeoutId) {
