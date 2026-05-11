@@ -467,6 +467,40 @@ function parseAdminAction(responseText) {
 }
 
 /**
+ * Extract text from Gemini response across SDK response shapes
+ */
+async function extractResponseText(response) {
+  if (!response) {
+    return '';
+  }
+
+  if (typeof response.text === 'string') {
+    return response.text;
+  }
+
+  if (typeof response.text === 'function') {
+    const textResult = await response.text();
+    return typeof textResult === 'string' ? textResult : '';
+  }
+
+  if (Array.isArray(response.candidates)) {
+    for (const candidate of response.candidates) {
+      if (candidate && candidate.content && Array.isArray(candidate.content.parts)) {
+        const candidateText = candidate.content.parts
+          .map(part => (part && typeof part.text === 'string' ? part.text : ''))
+          .join('')
+          .trim();
+        if (candidateText) {
+          return candidateText;
+        }
+      }
+    }
+  }
+
+  return '';
+}
+
+/**
  * Common allergen keywords for detection
  */
 const COMMON_ALLERGENS = ['wheat', 'dairy', 'nut', 'egg', 'soy', 'fish', 'shellfish', 'gluten'];
@@ -1370,8 +1404,7 @@ exports.sendMessage = async (req, res) => {
     // Get response text with error handling
     let text = '';
     try {
-      // In the new SDK, text is a property not a method
-      text = response.text;
+      text = await extractResponseText(response);
     } catch (error) {
       logger.error('Error extracting text from Gemini response:', error);
       // Check if there are candidates with finish reason

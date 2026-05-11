@@ -20,11 +20,16 @@
   let isChatbotOpen = false;
   let isLoading = false;
   let selectedFiles = []; // Array to store selected files for upload
+  let isChatbotInitialized = false;
 
   /**
    * Create chatbot HTML structure
    */
   function createChatbotHTML() {
+    if (document.getElementById('chatbot-widget')) {
+      return;
+    }
+
     const chatbotHTML = `
       <div id="chatbot-widget">
         <!-- Chatbot Toggle Button -->
@@ -134,7 +139,12 @@
    * Add CSS styles for the chatbot
    */
   function addChatbotStyles() {
+    if (document.getElementById('chatbot-styles')) {
+      return;
+    }
+
     const style = document.createElement('style');
+    style.id = 'chatbot-styles';
     style.textContent = `
       #chatbot-widget {
         position: fixed;
@@ -1577,6 +1587,11 @@
    * Initialize chatbot
    */
   function initChatbot() {
+    if (isChatbotInitialized) {
+      return;
+    }
+    isChatbotInitialized = true;
+
     // Add styles
     addChatbotStyles();
     
