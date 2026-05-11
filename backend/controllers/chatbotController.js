@@ -434,12 +434,17 @@ async function checkIsAdmin(req) {
         return false;
       }
       const token = parts[1];
+      let verifyTimeoutId;
       const decoded = await Promise.race([
         admin.auth().verifyIdToken(token),
         new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Admin token verification timed out')), ADMIN_TOKEN_VERIFY_TIMEOUT_MS);
+          verifyTimeoutId = setTimeout(() => reject(new Error('Admin token verification timed out')), ADMIN_TOKEN_VERIFY_TIMEOUT_MS);
         })
-      ]);
+      ]).finally(() => {
+        if (verifyTimeoutId) {
+          clearTimeout(verifyTimeoutId);
+        }
+      });
       return isAdminEmail(decoded.email);
     }
     
@@ -1368,12 +1373,17 @@ exports.sendMessage = async (req, res) => {
     // Send message and get response
     let result;
     try {
+      let chatTimeoutId;
       result = await Promise.race([
         chat.sendMessage({ message }),
         new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Gemini request timed out')), GEMINI_REQUEST_TIMEOUT_MS);
+          chatTimeoutId = setTimeout(() => reject(new Error('Gemini request timed out')), GEMINI_REQUEST_TIMEOUT_MS);
         })
-      ]);
+      ]).finally(() => {
+        if (chatTimeoutId) {
+          clearTimeout(chatTimeoutId);
+        }
+      });
     } catch (apiError) {
       logger.error('Gemini API error:', {
         error: apiError.message,
