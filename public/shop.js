@@ -1,21 +1,26 @@
-// Handles tab switching between Handmade Crafts and Cottage Foods
+// Handles tab switching between Handmade Crafts, Cottage Foods, and Rent Silk Florals
 function showShopSection(type) {
   // Validate type parameter
-  if (type !== 'decor' && type !== 'food') {
+  if (type !== 'decor' && type !== 'food' && type !== 'rentals') {
     console.warn('Invalid shop section type:', type);
     return;
   }
   
   document.getElementById('shop-decor').classList.remove('active');
   document.getElementById('shop-food').classList.remove('active');
+  document.getElementById('shop-rentals').classList.remove('active');
   document.getElementById('decorTab').classList.remove('active');
   document.getElementById('foodTab').classList.remove('active');
+  document.getElementById('rentalsTab').classList.remove('active');
   if (type === 'decor') {
     document.getElementById('shop-decor').classList.add('active');
     document.getElementById('decorTab').classList.add('active');
-  } else {
+  } else if (type === 'food') {
     document.getElementById('shop-food').classList.add('active');
     document.getElementById('foodTab').classList.add('active');
+  } else {
+    document.getElementById('shop-rentals').classList.add('active');
+    document.getElementById('rentalsTab').classList.add('active');
   }
   
   // Save the current tab to URL hash for persistence across page reloads
@@ -196,6 +201,9 @@ function renderProducts() {
   
   document.getElementById('food-products').innerHTML = foodHtml || 
     '<div style="color:#888;padding:1rem;">No products found.</div>';
+
+  // Render rentals section (silk/decor products only, with rental cards)
+  renderRentalsProducts(decor);
   
   // Add fade-in animation to product cards
   setTimeout(() => {
@@ -480,6 +488,12 @@ function setupAddToCartHandlers() {
   document.getElementById('decor-products').addEventListener('click', handleAddToCart);
   document.getElementById('food-products').addEventListener('click', handleAddToCart);
   
+  // Rental request buttons
+  const rentalsContainer = document.getElementById('rentals-products');
+  if (rentalsContainer) {
+    rentalsContainer.addEventListener('click', handleRequestRental);
+  }
+  
   addToCartHandlersSetup = true;
 }
 
@@ -587,6 +601,171 @@ function handleAddToCart(event) {
     });
   }
 }
+
+// ============================================================================
+// SILK FLORAL RENTALS
+// ============================================================================
+
+/**
+ * Handle clicks on "Request Rental" buttons in the rentals section.
+ */
+function handleRequestRental(event) {
+  const button = event.target.closest('.request-rental-btn');
+  if (!button) return;
+
+  const productId = button.dataset.id;
+  const productName = button.dataset.name || '';
+  const subject = encodeURIComponent(`Rental Inquiry: ${productName}`);
+  window.location.href = `contact.html?subject=${subject}`;
+}
+
+/**
+ * Render rental product cards into the #rentals-products container.
+ * @param {Array} decorProducts - Silk/decor products to display
+ */
+function renderRentalsProducts(decorProducts) {
+  const container = document.getElementById('rentals-products');
+  if (!container) return;
+
+  const html = decorProducts.map(productToRentalCard).join('');
+  container.innerHTML = html || '<div style="color:#888;padding:1rem;">No items available for rental at this time.</div>';
+}
+
+/**
+ * Apply filters to the rentals section.
+ */
+function applyRentalsFilters() {
+  const sortBy = document.getElementById('rentalsSort')?.value || 'default';
+  const collectionFilter = document.getElementById('rentalsCollection')?.value || 'all';
+  const occasionFilter = document.getElementById('rentalsOccasion')?.value || 'all';
+
+  let filtered = allProducts.filter(p => p.type === 'decor');
+
+  if (collectionFilter !== 'all') {
+    filtered = filtered.filter(p => p.collection === collectionFilter);
+  }
+  if (occasionFilter !== 'all') {
+    filtered = filtered.filter(p => p.occasion === occasionFilter);
+  }
+
+  if (sortBy === 'price-low') {
+    filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+  } else if (sortBy === 'price-high') {
+    filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+  } else if (sortBy === 'name') {
+    filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }
+
+  renderRentalsProducts(filtered);
+
+  setTimeout(() => {
+    document.querySelectorAll('#rentals-products .product-card').forEach((card, index) => {
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.classList.add('fade-in');
+        card.style.opacity = '1';
+      }, index * 50);
+    });
+    initImageZoom();
+    initCarousels();
+    if (window.fetchReviewStats) loadProductRatings();
+  }, 50);
+}
+
+/**
+ * Reset filters on the rentals section.
+ */
+function resetRentalsFilters() {
+  const sortSelect = document.getElementById('rentalsSort');
+  const collectionSelect = document.getElementById('rentalsCollection');
+  const occasionSelect = document.getElementById('rentalsOccasion');
+
+  if (sortSelect) sortSelect.value = 'default';
+  if (collectionSelect) collectionSelect.value = 'all';
+  if (occasionSelect) occasionSelect.value = 'all';
+
+  renderRentalsProducts(allProducts.filter(p => p.type === 'decor'));
+}
+
+/**
+ * Build a rental product card HTML string.
+ * Similar to productToCard but shows rental pricing and a "Request Rental" button.
+ * @param {Object} p - Product object
+ * @returns {string} HTML string
+ */
+function productToRentalCard(p) {
+  const stock = p.stock !== undefined ? p.stock : 0;
+  let stockClass = '';
+  let stockText = 'In Stock';
+
+  if (stock === 0) {
+    stockClass = 'out-of-stock';
+    stockText = 'Out of Stock';
+  } else if (stock <= 5) {
+    stockClass = 'low-stock';
+    stockText = 'Low Stock';
+  }
+
+  // Get all images for the product
+  const images = (p.images && p.images.length > 0)
+    ? p.images
+    : (p.image ? [p.image] : ['/img/default-product.png']);
+
+  const productName = escapeHtml(p.name);
+  const purchasePrice = p.price && !isNaN(p.price) ? Number(p.price) : null;
+  const rentalPrice = purchasePrice !== null
+    ? `~$${(purchasePrice * 0.35).toFixed(2)}`
+    : 'Contact for pricing';
+
+  // Generate image (single or carousel)
+  let imageHtml;
+  if (images.length > 1) {
+    const carouselId = `rental-carousel-${escapeAttr(p._id)}`;
+    imageHtml = `
+      <div class="product-image-carousel" id="${carouselId}">
+        ${images.map((img, idx) => {
+          const imageUrl = img && img.trim() ? escapeAttr(img) : '/img/default-product.png';
+          return `<a href="product.html?id=${escapeAttr(p._id)}" class="product-img-link" tabindex="-1" aria-hidden="true">${generateResponsiveImage(imageUrl, `${productName} - Image ${idx + 1}`)}</a>`;
+        }).join('')}
+        <button class="carousel-prev" onclick="prevImage('${carouselId}')">‹</button>
+        <button class="carousel-next" onclick="nextImage('${carouselId}')">›</button>
+        <div class="carousel-indicators">
+          ${images.map((_, idx) => `<span class="indicator ${idx === 0 ? 'active' : ''}" onclick="goToImage('${carouselId}', ${idx})"></span>`).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    const imageUrl = images[0] && images[0].trim() ? escapeAttr(images[0]) : '/img/default-product.png';
+    imageHtml = `<a href="product.html?id=${escapeAttr(p._id)}" class="product-img-link" tabindex="-1" aria-hidden="true">${generateResponsiveImage(imageUrl, productName)}</a>`;
+  }
+
+  return `
+    <div class="product-card" id="rental-product-${escapeAttr(p._id)}">
+      <div class="product-top-section">
+        ${imageHtml}
+        <div class="product-info">
+          <div class="product-title"><a href="product.html?id=${escapeAttr(p._id)}" class="product-title-link">${productName}</a></div>
+          <div class="product-price" title="Estimated rental price (approx. 35% of purchase price)">Rental: ${escapeHtml(rentalPrice)}/event</div>
+          ${purchasePrice !== null ? `<div style="font-size:0.8em;color:#6b7280;">Purchase price: $${purchasePrice.toFixed(2)}</div>` : ''}
+          <div class="product-stock ${stockClass}">${stockText}</div>
+          <div id="product-rating-${escapeAttr(p._id)}"></div>
+        </div>
+      </div>
+      <div class="product-bottom-section">
+        <a class="more-details-btn" href="product.html?id=${escapeAttr(p._id)}" title="View full product page">View Product</a>
+        <button
+          class="request-rental-btn"
+          data-id="${escapeAttr(p._id)}"
+          data-name="${escapeAttr(p.name)}"
+        >
+          Request Rental
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================================
 
 function productToCard(p) {
   const stock = p.stock !== undefined ? p.stock : 0;
@@ -1126,7 +1305,7 @@ function initCarousels() {
 document.addEventListener('DOMContentLoaded', () => {
   // Restore tab state from URL hash on page load
   const hash = window.location.hash.substring(1); // Remove the '#' character
-  if (hash === 'food' || hash === 'decor') {
+  if (hash === 'food' || hash === 'decor' || hash === 'rentals') {
     showShopSection(hash);
   }
   

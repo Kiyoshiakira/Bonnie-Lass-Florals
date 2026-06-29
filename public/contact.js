@@ -53,3 +53,18 @@ document.getElementById('contactForm').addEventListener('submit', async function
   }
 });
 
+// Pre-fill message from URL params (e.g. rental inquiry links)
+(function prefillFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const subject = params.get('subject');
+  if (subject) {
+    const messageField = document.getElementById('message');
+    if (messageField && !messageField.value) {
+      messageField.value = subject + '\n\n';
+      messageField.focus();
+      // Move cursor to end of pre-filled text
+      messageField.setSelectionRange(messageField.value.length, messageField.value.length);
+    }
+  }
+})();
+
