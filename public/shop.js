@@ -32,6 +32,9 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
   ? 'http://localhost:5000'
   : 'https://bonnie-lass-florals.onrender.com';
 
+// Rental pricing: percentage of purchase price shown as estimated rental rate
+const RENTAL_PRICE_PERCENTAGE = 0.35;
+
 // Global products cache
 let allProducts = [];
 let currentPage = 1;
@@ -714,7 +717,7 @@ function productToRentalCard(p) {
   const productName = escapeHtml(p.name);
   const purchasePrice = p.price && !isNaN(p.price) ? Number(p.price) : null;
   const rentalPrice = purchasePrice !== null
-    ? `~$${(purchasePrice * 0.35).toFixed(2)}`
+    ? `~$${(purchasePrice * RENTAL_PRICE_PERCENTAGE).toFixed(2)}`
     : 'Contact for pricing';
 
   // Generate image (single or carousel)
