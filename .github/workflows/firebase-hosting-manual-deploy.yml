@@ -1,0 +1,73 @@
+name: Deploy to Firebase Hosting manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "Where to deploy"
+        type: choice
+        required: true
+        default: live
+        options:
+          - live
+          - preview
+      preview_channel:
+        description: "Preview channel name (used only when target=preview)"
+        type: string
+        required: false
+        default: manual-preview
+      preview_expires:
+        description: "Preview expiration (used only when target=preview)"
+        type: string
+        required: false
+        default: 7d
+
+permissions:
+  contents: read
+
+jobs:
+  deploy_live:
+    if: ${{ inputs.deploy_target == 'live' }}
+    concurrency:
+      group: firebase-hosting-live
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Deploy live hosting channel
+        run: |
+          GAC=$(mktemp)
+          trap 'rm -f "$GAC"' EXIT
+          (umask 177; echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}' > "$GAC")
+          GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+            npx firebase-tools@latest deploy --only hosting \
+            --project bonnie-lass-florals
+
+  deploy_preview:
+    if: ${{ inputs.deploy_target == 'preview' }}
+    concurrency:
+      group: firebase-hosting-preview-${{ inputs.preview_channel }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Deploy preview hosting channel
+        run: |
+          CHANNEL="${{ inputs.preview_channel }}"
+          GAC=$(mktemp)
+          trap 'rm -f "$GAC"' EXIT
+          (umask 177; echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}' > "$GAC")
+          GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+            npx firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
+            --project bonnie-lass-florals \
+            --expires "${{ inputs.preview_expires }}"
