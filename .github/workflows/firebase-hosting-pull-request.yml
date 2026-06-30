@@ -18,10 +18,79 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase Hosting preview channel
+        id: deploy
+        run: |
+          CHANNEL="pr-${{ github.event.pull_request.number }}"
+          # Write service account credentials to a temp file with secure permissions
+          GAC=$(mktemp)
+          (umask 177; echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}' > "$GAC")
+
+          # Run deploy; capture output and exit code separately
+          set +e
+          OUTPUT=$(GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+            npx firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
+            --project bonnie-lass-florals --expires 7d --json 2>&1)
+          EXIT=$?
+          set -e
+          rm -f "$GAC"
+
+          echo "$OUTPUT"
+
+          if [ $EXIT -ne 0 ]; then
+            # Firebase returns FAILED_PRECONDITION (HTTP 400) when the version being
+            # deployed is already the active version on the channel (e.g. on workflow
+            # re-runs with unchanged content). Treat this as a no-op success.
+            if echo "$OUTPUT" | grep -qi "is the current active version"; then
+              echo "Deploy skipped: preview channel already has the latest content."
+              exit 0
+            fi
+            echo "Firebase Hosting deploy failed with exit code $EXIT"
+            exit $EXIT
+          fi
+
+          # Extract preview URL from JSON output for PR comment using jq
+          PREVIEW_URL=$(echo "$OUTPUT" | jq -r 'select(.status=="success") | .result | to_entries[0].value.url // empty' 2>/dev/null || true)
+          if [ -n "$PREVIEW_URL" ]; then
+            echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post preview URL comment on PR
+        if: steps.deploy.outputs.preview_url != ''
+        uses: actions/github-script@v7
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}
-          projectId: bonnie-lass-florals
-          channelId: pr-${{ github.event.pull_request.number }}
-          expires: 7d
+          script: |
+            const previewUrl = '${{ steps.deploy.outputs.preview_url }}';
+            const channel = 'pr-${{ github.event.pull_request.number }}';
+            const sha = context.payload.pull_request.head.sha.substring(0, 7);
+            const body = [
+              `🚀 **Deploy preview** for channel \`${channel}\` (commit ${sha})`,
+              '',
+              previewUrl,
+              '',
+              '_Preview expires in 7 days._'
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c =>
+              c.body && c.body.includes(`channel \`${channel}\``)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
