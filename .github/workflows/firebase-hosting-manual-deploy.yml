@@ -64,10 +64,6 @@ jobs:
       - name: Deploy preview hosting channel
         run: |
           CHANNEL="${{ inputs.preview_channel }}"
-          if [ -z "$CHANNEL" ]; then
-            echo "preview_channel is required when deploy_target=preview"
-            exit 1
-          fi
           GAC=$(mktemp)
           trap 'rm -f "$GAC"' EXIT
           (umask 177; echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}' > "$GAC")
