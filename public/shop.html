@@ -87,6 +87,48 @@
         max-width: none;
       }
     }
+    .rental-info-banner {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 2px solid #52b788;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin: 0 auto 2rem;
+      max-width: 800px;
+    }
+    .rental-info-title {
+      color: #1b4332;
+      font-size: 1.2rem;
+      margin: 0 0 0.75rem;
+    }
+    .rental-info-text {
+      color: #2d6a4f;
+      margin: 0.5rem 0;
+      line-height: 1.6;
+    }
+    .rental-info-text a {
+      color: #1b4332;
+      font-weight: 600;
+    }
+    .rental-info-list {
+      color: #2d6a4f;
+      margin: 0.75rem 0;
+      padding-left: 1.25rem;
+      line-height: 1.8;
+    }
+    .request-rental-btn {
+      background: #2d6a4f;
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.55rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      min-height: 38px;
+    }
+    .request-rental-btn:hover {
+      background: #1b4332;
+    }
   </style>
   <script src="ui-utils.js"></script>
 </head>
@@ -146,6 +188,7 @@
     <div class="shop-tabs">
       <button id="decorTab" class="active" onclick="showShopSection('decor')">Handmade Crafts</button>
       <button id="foodTab" onclick="showShopSection('food')">Cottage Foods</button>
+      <button id="rentalsTab" onclick="showShopSection('rentals')">🌸 Rent Silk Florals</button>
     </div>
     <div id="shop-decor" class="shop-section active">
       <div style="text-align: center;">
@@ -243,6 +286,68 @@
         <button class="filter-reset" onclick="resetFilters('food')">Reset Filters</button>
       </div>
       <div id="food-products"></div>
+    </div>
+    <div id="shop-rentals" class="shop-section">
+      <div style="text-align: center;">
+        <h2>Rent Silk Florals</h2>
+      </div>
+      <div class="rental-info-banner">
+        <h3 class="rental-info-title">🌸 Silk Floral Rentals</h3>
+        <p class="rental-info-text">
+          Love the look but not ready to commit? Rent any of our handmade silk floral arrangements for your wedding, event, photoshoot, or special occasion!
+        </p>
+        <ul class="rental-info-list">
+          <li>📅 <strong>Flexible rental periods</strong> — typically 3–7 days depending on your event</li>
+          <li>💰 <strong>Rental pricing</strong> — approximately 35% of the purchase price</li>
+          <li>🤝 <strong>Refundable deposit</strong> — required to hold your pieces</li>
+          <li>📦 <strong>Local pickup &amp; drop-off</strong> — arrangements must be picked up and returned in Iowa</li>
+        </ul>
+        <p class="rental-info-text">
+          To arrange a rental, click <strong>Request Rental</strong> on any item below — or <a href="contact.html">contact us</a> directly to discuss availability and details.
+        </p>
+      </div>
+      <div class="shop-filters">
+        <div class="filter-group">
+          <label for="rentalsSort">Sort by:</label>
+          <select id="rentalsSort" onchange="applyRentalsFilters()">
+            <option value="default">Default</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="name">Name: A-Z</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="rentalsCollection">Collection:</label>
+          <select id="rentalsCollection" onchange="applyRentalsFilters()">
+            <option value="all">All Collections</option>
+            <option value="christmas">Christmas</option>
+            <option value="halloween">Halloween</option>
+            <option value="easter">Easter</option>
+            <option value="thanksgiving">Thanksgiving</option>
+            <option value="valentines">Valentine's Day</option>
+            <option value="spring">Spring</option>
+            <option value="summer">Summer</option>
+            <option value="fall">Fall</option>
+            <option value="winter">Winter</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="rentalsOccasion">Occasion:</label>
+          <select id="rentalsOccasion" onchange="applyRentalsFilters()">
+            <option value="all">All Occasions</option>
+            <option value="birthday">Birthday</option>
+            <option value="wedding">Wedding</option>
+            <option value="anniversary">Anniversary</option>
+            <option value="baby-shower">Baby Shower</option>
+            <option value="graduation">Graduation</option>
+            <option value="housewarming">Housewarming</option>
+            <option value="retirement">Retirement</option>
+            <option value="sympathy">Sympathy</option>
+          </select>
+        </div>
+        <button class="filter-reset" onclick="resetRentalsFilters()">Reset Filters</button>
+      </div>
+      <div id="rentals-products"></div>
     </div>
   </section>
 
