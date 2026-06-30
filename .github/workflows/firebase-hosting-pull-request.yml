@@ -36,21 +36,41 @@ jobs:
             --project bonnie-lass-florals --expires 7d --json 2>&1)
           EXIT=$?
           set -e
-          rm -f "$GAC"
-
-          echo "$OUTPUT"
 
           if [ $EXIT -ne 0 ]; then
+            if echo "$OUTPUT" | grep -qi "already exists"; then
+              echo "Preview channel already exists; deleting and retrying deploy."
+              GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+                npx firebase-tools@latest hosting:channel:delete "$CHANNEL" \
+                --project bonnie-lass-florals --force
+
+              set +e
+              OUTPUT=$(GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+                npx firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
+                --project bonnie-lass-florals --expires 7d --json 2>&1)
+              EXIT=$?
+              set -e
+            fi
+
+            echo "$OUTPUT"
+
             # Firebase returns FAILED_PRECONDITION (HTTP 400) when the version being
             # deployed is already the active version on the channel (e.g. on workflow
             # re-runs with unchanged content). Treat this as a no-op success.
             if echo "$OUTPUT" | grep -qi "is the current active version"; then
               echo "Deploy skipped: preview channel already has the latest content."
+              rm -f "$GAC"
               exit 0
             fi
-            echo "Firebase Hosting deploy failed with exit code $EXIT"
-            exit $EXIT
+            if [ $EXIT -ne 0 ]; then
+              rm -f "$GAC"
+              echo "Firebase Hosting deploy failed with exit code $EXIT"
+              exit $EXIT
+            fi
           fi
+
+          rm -f "$GAC"
+          echo "$OUTPUT"
 
           # Extract preview URL from JSON output for PR comment using jq
           PREVIEW_URL=$(echo "$OUTPUT" | jq -r 'select(.status=="success") | .result | to_entries[0].value.url // empty' 2>/dev/null || true)
