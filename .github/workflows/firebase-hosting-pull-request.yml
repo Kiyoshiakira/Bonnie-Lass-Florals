@@ -27,6 +27,7 @@ jobs:
           CHANNEL="pr-${{ github.event.pull_request.number }}"
           # Write service account credentials to a temp file with secure permissions
           GAC=$(mktemp)
+          trap 'rm -f "$GAC"' EXIT
           (umask 177; echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}' > "$GAC")
 
           # Run deploy; capture output and exit code separately
@@ -36,20 +37,45 @@ jobs:
             --project bonnie-lass-florals --expires 7d --json 2>&1)
           EXIT=$?
           set -e
-          rm -f "$GAC"
-
           echo "$OUTPUT"
 
           if [ $EXIT -ne 0 ]; then
+            if [[ "$OUTPUT" == *"HTTP Error: 409, Channel"* &&
+              "$OUTPUT" == *"channels/$CHANNEL"* &&
+              "$OUTPUT" == *"already exists"* ]]; then
+              echo "Preview channel already exists; deleting and retrying deploy."
+              set +e
+              GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+                npx firebase-tools@latest hosting:channel:delete "$CHANNEL" \
+                --project bonnie-lass-florals --force
+              DELETE_EXIT=$?
+              set -e
+              if [ $DELETE_EXIT -ne 0 ]; then
+                echo "Failed to delete existing preview channel $CHANNEL before retry."
+                exit $DELETE_EXIT
+              fi
+
+              set +e
+              OUTPUT=$(GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+                npx firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
+                --project bonnie-lass-florals --expires 7d --json 2>&1)
+              EXIT=$?
+              set -e
+              echo "$OUTPUT"
+            fi
+
             # Firebase returns FAILED_PRECONDITION (HTTP 400) when the version being
             # deployed is already the active version on the channel (e.g. on workflow
             # re-runs with unchanged content). Treat this as a no-op success.
-            if echo "$OUTPUT" | grep -qi "is the current active version"; then
+            if [[ "$OUTPUT" == *"FAILED_PRECONDITION"* &&
+              "$OUTPUT" == *"is the current active version"* ]]; then
               echo "Deploy skipped: preview channel already has the latest content."
               exit 0
             fi
-            echo "Firebase Hosting deploy failed with exit code $EXIT"
-            exit $EXIT
+            if [ $EXIT -ne 0 ]; then
+              echo "Firebase Hosting deploy failed with exit code $EXIT"
+              exit $EXIT
+            fi
           fi
 
           # Extract preview URL from JSON output for PR comment using jq

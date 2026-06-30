@@ -21,9 +21,27 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}
-          channelId: live
-          projectId: bonnie-lass-florals
+      - name: Deploy live hosting channel
+        run: |
+          GAC=$(mktemp)
+          trap 'rm -f "$GAC"' EXIT
+          (umask 177; echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BONNIE_LASS_FLORALS }}' > "$GAC")
+
+          set +e
+          OUTPUT=$(GOOGLE_APPLICATION_CREDENTIALS="$GAC" \
+            npx firebase-tools@latest deploy --only hosting \
+            --project bonnie-lass-florals --json 2>&1)
+          EXIT=$?
+          set -e
+
+          echo "$OUTPUT"
+
+          if [ $EXIT -ne 0 ]; then
+            if [[ "$OUTPUT" == *"FAILED_PRECONDITION"* &&
+              "$OUTPUT" == *"is the current active version"* ]]; then
+              echo "Deploy skipped: live channel already has the latest content."
+              exit 0
+            fi
+            echo "Firebase Hosting deploy failed with exit code $EXIT"
+            exit $EXIT
+          fi
