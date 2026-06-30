@@ -37,7 +37,8 @@ jobs:
           echo "$OUTPUT"
 
           if [ $EXIT -ne 0 ]; then
-            if echo "$OUTPUT" | grep -qi "is the current active version"; then
+            if [[ "$OUTPUT" == *"FAILED_PRECONDITION"* &&
+              "$OUTPUT" == *"is the current active version"* ]]; then
               echo "Deploy skipped: live channel already has the latest content."
               exit 0
             fi
