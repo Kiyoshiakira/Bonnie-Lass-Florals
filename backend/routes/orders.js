@@ -16,9 +16,16 @@ function getAuthenticatedUserId(req) {
   return (req.user && req.user._id) || (req.session && req.session.user && req.session.user._id);
 }
 
+function isStrictMongoObjectId(value) {
+  if (!value) return false;
+  if (value instanceof mongoose.Types.ObjectId) return true;
+  return /^[0-9a-fA-F]{24}$/.test(String(value));
+}
+
 function getMongoUserId(req) {
   const userId = getAuthenticatedUserId(req);
-  return mongoose.Types.ObjectId.isValid(userId) ? userId : null;
+  if (!isStrictMongoObjectId(userId)) return null;
+  return userId instanceof mongoose.Types.ObjectId ? userId : new mongoose.Types.ObjectId(String(userId));
 }
 
 // Get all orders (admin only)
@@ -49,8 +56,11 @@ router.post('/', auth, async (req, res) => {
   try {
     const { items, total, shippingAddress } = req.body;
     const userId = getMongoUserId(req);
+    if (!userId) {
+      return res.status(400).json({ error: "Invalid user id for order creation" });
+    }
     const newOrder = new Order({
-      ...(userId ? { user: userId } : {}),
+      user: userId,
       items,
       total,
       shippingAddress,
