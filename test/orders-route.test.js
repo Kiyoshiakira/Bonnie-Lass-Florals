@@ -1,17 +1,11 @@
 const { expect } = require('chai');
 
 describe('Orders Route', function () {
-  function getMineHandler() {
-    const router = require('../backend/routes/orders');
-    const mineRouteLayer = router.stack.find(
-      (layer) => layer.route && layer.route.path === '/mine' && layer.route.methods.get
-    );
-    return mineRouteLayer.route.stack[mineRouteLayer.route.stack.length - 1].handle;
-  }
+  const ordersRouter = require('../backend/routes/orders');
+  const { mineOrdersHandler } = ordersRouter.__testables;
 
   it('returns empty list for non-ObjectId authenticated user ids on /mine', async function () {
     const Order = require('../backend/models/Order');
-    const mineHandler = getMineHandler();
 
     const req = {
       user: { _id: 'firebase-uid-123' },
@@ -19,14 +13,14 @@ describe('Orders Route', function () {
     };
 
     let responseBody;
-    let responseStatus;
+    let statusCalled = false;
     const res = {
       json: (body) => {
         responseBody = body;
         return body;
       },
       status: (code) => {
-        responseStatus = code;
+        statusCalled = true;
         return {
           json: (body) => {
             responseBody = body;
@@ -44,8 +38,8 @@ describe('Orders Route', function () {
     };
 
     try {
-      await mineHandler(req, res);
-      expect(responseStatus).to.equal(undefined);
+      await mineOrdersHandler(req, res);
+      expect(statusCalled).to.equal(false);
       expect(responseBody).to.deep.equal([]);
       expect(findCalled).to.equal(false);
     } finally {
@@ -55,7 +49,6 @@ describe('Orders Route', function () {
 
   it('queries orders for valid ObjectId user ids on /mine', async function () {
     const Order = require('../backend/models/Order');
-    const mineHandler = getMineHandler();
 
     const validId = '507f1f77bcf86cd799439011';
     const req = {
@@ -84,7 +77,7 @@ describe('Orders Route', function () {
     };
 
     try {
-      await mineHandler(req, res);
+      await mineOrdersHandler(req, res);
       expect(findCalled).to.equal(true);
       expect(responseBody).to.deep.equal(expectedOrders);
     } finally {

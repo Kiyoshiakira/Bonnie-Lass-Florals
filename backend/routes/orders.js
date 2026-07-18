@@ -40,7 +40,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get orders for the logged-in user
-router.get('/mine', auth, async (req, res) => {
+async function mineOrdersHandler(req, res) {
   try {
     const userId = getMongoUserId(req);
     if (!userId) return res.json([]);
@@ -49,15 +49,17 @@ router.get('/mine', auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+}
+
+router.get('/mine', auth, mineOrdersHandler);
 
 // Create a new order
-router.post('/', auth, async (req, res) => {
+async function createOrderHandler(req, res) {
   try {
     const { items, total, shippingAddress } = req.body;
     const userId = getMongoUserId(req);
     if (!userId) {
-      return res.status(400).json({ error: "Invalid user ID for order creation" });
+      return res.status(400).json({ error: "Invalid user ID for order creation: expected a MongoDB ObjectId" });
     }
     const newOrder = new Order({
       user: userId,
@@ -71,7 +73,9 @@ router.post('/', auth, async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-});
+}
+
+router.post('/', auth, createOrderHandler);
 
 // Update order status (admin only)
 router.patch('/:id', auth, async (req, res) => {
@@ -103,3 +107,9 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.__testables = {
+  mineOrdersHandler,
+  createOrderHandler,
+  getMongoUserId,
+  isStrictMongoObjectId
+};
