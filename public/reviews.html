@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Read customer feedback and leave product reviews for Bonnie Lass Florals.">
+  <meta property="og:title" content="Customer Reviews - Bonnie Lass Florals">
+  <meta property="og:description" content="Choose a product, read customer feedback, and leave your own review.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bonnielassflorals.com/reviews.html">
+  <meta property="og:image" content="https://bonnielassflorals.com/img/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Customer Reviews - Bonnie Lass Florals">
+  <meta name="twitter:description" content="Choose a product, read customer feedback, and leave your own review.">
+  <meta name="twitter:image" content="https://bonnielassflorals.com/img/logo.png">
+  <title>Customer Reviews - Bonnie Lass Florals</title>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://bonnie-lass-florals.onrender.com" crossorigin>
+  <link rel="preload" href="styles.css" as="style">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="auth.css">
+  <script src="theme-loader.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    initFirebase();
+  </script>
+  <style>
+    .reviews-page-intro {
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+      text-align: center;
+      color: #425466;
+      line-height: 1.7;
+    }
+    .reviews-controls {
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      align-items: end;
+    }
+    .reviews-control-group label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: #1b4332;
+    }
+    .reviews-control-group select {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      min-height: 44px;
+      font: inherit;
+      background: #fff;
+    }
+    #reviews-hub-status {
+      max-width: 900px;
+      margin: 0 auto 1rem;
+      color: #4b5563;
+      text-align: center;
+    }
+    .selected-product-summary {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .selected-product-summary h2 {
+      margin: 0 0 0.4rem;
+      font-size: 1.2rem;
+      color: #1b4332;
+    }
+    .selected-product-summary p {
+      margin: 0;
+      color: #4b5563;
+    }
+    .selected-product-summary a {
+      color: #2d6a4f;
+      font-weight: 600;
+    }
+    .reviews-hub-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+  </style>
+  <script src="ui-utils.js"></script>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Bonnie Lass Florals Logo">
+      Bonnie Lass Florals
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="shop.html">Shop</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a href="cart.html" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+      <div id="profileCircleContainer">
+        <img id="profileCircle" src="img/default-avatar.png" alt="Profile" width="40" height="40" />
+        <div id="profileDropdown">
+          <div id="userInfoDropdown"></div>
+          <a href="profile.html">Profile</a>
+          <a href="orders.html">Orders</a>
+          <a id="adminOrdersLink" href="/admin/orders.html" style="display:none;">All Orders (Admin)</a>
+          <a id="uploadProductLink" href="/admin/upload.html" style="display:none;">Upload Product</a>
+          <a id="paletteLink" href="/admin/palette.html" style="display:none;">Palette Editor</a>
+          <a id="messagesLink" href="/admin/messages.html" style="display:none;">Messages</a>
+          <a id="inventoryTrackerLink" href="/admin/inventory-tracker.html" style="display:none;">Inventory Tracker</a>
+          <button id="logoutMenu">Logout</button>
+        </div>
+      </div>
+      <a id="loginBtn" href="#">Login</a>
+    </nav>
+  </header>
+
+  <div id="loginModal">
+    <div id="loginModalContent">
+      <h2 id="loginTitle">Login</h2>
+      <form id="authForm">
+        <div id="signupFields" class="hidden">
+          <input type="text" id="signupName" placeholder="Your Name" required>
+        </div>
+        <input type="email" id="emailField" placeholder="Email" required>
+        <input type="password" id="passwordField" placeholder="Password" required>
+        <button type="submit" id="loginEmailBtn">Login</button>
+        <button type="button" id="toggleSignup" style="background:none;color:#d946ef;border:none;float:right;margin-top:1em;">Sign up instead</button>
+      </form>
+      <div style="margin:1em 0;">OR</div>
+      <button id="googleLogin" style="background:#4285F4;color:#fff;padding:0.6em 1.2em;border:none;border-radius:0.5em;">Login with Google</button>
+      <button type="button" id="closeLogin" style="margin-top:1.5em;">Close</button>
+      <div id="loginError" style="color:red;margin-top:1em;"></div>
+    </div>
+  </div>
+
+  <section>
+    <h1>Customer Reviews & Comments</h1>
+    <p class="reviews-page-intro">
+      Pick what you want to talk about, read what others said, and leave your own review.
+      This is a shared feedback space for market customers and online shoppers.
+    </p>
+
+    <div class="reviews-controls">
+      <div class="reviews-control-group">
+        <label for="review-type-select">What would you like to review?</label>
+        <select id="review-type-select">
+          <option value="all">All products</option>
+          <option value="decor">Handmade crafts</option>
+          <option value="food">Cottage foods</option>
+        </select>
+      </div>
+      <div class="reviews-control-group">
+        <label for="review-product-select">Choose a product</label>
+        <select id="review-product-select">
+          <option value="">Loading products...</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="reviews-hub-status">Loading customer feedback...</div>
+    <div class="reviews-hub-container" id="reviews-hub-container"></div>
+  </section>
+
+  <script>
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const countEl = document.getElementById('cart-count');
+      if (countEl) countEl.textContent = cart.length;
+    }
+    updateCartCount();
+  </script>
+  <script src="cart.js"></script>
+  <script src="reviews.js"></script>
+  <script src="reviews-page.js"></script>
+  <script src="mobile-nav.js"></script>
+  <script src="auth.js"></script>
+  <script src="ux-enhancements.js"></script>
+  <script src="chatbot.js"></script>
+</body>
+</html>
