@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
 const { isAdminEmail } = require('../config/admins');
@@ -9,6 +10,15 @@ function isAdmin(req) {
   // Prefer req.user (set by auth middleware), fallback to req.session.user for backward compatibility
   const email = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email);
   return email ? isAdminEmail(email) : false;
+}
+
+function getAuthenticatedUserId(req) {
+  return (req.user && req.user._id) || (req.session && req.session.user && req.session.user._id);
+}
+
+function getMongoUserId(req) {
+  const userId = getAuthenticatedUserId(req);
+  return mongoose.Types.ObjectId.isValid(userId) ? userId : null;
 }
 
 // Get all orders (admin only)
@@ -25,7 +35,8 @@ router.get('/', auth, async (req, res) => {
 // Get orders for the logged-in user
 router.get('/mine', auth, async (req, res) => {
   try {
-    const userId = req.session.user._id;
+    const userId = getMongoUserId(req);
+    if (!userId) return res.json([]);
     const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
@@ -37,9 +48,9 @@ router.get('/mine', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const { items, total, shippingAddress } = req.body;
-    const userId = req.session.user._id;
+    const userId = getMongoUserId(req);
     const newOrder = new Order({
-      user: userId,
+      ...(userId ? { user: userId } : {}),
       items,
       total,
       shippingAddress,
