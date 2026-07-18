@@ -57,7 +57,7 @@ router.post('/', auth, async (req, res) => {
     const { items, total, shippingAddress } = req.body;
     const userId = getMongoUserId(req);
     if (!userId) {
-      return res.status(400).json({ error: "Invalid user id for order creation" });
+      return res.status(400).json({ error: "Invalid user ID for order creation" });
     }
     const newOrder = new Order({
       user: userId,
