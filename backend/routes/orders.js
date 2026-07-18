@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
 const { isAdminEmail } = require('../config/admins');
@@ -9,6 +10,22 @@ function isAdmin(req) {
   // Prefer req.user (set by auth middleware), fallback to req.session.user for backward compatibility
   const email = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email);
   return email ? isAdminEmail(email) : false;
+}
+
+function getAuthenticatedUserId(req) {
+  return (req.user && req.user._id) || (req.session && req.session.user && req.session.user._id);
+}
+
+function isStrictMongoObjectId(value) {
+  if (!value) return false;
+  if (value instanceof mongoose.Types.ObjectId) return true;
+  return /^[0-9a-fA-F]{24}$/.test(String(value));
+}
+
+function getMongoUserId(req) {
+  const userId = getAuthenticatedUserId(req);
+  if (!isStrictMongoObjectId(userId)) return null;
+  return userId instanceof mongoose.Types.ObjectId ? userId : new mongoose.Types.ObjectId(String(userId));
 }
 
 // Get all orders (admin only)
@@ -23,21 +40,27 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get orders for the logged-in user
-router.get('/mine', auth, async (req, res) => {
+async function mineOrdersHandler(req, res) {
   try {
-    const userId = req.session.user._id;
+    const userId = getMongoUserId(req);
+    if (!userId) return res.json([]);
     const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+}
+
+router.get('/mine', auth, mineOrdersHandler);
 
 // Create a new order
-router.post('/', auth, async (req, res) => {
+async function createOrderHandler(req, res) {
   try {
     const { items, total, shippingAddress } = req.body;
-    const userId = req.session.user._id;
+    const userId = getMongoUserId(req);
+    if (!userId) {
+      return res.status(400).json({ error: "Invalid user ID for order creation: expected a MongoDB ObjectId" });
+    }
     const newOrder = new Order({
       user: userId,
       items,
@@ -50,7 +73,9 @@ router.post('/', auth, async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-});
+}
+
+router.post('/', auth, createOrderHandler);
 
 // Update order status (admin only)
 router.patch('/:id', auth, async (req, res) => {
@@ -82,3 +107,9 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.__testables = {
+  mineOrdersHandler,
+  createOrderHandler,
+  getMongoUserId,
+  isStrictMongoObjectId
+};
