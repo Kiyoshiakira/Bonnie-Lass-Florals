@@ -5,17 +5,6 @@ const REVIEWS_API_BASE = (location.hostname === 'localhost' || location.hostname
 let reviewsHubProducts = [];
 const reviewsHubProductsById = new Map();
 
-function escapeHtmlSafe(value) {
-  if (!value) return '';
-  return value
-    .toString()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 function setHubStatus(message) {
   const statusEl = document.getElementById('reviews-hub-status');
   if (statusEl) statusEl.textContent = message || '';
@@ -39,13 +28,27 @@ function updateProductIdInUrl(productId) {
 }
 
 async function fetchProductsForReviewsHub() {
-  const response = await fetch(`${REVIEWS_API_BASE}/api/products?page=1&limit=1000`);
-  if (!response.ok) {
-    throw new Error('Failed to load products');
-  }
+  const products = [];
+  const limit = 100;
+  let page = 1;
+  let totalPages = 1;
 
-  const data = await response.json();
-  const products = Array.isArray(data) ? data : (data.products || []);
+  while (page <= totalPages) {
+    const response = await fetch(`${REVIEWS_API_BASE}/api/products?page=${page}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Failed to load products');
+    }
+
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      products.push(...data);
+      break;
+    }
+
+    products.push(...(data.products || []));
+    totalPages = data.pagination?.totalPages || 1;
+    page += 1;
+  }
 
   return products.sort((a, b) => {
     const typeA = (a.type || '').toLowerCase();
@@ -110,22 +113,76 @@ async function renderSelectedProductReviews(productId) {
   setHubStatus('Loading customer feedback...');
 
   try {
-    const reviewData = await window.initProductReviews(productId);
-    const safeName = escapeHtmlSafe(product.name || 'Product');
+    const stats = await window.fetchReviewStats(productId);
     const safeType = product.type === 'food' ? 'Cottage Food' : 'Handmade Craft';
+    const stars = typeof window.renderStars === 'function'
+      ? window.renderStars(stats.averageRating || 0)
+      : '';
+    const ratingText = `${Number(stats.averageRating || 0).toFixed(1)} (${stats.totalReviews || 0} ${(stats.totalReviews || 0) === 1 ? 'review' : 'reviews'})`;
 
-    container.innerHTML = `
-      <div class="selected-product-summary">
-        <h2>${safeName}</h2>
-        <p>${safeType} · <a href="product.html?id=${encodeURIComponent(productId)}">View product details</a></p>
-      </div>
-      ${reviewData.html}
-    `;
+    container.textContent = '';
+
+    const summary = document.createElement('div');
+    summary.className = 'selected-product-summary';
+
+    const title = document.createElement('h2');
+    title.textContent = product.name || 'Product';
+    summary.appendChild(title);
+
+    const description = document.createElement('p');
+    description.textContent = `${safeType} · `;
+    const productLink = document.createElement('a');
+    productLink.href = `product.html?id=${encodeURIComponent(productId)}`;
+    productLink.textContent = 'View product details';
+    description.appendChild(productLink);
+    summary.appendChild(description);
+
+    const ratingLine = document.createElement('p');
+    ratingLine.textContent = `${stars} ${ratingText}`;
+    summary.appendChild(ratingLine);
+
+    const reviewsSection = document.createElement('div');
+    reviewsSection.className = 'reviews-section';
+
+    const reviewsHeader = document.createElement('div');
+    reviewsHeader.className = 'reviews-header';
+
+    const reviewsTitle = document.createElement('h3');
+    reviewsTitle.textContent = 'Reviews';
+    reviewsHeader.appendChild(reviewsTitle);
+
+    const addReviewBtn = document.createElement('button');
+    addReviewBtn.className = 'add-review-btn';
+    addReviewBtn.type = 'button';
+    addReviewBtn.textContent = 'Write Review';
+    addReviewBtn.addEventListener('click', () => {
+      if (typeof window.showReviewForm === 'function') {
+        window.showReviewForm(productId);
+      }
+    });
+    reviewsHeader.appendChild(addReviewBtn);
+
+    const reviewsList = document.createElement('div');
+    reviewsList.id = `reviews-list-${productId}`;
+
+    reviewsSection.appendChild(reviewsHeader);
+    reviewsSection.appendChild(reviewsList);
+
+    container.appendChild(summary);
+    container.appendChild(reviewsSection);
+
+    if (typeof window.loadProductReviews === 'function') {
+      await window.loadProductReviews(productId);
+    }
 
     setHubStatus('Read comments below or write your own review.');
   } catch (error) {
     console.error('Failed to render selected product reviews:', error);
-    container.innerHTML = '<div class="review-error">Failed to load reviews for this product.</div>';
+    container.textContent = '';
+    const errorEl = document.createElement('div');
+    errorEl.className = 'review-error';
+    errorEl.textContent = 'Failed to load reviews for this product.';
+    container.appendChild(errorEl);
     setHubStatus('Could not load feedback right now. Please try again.');
   }
 }
@@ -158,7 +215,11 @@ async function initReviewsHub() {
     setHubStatus('Failed to load products. Please refresh and try again.');
     const container = document.getElementById('reviews-hub-container');
     if (container) {
-      container.innerHTML = '<div class="review-error">Unable to load review options.</div>';
+      container.textContent = '';
+      const errorEl = document.createElement('div');
+      errorEl.className = 'review-error';
+      errorEl.textContent = 'Unable to load review options.';
+      container.appendChild(errorEl);
     }
     return;
   }

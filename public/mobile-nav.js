@@ -21,9 +21,7 @@
 
     // Ensure customer reviews hub is available from main-site navigation
     if (!window.location.pathname.includes('/admin/')) {
-      const hasReviewsLink = Array.from(nav.querySelectorAll('a'))
-        .some(link => link.getAttribute('href') === 'reviews.html');
-      if (!hasReviewsLink) {
+      if (!nav.querySelector('a[href="reviews.html"]')) {
         const reviewsLink = document.createElement('a');
         reviewsLink.href = 'reviews.html';
         reviewsLink.textContent = 'Reviews';
