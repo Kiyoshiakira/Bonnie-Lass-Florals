@@ -19,7 +19,7 @@ describe('Orders Route', function () {
         responseBody = body;
         return body;
       },
-      status: (code) => {
+      status: (_code) => {
         statusCalled = true;
         return {
           json: (body) => {
