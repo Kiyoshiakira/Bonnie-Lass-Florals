@@ -218,6 +218,145 @@ function formatDate(dateString) {
   return `${Math.floor(diffDays / 365)} years ago`;
 }
 
+function createReviewFormElement(productId) {
+  const formWrapper = document.createElement('div');
+  formWrapper.className = 'review-form';
+  formWrapper.id = `review-form-${productId}`;
+
+  const title = document.createElement('h4');
+  title.textContent = 'Write a Review';
+  formWrapper.appendChild(title);
+
+  const ratingGroup = document.createElement('div');
+  ratingGroup.className = 'form-group';
+  const ratingLabel = document.createElement('label');
+  ratingLabel.textContent = 'Rating *';
+  ratingGroup.appendChild(ratingLabel);
+
+  const ratingInput = document.createElement('div');
+  ratingInput.className = 'rating-input';
+  for (let rating = 5; rating >= 1; rating -= 1) {
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = `rating-${productId}`;
+    input.id = `star${rating}-${productId}`;
+    input.value = rating;
+    if (rating === 5) input.required = true;
+    ratingInput.appendChild(input);
+
+    const starLabel = document.createElement('label');
+    starLabel.setAttribute('for', `star${rating}-${productId}`);
+    starLabel.textContent = '★';
+    ratingInput.appendChild(starLabel);
+  }
+  ratingGroup.appendChild(ratingInput);
+  formWrapper.appendChild(ratingGroup);
+
+  const commentGroup = document.createElement('div');
+  commentGroup.className = 'form-group';
+  const commentLabel = document.createElement('label');
+  commentLabel.setAttribute('for', `comment-${productId}`);
+  commentLabel.textContent = 'Your Review';
+  commentGroup.appendChild(commentLabel);
+
+  const commentInput = document.createElement('textarea');
+  commentInput.id = `comment-${productId}`;
+  commentInput.name = 'comment';
+  commentInput.placeholder = 'Share your thoughts about this product...';
+  commentInput.maxLength = 1000;
+  commentGroup.appendChild(commentInput);
+  formWrapper.appendChild(commentGroup);
+
+  const actions = document.createElement('div');
+  actions.className = 'form-actions';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'button';
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit Review';
+  submitBtn.addEventListener('click', () => submitReview(productId));
+  actions.appendChild(submitBtn);
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'cancel-btn';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => cancelReviewForm(productId));
+  actions.appendChild(cancelBtn);
+  formWrapper.appendChild(actions);
+
+  const errorDiv = document.createElement('div');
+  errorDiv.id = `review-error-${productId}`;
+  errorDiv.className = 'review-error';
+  errorDiv.style.display = 'none';
+  formWrapper.appendChild(errorDiv);
+
+  return formWrapper;
+}
+
+function renderReviewsIntoContainer(container, productId, reviews) {
+  container.textContent = '';
+
+  if (reviews.length === 0) {
+    const noReviews = document.createElement('div');
+    noReviews.className = 'no-reviews';
+    noReviews.textContent = 'No reviews yet. Be the first to review this product!';
+    container.appendChild(noReviews);
+    return;
+  }
+
+  const currentUser = firebase.auth().currentUser;
+  const currentUserId = currentUser ? currentUser.uid : null;
+
+  reviews.forEach(review => {
+    const reviewItem = document.createElement('div');
+    reviewItem.className = 'review-item';
+    reviewItem.id = `review-${review._id}`;
+
+    const header = document.createElement('div');
+    header.className = 'review-header';
+    const metaWrap = document.createElement('div');
+
+    const author = document.createElement('div');
+    author.className = 'review-author';
+    author.textContent = review.userName || 'Anonymous';
+    metaWrap.appendChild(author);
+
+    const rating = document.createElement('div');
+    rating.className = 'review-rating';
+    rating.textContent = renderStars(review.rating);
+    metaWrap.appendChild(rating);
+
+    const date = document.createElement('div');
+    date.className = 'review-date';
+    date.textContent = formatDate(review.createdAt);
+    metaWrap.appendChild(date);
+
+    header.appendChild(metaWrap);
+    reviewItem.appendChild(header);
+
+    if (review.comment) {
+      const comment = document.createElement('div');
+      comment.className = 'review-comment';
+      comment.textContent = review.comment;
+      reviewItem.appendChild(comment);
+    }
+
+    if (currentUserId === review.user) {
+      const actions = document.createElement('div');
+      actions.className = 'review-actions';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => deleteReviewHandler(productId, review._id));
+      actions.appendChild(deleteBtn);
+      reviewItem.appendChild(actions);
+    }
+
+    container.appendChild(reviewItem);
+  });
+}
+
 /**
  * Render the review form
  */
@@ -315,7 +454,8 @@ function showReviewForm(productId) {
   }
   
   // Insert form at the top of reviews list
-  container.insertAdjacentHTML('afterbegin', renderReviewForm(productId));
+  const formElement = createReviewFormElement(productId);
+  container.prepend(formElement);
 }
 
 /**
@@ -387,10 +527,14 @@ async function loadProductReviews(productId) {
   
   try {
     const reviews = await fetchReviews(productId);
-    container.innerHTML = renderReviews(productId, reviews);
+    renderReviewsIntoContainer(container, productId, reviews);
   } catch (error) {
     console.error('Error loading reviews:', error);
-    container.innerHTML = '<div class="review-error">Failed to load reviews</div>';
+    container.textContent = '';
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'review-error';
+    errorDiv.textContent = 'Failed to load reviews';
+    container.appendChild(errorDiv);
   }
 }
 

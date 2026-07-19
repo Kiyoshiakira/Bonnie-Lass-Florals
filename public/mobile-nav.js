@@ -18,6 +18,22 @@
       console.warn('Header or nav element not found');
       return;
     }
+
+    // Ensure customer reviews hub is available from main-site navigation
+    if (!window.location.pathname.includes('/admin/')) {
+      if (!nav.querySelector('a[href="reviews.html"]')) {
+        const reviewsLink = document.createElement('a');
+        reviewsLink.href = 'reviews.html';
+        reviewsLink.textContent = 'Reviews';
+        const contactLink = Array.from(nav.querySelectorAll('a'))
+          .find(link => link.getAttribute('href') === 'contact.html');
+        if (contactLink) {
+          nav.insertBefore(reviewsLink, contactLink.nextSibling);
+        } else {
+          nav.appendChild(reviewsLink);
+        }
+      }
+    }
     
     // Create hamburger menu button
     const hamburger = document.createElement('button');
